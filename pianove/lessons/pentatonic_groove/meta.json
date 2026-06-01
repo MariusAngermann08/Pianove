@@ -1,0 +1,9 @@
+{
+  "id": "pentatonic_groove",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["pentatonic", "groove", "folk"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 8
+}

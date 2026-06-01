@@ -1,0 +1,9 @@
+{
+  "id": "natural_notes",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["natural", "white-keys", "range"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 6
+}

@@ -1,0 +1,9 @@
+{
+  "id": "motif_building",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["motif", "melody", "patterns"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 7
+}

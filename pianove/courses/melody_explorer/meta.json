@@ -1,0 +1,16 @@
+{
+  "id": "melody_explorer",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "lessons": [
+    "natural_notes",
+    "motif_building",
+    "echo_phrases",
+    "d_major_scale",
+    "pentatonic_groove",
+    "folk_tune",
+    "classical_theme",
+    "final_melody"
+  ]
+}

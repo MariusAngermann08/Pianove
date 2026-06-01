@@ -1,0 +1,9 @@
+{
+  "id": "two_hands_preview",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["melody", "range", "arpeggios"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 8
+}

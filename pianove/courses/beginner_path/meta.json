@@ -1,0 +1,16 @@
+{
+  "id": "beginner_path",
+  "version": "2.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "lessons": [
+    "welcome",
+    "c_major_scale",
+    "five_note_melody",
+    "g_major_intro",
+    "simple_waltz",
+    "left_hand_basics",
+    "two_hands_preview",
+    "first_song"
+  ]
+}

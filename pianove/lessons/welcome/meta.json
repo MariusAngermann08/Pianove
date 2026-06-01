@@ -1,0 +1,9 @@
+{
+  "id": "welcome",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["intro", "melody"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 5
+}

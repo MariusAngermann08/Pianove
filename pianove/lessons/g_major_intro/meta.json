@@ -1,0 +1,9 @@
+{
+  "id": "g_major_intro",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["g-major", "scale", "melody"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 7
+}

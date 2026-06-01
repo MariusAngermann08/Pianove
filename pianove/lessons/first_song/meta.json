@@ -1,0 +1,9 @@
+{
+  "id": "first_song",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["song", "melody", "classic"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 10
+}

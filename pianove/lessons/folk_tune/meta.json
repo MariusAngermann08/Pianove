@@ -1,0 +1,9 @@
+{
+  "id": "folk_tune",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["folk", "g-major", "melody"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 9
+}

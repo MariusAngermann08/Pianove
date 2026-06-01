@@ -1,0 +1,9 @@
+{
+  "id": "echo_phrases",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["phrases", "echo", "call-response"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 7
+}

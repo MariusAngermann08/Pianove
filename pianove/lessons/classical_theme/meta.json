@@ -1,0 +1,9 @@
+{
+  "id": "classical_theme",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["classical", "theme", "elegant"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 9
+}

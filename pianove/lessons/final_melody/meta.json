@@ -1,0 +1,9 @@
+{
+  "id": "final_melody",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["finale", "complete", "showcase"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 10
+}

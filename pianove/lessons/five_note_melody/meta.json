@@ -1,0 +1,9 @@
+{
+  "id": "five_note_melody",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["melody", "five-note", "basics"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 6
+}

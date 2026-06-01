@@ -1,0 +1,123 @@
+import pygame
+from pylay import FloatLayout, VStack, Label, LineChart, ColorPalette, iOSTheme, EmojiIcon
+from pianove.i18n import t
+from pianove.ui_utils import ui_dims
+from pianove.progress import (
+    streak, lessons_completed_count, weekly_lessons, is_complete, course_complete
+)
+from pianove.state import storage
+
+_WEEK_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+_ORANGE = pygame.Color(255, 149, 0)
+_GREEN  = pygame.Color(52, 199, 89)
+_GOLD   = pygame.Color(255, 200, 50)
+_GRAY   = pygame.Color(160, 160, 170)
+
+
+def _minutes_to_str(mins: int) -> str:
+    if mins == 0:
+        return "—"
+    h, m = divmod(mins, 60)
+    return f"{h}h {m:02d}m" if h else f"{m}m"
+
+
+def _stat_card(value: str, label: str, color: pygame.Color, icon: str) -> VStack:
+    card = VStack(
+        spacing=4, padding=12,
+        anchor="top_left", x=0, y=0,
+        width=0.31, height=1.0,
+        background_color=iOSTheme.secondary_background,
+        border_radius=12,
+    )
+    card.add_child(EmojiIcon(icon, size=20, color=color))
+    card.add_child(Label(text=value, font_size=22, bold=True, color=color, height=30))
+    card.add_child(Label(text=label, font_size=13, color=iOSTheme.secondary_label, height=18))
+    return card
+
+
+def _achievement(icon: str, label: str, color: pygame.Color,
+                 x_frac: float, earned: bool) -> VStack:
+    bg    = color if earned else iOSTheme.secondary_background
+    alpha = pygame.Color(255, 255, 255) if earned else _GRAY
+    badge = VStack(
+        spacing=2, padding=6,
+        anchor="top_left", x=x_frac, y=0.0,
+        width=0.22, height=1.0,
+        background_color=bg,
+        border_radius=12,
+    )
+    badge.add_child(EmojiIcon(icon, size=22, color=alpha,
+                              anchor="center", x=0, y=0))
+    badge.add_child(Label(text=label, font_size=10, bold=True, color=alpha))
+    return badge
+
+
+def build():
+    U = ui_dims()
+
+    cur_streak  = streak()
+    lessons_done = lessons_completed_count()
+    total_mins   = storage.get("total_minutes", 0)
+    week_data    = weekly_lessons()
+
+    # Achievements
+    ach_first   = lessons_done >= 1
+    ach_course  = course_complete("beginner_path")
+    ach_streak3 = cur_streak >= 3
+    ach_ded     = len(storage.get("lesson_dates", [])) >= 7  # 7+ sessions
+
+    root   = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
+    scroll = VStack(spacing=14, padding=16, width=1.0, height=1.0)
+    root.add_child(scroll)
+
+    scroll.add_child(Label(
+        text=t("stats_title"),
+        font_size=U["title_size"] - 6,
+        bold=True, color=iOSTheme.label,
+    ))
+
+    # ── Stat cards ─────────────────────────────────────────────────────────────
+    stats_row = FloatLayout(width=1.0, height=104)
+    cards = [
+        _stat_card(str(cur_streak),           t("stats_streak"),  _ORANGE,              "🔥"),
+        _stat_card(str(lessons_done),          t("stats_lessons"), ColorPalette.BLUE,    "🎓"),
+        _stat_card(_minutes_to_str(total_mins), t("stats_time"),   _GREEN,               "⏱"),
+    ]
+    for card, x in zip(cards, [0.0, 0.345, 0.69]):
+        card.x_spec = x
+        stats_row.add_child(card)
+    scroll.add_child(stats_row)
+
+    # ── Weekly chart ───────────────────────────────────────────────────────────
+    scroll.add_child(Label(
+        text=t("stats_week"),
+        font_size=U["subtitle_size"],
+        bold=True, color=iOSTheme.label,
+    ))
+    scroll.add_child(LineChart(
+        data=week_data,
+        labels=_WEEK_LABELS,
+        active_color=ColorPalette.BLUE,
+        title=t("stats_week"),
+        width=1.0, height=180,
+    ))
+
+    # ── Achievements ──────────────────────────────────────────────────────────
+    scroll.add_child(Label(
+        text=t("stats_achievements"),
+        font_size=U["subtitle_size"],
+        bold=True, color=iOSTheme.label,
+    ))
+    badges_row = FloatLayout(width=1.0, height=64)
+    achievements = [
+        ("🎓", t("ach_first_lesson"), _GREEN,  0.0,   ach_first),
+        ("🏆", t("ach_course_done"),  _GOLD,   0.245, ach_course),
+        ("🔥", t("ach_streak_3"),     _ORANGE, 0.49,  ach_streak3),
+        ("⭐", t("ach_dedicated"),    ColorPalette.BLUE, 0.735, ach_ded),
+    ]
+    for icon, label, color, x_frac, earned in achievements:
+        badges_row.add_child(_achievement(icon, label, color, x_frac, earned))
+    scroll.add_child(badges_row)
+
+    return root
