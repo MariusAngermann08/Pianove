@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — Getting Started</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html" class="active">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Getting Started with PyLay</h1>
+      <p class="page-subtitle">Understand the layout model, state system, and spring animation — then build a complete settings screen from scratch.</p>
+    </div>
+
+    <section class="doc-section" id="installation">
+      <h2>Installation</h2>
+      <p>Copy the <code>PyLay/pylay/</code> directory into your project. Then install the dependency:</p>
+      <pre><code class="language-bash">pip install pygame</code></pre>
+      <p>Optionally install Pillow for emoji rendering:</p>
+      <pre><code class="language-bash">pip install Pillow</code></pre>
+      <p>Import everything:</p>
+      <pre><code class="language-python">from pylay import *
+# or selectively:
+from pylay import App, VStack, Button, Label, Switch, State</code></pre>
+    </section>
+
+    <section class="doc-section" id="concepts">
+      <h2>Core concepts</h2>
+
+      <h3>The widget tree</h3>
+      <p>PyLay builds UIs as a tree of <code>UIElement</code> objects. Every widget — buttons, labels, sliders — is a <code>UIElement</code> with a parent and zero or more children. The tree is rooted at <code>app.root</code>.</p>
+      <pre><code class="language-python">app.root                   # FloatLayout (root)
+├── VStack                 # Layout container
+│   ├── Label("Title")     # Widget
+│   ├── Slider(...)        # Widget
+│   └── Button("Save")     # Widget
+└── BottomNavigationBar    # Navigation widget</code></pre>
+
+      <h3 id="layout-model">The layout model</h3>
+      <p>Each <code>UIElement</code> has five layout parameters: <code>anchor</code>, <code>x</code>, <code>y</code>, <code>width</code>, and <code>height</code>. These resolve against the parent's bounds.</p>
+      <ul>
+        <li><strong>Integers</strong> are pixel values: <code>width=200</code> = 200 pixels wide.</li>
+        <li><strong>Floats (0.0–1.0)</strong> are fractions of the parent: <code>width=1.0</code> = fill the parent, <code>width=0.5</code> = half the parent.</li>
+        <li><code>anchor</code> determines which corner/edge the element is positioned from: <code>"top_left"</code>, <code>"center"</code>, <code>"bottom_right"</code>, etc.</li>
+        <li><code>x</code> and <code>y</code> are offsets from the anchor point.</li>
+      </ul>
+      <pre><code class="language-python"># Full-screen overlay
+FloatLayout(anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+
+# Fixed 200×50 button in the bottom-right corner, 20px from the edge
+Button("Save", anchor="bottom_right", x=20, y=20, width=200, height=50)
+
+# Label that is 80% of the parent width, centered horizontally
+Label("Title", anchor="top_center", x=0, y=32, width=0.8, height=40)</code></pre>
+
+      <h3 id="state-model">The State model</h3>
+      <p>PyLay uses a reactive state system. Instead of manually updating widgets when data changes, you create a <code>State</code> object and pass it where a widget expects a value. The widget subscribes to the state and redraws when the value changes — no callbacks needed for display.</p>
+      <pre><code class="language-python">from pylay import State, Label, Button
+
+score = State(0)
+
+# Label updates automatically when score.value changes
+label = Label(score, font_size=32, ...)
+
+# Change the value from anywhere
+score.value += 1       # label re-renders on next frame
+score.set(100)         # same thing</code></pre>
+
+      <h3 id="modes">Managed vs embedded mode</h3>
+      <p>PyLay can own the pygame window (<strong>managed mode</strong>) or be embedded in an existing loop (<strong>embedded mode</strong>).</p>
+      <table class="param-table">
+        <thead><tr><th>Mode</th><th>When to use</th><th>How</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">Managed</td><td>Building a standalone PyLay app</td><td><code>App(managed_display=True)</code>, call <code>app.run()</code></td></tr>
+          <tr><td class="col-name">Embedded</td><td>Adding PyLay UI to an existing pygame loop (e.g. Pianove)</td><td><code>App(managed_display=False)</code>, call <code>app.attach(surface)</code>, then <code>app.process_events(events)</code> and <code>app.frame(dt)</code> each tick</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="how-to-learn">
+      <h2>Recommended learning path</h2>
+      <p>PyLay has a lot of surface area. Work through these steps in order — each one introduces the next concept naturally.</p>
+
+      <h3>Step 1 — Hello World: App, Label, Button</h3>
+      <p>The simplest PyLay app. Learn how <code>App</code>, <code>VStack</code>, and <code>add_child()</code> work.</p>
+      <pre><code class="language-python">from pylay import App, VStack, Label, Button
+
+app = App("Hello", 800, 600, dark_mode=True)
+
+root = VStack(spacing=16, padding=32,
+              anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+
+root.add_child(Label("Hello, PyLay!", font_size=28, bold=True,
+                     anchor="top_left", x=0, y=0, width=1.0, height=40))
+root.add_child(Button("Click me", on_click=lambda: print("clicked"),
+                      anchor="top_left", x=0, y=0, width=160, height=44))
+
+app.set_root(root)
+app.run()</code></pre>
+
+      <h3>Step 2 — State: reactive labels and counters</h3>
+      <p>Add reactive state so the UI updates without manual refresh calls.</p>
+      <pre><code class="language-python">from pylay import App, VStack, Label, Button, State
+
+app = App("Counter", 600, 400)
+count = State(0)
+
+root = VStack(spacing=12, padding=24,
+              anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+root.add_child(Label(count, font_size=48, bold=True,
+                     anchor="top_left", x=0, y=0, width=1.0, height=72))
+root.add_child(Button("+ 1", on_click=lambda: count.set(count.value + 1),
+                      anchor="top_left", x=0, y=0, width=120, height=44))
+root.add_child(Button("Reset", on_click=lambda: count.set(0),
+                      anchor="top_left", x=0, y=0, width=120, height=44))
+
+app.set_root(root)
+app.run()</code></pre>
+
+      <h3>Step 3 — Controls: Switch, Slider, TextField</h3>
+      <p>Add interactive input widgets backed by State.</p>
+      <pre><code class="language-python">from pylay import App, VStack, Label, Switch, Slider, State, iOSTheme
+
+app = App("Settings", 900, 700)
+
+dark = State(True)
+volume = State(0.75)
+
+def on_dark_change(v):
+    dark.set(v)
+    app.apply_theme(v)
+
+root = VStack(spacing=20, padding=32,
+              anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+
+root.add_child(Label("Dark Mode", font_size=16,
+                     anchor="top_left", x=0, y=0, width=1.0, height=28))
+root.add_child(Switch(value=dark, on_change=on_dark_change,
+                      anchor="top_left", x=0, y=0))
+
+root.add_child(Label("Volume", font_size=16,
+                     anchor="top_left", x=0, y=0, width=1.0, height=28))
+root.add_child(Slider(value=volume, min_val=0.0, max_val=1.0,
+                      anchor="top_left", x=0, y=0, width=1.0, height=30))
+
+app.set_root(root)
+app.run()</code></pre>
+
+      <h3>Step 4 — PageRouter: multiple screens</h3>
+      <p>Use <code>PageRouter</code> for a multi-screen application. Page builder functions return a fresh widget tree each time they are called.</p>
+      <pre><code class="language-python">from pylay import App, PageRouter, VStack, Label, Button
+
+app = App("Multi-Screen", 1024, 768)
+
+def home():
+    root = VStack(padding=32, anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+    root.add_child(Label("Home", font_size=28, bold=True,
+                         anchor="top_left", x=0, y=0, width=1.0, height=48))
+    root.add_child(Button("Go to Settings",
+                          on_click=lambda: router.navigate("settings"),
+                          anchor="top_left", x=0, y=0, width=200, height=44))
+    return root
+
+def settings():
+    root = VStack(padding=32, anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+    root.add_child(Label("Settings", font_size=28, bold=True,
+                         anchor="top_left", x=0, y=0, width=1.0, height=48))
+    root.add_child(Button("← Back",
+                          on_click=lambda: router.navigate("home"),
+                          anchor="top_left", x=0, y=0, width=120, height=44))
+    return root
+
+router = PageRouter(
+    pages={"home": home, "settings": settings},
+    initial_page="home",
+    anchor="top_left", x=0, y=0, width=1.0, height=1.0,
+)
+app.set_root(router)
+router.navigate("home")
+app.run()</code></pre>
+
+      <div class="doc-image-placeholder">
+        <strong>Screenshot: Multi-screen app with PageRouter slide transition</strong>
+        <span>Add docs/img/pylay-router-demo.png</span>
+      </div>
+
+      <h3>Step 5 — Theme switching</h3>
+      <p>Add a dark/light toggle. All widgets automatically re-render when <code>app.apply_theme()</code> is called.</p>
+      <pre><code class="language-python">from pylay import App, VStack, Switch, Label, iOSTheme, State
+
+app = App("Theme", 800, 600, dark_mode=True)
+dark = State(True)
+
+root = VStack(padding=24, anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+root.add_child(Label("Dark mode", font_size=15,
+                     anchor="top_left", x=0, y=0, width=1.0, height=26))
+root.add_child(Switch(
+    value=dark,
+    on_change=lambda v: (dark.set(v), app.apply_theme(v)),
+    anchor="top_left", x=0, y=0,
+))
+
+app.set_root(root)
+app.run()</code></pre>
+    </section>
+
+    <section class="doc-section" id="pitfalls">
+      <h2>Common pitfalls</h2>
+      <table class="param-table">
+        <thead><tr><th>Pitfall</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">Widget shows in wrong position</td><td>anchor/x/y not matching intent</td><td>Check: anchor is the reference corner, x/y are offsets from it</td></tr>
+          <tr><td class="col-name">State change doesn't update label</td><td>Passed a string literal instead of a State object</td><td>Pass <code>State("initial")</code>, not <code>"initial"</code></td></tr>
+          <tr><td class="col-name">VStack children overflow but no scroll</td><td>height spec is 0 or not set</td><td>Give the VStack an explicit height (<code>1.0</code> for full parent)</td></tr>
+          <tr><td class="col-name">Button click fires in embedded mode but nothing happens</td><td>process_events() not called each frame</td><td>Call <code>app.process_events(pg.event.get())</code> every frame</td></tr>
+          <tr><td class="col-name">FilePicker does nothing</td><td>Not added to the widget tree</td><td>Call <code>root.add_child(picker)</code> even though it is invisible</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="doc-nav-footer">
+      <div></div>
+      <a href="app-core.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">App &amp; UIElement →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — Music Notation Renderer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/docs.css">
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="index.html#story">Story</a>
+    <a href="docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="overview-body">
+<div class="overview-content">
+  <div class="overview-header">
+    <div>
+      <h1>PyLute</h1>
+      <p class="overview-desc">A music notation rendering library for pygame. PyLute parses MusicXML files and draws proportional, engraved sheet music on any pygame surface — clef symbols, key signatures, time signatures, beams, accidentals, and ledger lines, all using the Bravura SMuFL font.</p>
+      <p class="overview-desc">PyLute is used inside Pianove to display the sheet music view, but it is a fully independent library that can be embedded in any pygame application.</p>
+      <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+        <a href="pylute/getting-started.html" class="btn btn-primary">Get Started →</a>
+        <a href="pylute/score.html" class="btn btn-outline">Score API</a>
+      </div>
+    </div>
+    <div class="overview-meta">
+      <div class="overview-meta-row"><span>Import</span><span>import pylute</span></div>
+      <div class="overview-meta-row"><span>Python</span><span>3.10 +</span></div>
+      <div class="overview-meta-row"><span>Dependency</span><span>pygame, pygame.freetype</span></div>
+      <div class="overview-meta-row"><span>Font</span><span>Bravura SMuFL (bundled)</span></div>
+      <div class="overview-meta-row"><span>Input formats</span><span>.xml · .musicxml · .mxl</span></div>
+      <div class="overview-meta-row"><span>License</span><span>MIT</span></div>
+    </div>
+  </div>
+
+  <div class="start-here-banner">
+    <div>
+      <h3>New to PyLute?</h3>
+      <p>The Getting Started guide covers the core concepts, common pitfalls, and a step-by-step tutorial for building your first score from scratch.</p>
+    </div>
+    <a href="pylute/getting-started.html" class="btn btn-primary" style="white-space:nowrap">Getting Started →</a>
+  </div>
+
+  <div class="category-grid">
+    <div class="category-group">
+      <div class="category-group-header">Introduction</div>
+      <ul class="category-link-list">
+        <li><a href="pylute/getting-started.html">Getting Started <span>Concepts, tutorial, pitfalls</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Core Classes</div>
+      <ul class="category-link-list">
+        <li><a href="pylute/score.html">Score <span>Top-level object, draw()</span></a></li>
+        <li><a href="pylute/elements.html">Staff, Bar, Note, Rest <span>Hierarchy and events</span></a></li>
+        <li><a href="pylute/elements.html#notation">Clef, KeySignature, TimeSignature, Brace <span>Notation elements</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">MusicXML</div>
+      <ul class="category-link-list">
+        <li><a href="pylute/musicxml.html">load_musicxml() <span>Import .xml / .mxl files</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Canvas Integration</div>
+      <ul class="category-link-list">
+        <li><a href="pylute/canvas.html">ScoreCanvas <span>Scrollable view for PyLay</span></a></li>
+        <li><a href="pylute/canvas.html#scorepager">ScorePager <span>Paged view with navigation</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group" style="border-bottom:none">
+      <div class="category-group-header">Utilities</div>
+      <ul class="category-link-list">
+        <li><a href="pylute/utilities.html">Pitch Utilities <span>parse_pitch, pitch_to_step</span></a></li>
+        <li><a href="pylute/utilities.html#durations">Durations <span>VALUES dict, get_value()</span></a></li>
+        <li><a href="pylute/utilities.html#font">Font Management <span>set_font_size, get_font</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group" style="border-bottom:none;border-right:none">
+      <div class="category-group-header">Object Model</div>
+      <ul class="category-link-list">
+        <li><a href="pylute/score.html#hierarchy">Score → Staff → Bar → Note/Rest <span>Understanding the hierarchy</span></a></li>
+        <li><a href="pylute/getting-started.html#concepts">Key concepts <span>Surface, layout, reflow</span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="js/landing.js"></script>
+</body>
+</html>

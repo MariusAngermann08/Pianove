@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — pygame UI Framework</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/docs.css">
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="index.html#story">Story</a>
+    <a href="docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="overview-body">
+<div class="overview-content">
+  <div class="overview-header">
+    <div>
+      <h1>PyLay</h1>
+      <p class="overview-desc">An iOS-inspired UI framework for pygame. PyLay provides a hierarchical widget tree, spring-based physics animations, reactive state management, and a complete iOS-style theming system — built entirely on top of pygame without any external UI toolkit.</p>
+      <p class="overview-desc">PyLay powers the entire Pianove interface and is independently usable in any pygame application. It ships with 21 widgets, a page router with animated transitions, and a layout engine that scales to any window size.</p>
+      <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+        <a href="pylay/getting-started.html" class="btn btn-primary">Get Started →</a>
+        <a href="pylay/app-core.html" class="btn btn-outline">App API</a>
+      </div>
+    </div>
+    <div class="overview-meta">
+      <div class="overview-meta-row"><span>Import</span><span>from pylay import *</span></div>
+      <div class="overview-meta-row"><span>Python</span><span>3.10 +</span></div>
+      <div class="overview-meta-row"><span>Dependency</span><span>pygame (Pillow optional)</span></div>
+      <div class="overview-meta-row"><span>Widgets</span><span>21 built-in components</span></div>
+      <div class="overview-meta-row"><span>Theming</span><span>Dark + light, iOS palette</span></div>
+      <div class="overview-meta-row"><span>License</span><span>MIT</span></div>
+    </div>
+  </div>
+
+  <div class="start-here-banner">
+    <div>
+      <h3>New to PyLay?</h3>
+      <p>The Getting Started guide explains the widget tree, layout constraints, reactive state, and spring animation model — with a step-by-step tutorial building a settings screen.</p>
+    </div>
+    <a href="pylay/getting-started.html" class="btn btn-primary" style="white-space:nowrap">Getting Started →</a>
+  </div>
+
+  <div class="category-grid">
+    <div class="category-group">
+      <div class="category-group-header">Introduction</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/getting-started.html">Getting Started <span>Concepts, layout model, tutorial</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Core</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/app-core.html">App <span>Application host, event loop</span></a></li>
+        <li><a href="pylay/app-core.html#uielement">UIElement <span>Base class, layout, animation</span></a></li>
+        <li><a href="pylay/state-animation.html">State <span>Reactive value binding</span></a></li>
+        <li><a href="pylay/state-animation.html#spring">Spring <span>Physics animation solver</span></a></li>
+        <li><a href="pylay/state-animation.html#theme">Theme &amp; ColorPalette <span>iOS colour system</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Layouts</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/layouts.html">FloatLayout <span>Absolute-position container</span></a></li>
+        <li><a href="pylay/layouts.html#vstack">VStack <span>Vertical stack with scroll</span></a></li>
+        <li><a href="pylay/layouts.html#router">PageRouter <span>Animated screen transitions</span></a></li>
+        <li><a href="pylay/layouts.html#sidebar">SidebarDrawer <span>Slide-in side panel</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Widgets — Controls</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/widgets-controls.html">Button, Switch, Slider <span>Tap and toggle inputs</span></a></li>
+        <li><a href="pylay/widgets-controls.html#text">TextField <span>Text input with focus ring</span></a></li>
+        <li><a href="pylay/widgets-controls.html#check">Checkbox, RadioButton <span>Selection controls</span></a></li>
+        <li><a href="pylay/widgets-controls.html#seg">SegmentedControl <span>Tab selector</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Widgets — Display</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/widgets-display.html">Label <span>Static or State-bound text</span></a></li>
+        <li><a href="pylay/widgets-display.html#progress">ProgressBar <span>Animated fill</span></a></li>
+        <li><a href="pylay/widgets-display.html#chart">LineChart <span>Interactive data chart</span></a></li>
+        <li><a href="pylay/widgets-display.html#code">CodeViewer <span>Syntax-highlighted code</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Widgets — Advanced</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/widgets-advanced.html">PygameCanvas <span>Embed raw pygame rendering</span></a></li>
+        <li><a href="pylay/widgets-advanced.html#scroll">ScrollableCanvas <span>Scrollable custom content</span></a></li>
+        <li><a href="pylay/widgets-advanced.html#file">FilePicker <span>Native file dialog</span></a></li>
+        <li><a href="pylay/widgets-advanced.html#more">SlideReveal, HamburgerButton, BottomNav, SideNav, OptionSelector</a></li>
+      </ul>
+    </div>
+    <div class="category-group" style="border-bottom:none">
+      <div class="category-group-header">Utilities</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/utilities.html">Storage <span>Persistent JSON key-value store</span></a></li>
+        <li><a href="pylay/utilities.html#scaling">Scaling <span>UI_SCALE, scaled_px()</span></a></li>
+      </ul>
+    </div>
+    <div class="category-group" style="border-bottom:none;border-right:none">
+      <div class="category-group-header">Concepts</div>
+      <ul class="category-link-list">
+        <li><a href="pylay/getting-started.html#layout-model">Layout model <span>anchor / x / y / width / height</span></a></li>
+        <li><a href="pylay/getting-started.html#state-model">State model <span>Reactive bindings</span></a></li>
+        <li><a href="pylay/getting-started.html#modes">Managed vs embedded mode <span>App ownership of the loop</span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="js/landing.js"></script>
+</body>
+</html>

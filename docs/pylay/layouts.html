@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — Layouts &amp; Router</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html" class="active">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Layouts &amp; Router</h1>
+      <p class="page-subtitle">Container elements that position and scroll their children, plus the animated page router.</p>
+      <div class="page-meta"><span class="meta-item">FloatLayout</span><span class="meta-item">VStack</span><span class="meta-item">PageRouter</span><span class="meta-item">SidebarDrawer</span></div>
+    </div>
+
+    <!-- FloatLayout -->
+    <section class="doc-section" id="floatlayout">
+      <h2>FloatLayout</h2>
+      <p>The standard container. Children position themselves using their own <code>anchor/x/y/width/height</code> specs relative to this container's bounds. Optionally renders a card-style background with rounded corners and a border.</p>
+      <pre><code class="language-python">FloatLayout(
+    anchor="top_left", x=0, y=0, width=1.0, height=1.0,
+    background_color=None,
+    border_radius=12,
+    border_width=0,
+    border_color=None,
+    padding=0,
+)</code></pre>
+      <table class="param-table">
+        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">background_color</td><td class="col-default">None</td><td>Fill color as <code>pygame.Color</code>. <code>None</code> = transparent (no fill drawn).</td></tr>
+          <tr><td class="col-name">border_radius</td><td class="col-default">12</td><td>Corner radius in pixels for the background fill.</td></tr>
+          <tr><td class="col-name">border_width</td><td class="col-default">0</td><td>Stroke width. <code>0</code> = no border drawn.</td></tr>
+          <tr><td class="col-name">padding</td><td class="col-default">0</td><td>Inset all children by this many pixels on every side.</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-python">from pylay import FloatLayout, Button, Label, iOSTheme
+
+# Card panel with themed background
+card = FloatLayout(
+    anchor="center", x=0, y=0, width=0.6, height=0.5,
+    background_color=iOSTheme.secondary_background,
+    border_radius=16,
+    border_width=1,
+    border_color=iOSTheme.fill,
+    padding=20,
+)
+card.add_child(Label("Card content", anchor="top_center", x=0, y=0, width=1.0, height=40))</code></pre>
+    </section>
+
+    <!-- VStack -->
+    <section class="doc-section" id="vstack">
+      <h2>VStack</h2>
+      <p>Stacks visible children vertically in order with a uniform gap. Automatically adds spring-physics scrolling if the total children height exceeds the container. The most commonly used layout in PyLay.</p>
+      <pre><code class="language-python">VStack(
+    spacing=10,
+    padding=15,
+    anchor="top_left", x=0, y=0, width=1.0, height=1.0,
+)</code></pre>
+      <table class="param-table">
+        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">spacing</td><td class="col-default">10</td><td>Pixel gap between consecutive visible children.</td></tr>
+          <tr><td class="col-name">padding</td><td class="col-default">15</td><td>Inset applied to all four sides before laying out children.</td></tr>
+        </tbody>
+      </table>
+      <div class="doc-note"><strong>Scrolling:</strong> VStack inherits from <code>Layout</code> (the scrollable base). If the total child height exceeds the VStack's own height, a scrollbar appears and mouse-wheel scrolling is enabled automatically.</div>
+    </section>
+
+    <!-- PageRouter -->
+    <section class="doc-section" id="router">
+      <h2>PageRouter</h2>
+      <p>A multi-screen router with physics-based slide transitions. Pages are defined as builder functions that return a <code>UIElement</code>. Only the currently active page is instantiated at any time.</p>
+
+      <div class="class-block">
+        <div class="class-block-header"><div class="class-name">class PageRouter</div><div class="class-desc">Screen router with spring-animated slide transitions.</div></div>
+        <div class="class-block-body">
+          <pre><code class="language-python">PageRouter(
+    pages: dict[str, Callable[[], UIElement]] | None = None,
+    initial_page="",
+    anchor="top_left", x=0, y=0, width=1.0, height=1.0,
+)</code></pre>
+          <div class="method-block">
+            <div class="method-sig">navigate(page_name: str, direction="auto", animated=True) → None</div>
+            <p class="method-desc">Transition to a named page. <code>direction</code>: <code>"right"</code> (forward), <code>"left"</code> (backward), <code>"auto"</code> (inferred from registry order). <code>animated=False</code> = instant swap.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">refresh() → None</div>
+            <p class="method-desc">Rebuild the current page with a cross-dissolve + scale animation. Use when a global change (theme, language) requires the page to re-render from scratch.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">reload_current_page(delay=0.0) → None</div>
+            <p class="method-desc">Rebuild the active page. <code>delay &gt; 0</code> defers the rebuild to let running spring animations finish first.</p>
+          </div>
+        </div>
+      </div>
+
+      <pre><code class="language-python">from pylay import App, PageRouter, VStack, Label, Button
+
+app = App("App", 1024, 768)
+
+def home():
+    v = VStack(padding=32, anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+    v.add_child(Label("Home", font_size=28, bold=True,
+                      anchor="top_left", x=0, y=0, width=1.0, height=48))
+    v.add_child(Button("Settings →",
+                       on_click=lambda: router.navigate("settings"),
+                       anchor="top_left", x=0, y=0, width=180, height=44))
+    return v
+
+def settings():
+    v = VStack(padding=32, anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+    v.add_child(Label("Settings", font_size=28, bold=True,
+                      anchor="top_left", x=0, y=0, width=1.0, height=48))
+    v.add_child(Button("← Back",
+                       on_click=lambda: router.navigate("home"),
+                       anchor="top_left", x=0, y=0, width=120, height=44))
+    return v
+
+router = PageRouter({"home": home, "settings": settings}, initial_page="home",
+                    anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+app.set_root(router)
+router.navigate("home")
+app.run()</code></pre>
+    </section>
+
+    <!-- SidebarDrawer -->
+    <section class="doc-section" id="sidebar">
+      <h2>SidebarDrawer</h2>
+      <p>A slide-in side panel that animates in from the left edge over the main content. Typically toggled by a <code>HamburgerButton</code>. See <a href="widgets-advanced.html">Advanced Widgets</a> for the HamburgerButton reference.</p>
+      <pre><code class="language-python">from pylay import SidebarDrawer, HamburgerButton, State
+
+drawer_open = State(False)
+
+drawer = SidebarDrawer(
+    open_state=drawer_open,
+    width=240,
+    # add children to drawer.content
+)
+hamburger = HamburgerButton(
+    open_state=drawer_open,
+    on_toggle=lambda v: drawer_open.set(v),
+    anchor="top_left", x=16, y=16, width=40, height=40,
+)
+app.root.add_child(drawer)
+app.root.add_child(hamburger)</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="state-animation.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">State, Spring &amp; Theme</div>
+      </a>
+      <a href="widgets-controls.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Controls →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

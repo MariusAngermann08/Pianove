@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — Advanced Widgets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html" class="active">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Advanced Widgets</h1>
+      <p class="page-subtitle">Custom rendering, file dialogs, navigation bars, animated panels, and more.</p>
+    </div>
+
+    <!-- PygameCanvas -->
+    <section class="doc-section" id="canvas">
+      <h2>PygameCanvas</h2>
+      <p>Embeds raw pygame rendering inside a PyLay layout. The only widget in PyLay that draws content you control entirely. Three integration styles:</p>
+      <pre><code class="language-python">PygameCanvas(
+    on_draw: Callable[[pygame.Surface, pygame.Rect], None] | None = None,
+    on_event: Callable[[pygame.event.Event, pygame.Rect], bool] | None = None,
+    on_update: Callable[[float, pygame.Rect], None] | None = None,
+    target=None,        # object with .draw(), .handle_event(), .update() methods
+    draw_border=True,
+    anchor="top_left", x=0, y=0, width=200, height=200,
+)</code></pre>
+
+      <h3>Style 1 — Callbacks</h3>
+      <pre><code class="language-python">def my_draw(surface, rect):
+    pygame.draw.circle(surface, (255, 100, 0),
+                       rect.center, min(rect.w, rect.h) // 3)
+
+PygameCanvas(on_draw=my_draw,
+             anchor="center", x=0, y=0, width=200, height=200)</code></pre>
+
+      <h3>Style 2 — Target object (used by PyLute ScoreCanvas)</h3>
+      <pre><code class="language-python">class MyRenderer:
+    def draw(self, surface, rect):
+        # your rendering here
+        pass
+    def handle_event(self, event, rect):
+        return False  # True if event was consumed
+    def update(self, dt, rect):
+        pass
+
+PygameCanvas(target=MyRenderer(), ...)</code></pre>
+
+      <h3>Style 3 — Subclass</h3>
+      <pre><code class="language-python">class MyWidget(PygameCanvas):
+    def draw_content(self, surface, rect):
+        pygame.draw.rect(surface, iOSTheme.accent, rect, border_radius=8)
+    def handle_content_event(self, event, rect):
+        return False
+    def update_content(self, dt, rect):
+        pass</code></pre>
+    </section>
+
+    <!-- ScrollableCanvas -->
+    <section class="doc-section" id="scroll">
+      <h2>ScrollableCanvas</h2>
+      <p>A <code>PygameCanvas</code> with spring-physics vertical scrolling. The target object must implement <code>draw(surface, rect)</code> and <code>content_height(canvas_w) → int</code>.</p>
+      <pre><code class="language-python">ScrollableCanvas(target=my_renderer,
+                 anchor="top_left", x=0, y=0, width=1.0, height=1.0)</code></pre>
+      <p>This is the widget used by PyLute's <code>ScoreCanvas</code>. See the <a href="../pylute/canvas.html">PyLute canvas documentation</a> for a complete example.</p>
+    </section>
+
+    <!-- FilePicker -->
+    <section class="doc-section" id="file">
+      <h2>FilePicker</h2>
+      <p>Zero-size headless widget. Opens a native OS file dialog without blocking the pygame event loop. Must be added to the widget tree to function.</p>
+      <pre><code class="language-python">FilePicker(
+    title="Open file",
+    filters: list[str] | None = None,
+    # filters format: ["Label | *.ext1 *.ext2", "All files | *"]
+)</code></pre>
+      <div class="method-block">
+        <div class="method-sig">pick(on_file: Callable[[str], None]) → None</div>
+        <p class="method-desc">Open the dialog. <code>on_file</code> is called with the selected path, or <code>""</code> if the user cancelled.</p>
+      </div>
+      <pre><code class="language-python">from pylay import FilePicker, Button
+
+picker = FilePicker(
+    title="Open MusicXML",
+    filters=["MusicXML | *.xml *.mxl *.musicxml", "All files | *"],
+)
+root.add_child(picker)   # must be in the tree
+
+btn = Button("Open...",
+             on_click=lambda: picker.pick(lambda p: load_score(p) if p else None),
+             anchor="top_left", x=0, y=0, width=120, height=44)
+root.add_child(btn)</code></pre>
+    </section>
+
+    <!-- OptionSelector -->
+    <section class="doc-section" id="more">
+      <h2>OptionSelector</h2>
+      <pre><code class="language-python">OptionSelector(
+    options: list[tuple[str, Any]],  # [(label, value), ...]
+    value: State,
+    on_change: Callable[[Any], None] | None = None,
+    anchor="top_left", x=0, y=0, width=300,
+    row_height=48, spacing=6, font_size=15,
+)</code></pre>
+      <p>A vertical list of labelled options with a spring-animated accent bar that slides to the selected row. Useful for setting selection where all options are visible simultaneously (e.g. language, difficulty).</p>
+      <pre><code class="language-python">lang = State("en")
+selector = OptionSelector(
+    options=[("English", "en"), ("Deutsch", "de")],
+    value=lang,
+    on_change=lambda v: set_language(v),
+    anchor="top_left", x=0, y=0, width=1.0,
+)</code></pre>
+
+      <h2>SlideReveal</h2>
+      <pre><code class="language-python">SlideReveal(
+    child: UIElement | None = None,
+    max_height=200,
+    visible=True,
+    response=0.38,
+    damping_fraction=1.0,
+)</code></pre>
+      <p>Spring-animates a child element open and closed by interpolating its clipped height. The widget always reserves <code>max_height</code> in the layout.</p>
+      <div class="method-block">
+        <div class="method-sig">reveal(visible: bool) → None</div>
+        <p class="method-desc">Animate open (<code>True</code>) or closed (<code>False</code>).</p>
+      </div>
+
+      <h2>HamburgerButton</h2>
+      <pre><code class="language-python">HamburgerButton(
+    open_state: bool | State = False,
+    on_toggle: Callable[[bool], None] | None = None,
+    anchor="top_left", x=0, y=0, width=40, height=40,
+    active_color=None,
+)</code></pre>
+      <p>Three-bar icon that spring-morphs into an × when <code>open_state</code> is <code>True</code>.</p>
+
+      <h2>BottomNavigationBar</h2>
+      <pre><code class="language-python">BottomNavigationBar(
+    active_tab_state: State,
+    items: list[dict],   # [{"title": str, "icon_fn": Callable[[], Surface]}, ...]
+    on_change: Callable[[int], None] | None = None,
+    height=64,
+    anchor="bottom_left", x=0, y=0, width=1.0, height=64,
+)</code></pre>
+      <p>iOS-style tab bar pinned to the bottom. Selected tabs spring-scale to 1.1×. Pair with a <code>PageRouter</code> for navigation.</p>
+
+      <h2>SideNav</h2>
+      <pre><code class="language-python">SideNav(
+    active_tab_state: State,
+    items: list[dict],
+    on_change: Callable[[int], None] | None = None,
+    width=200,
+    title="",
+    footer_fn: Callable[[], str] | None = None,
+)</code></pre>
+      <p>Vertical sidebar navigation with a header, item list, and an optional footer string. Selected row highlighted with theme accent.</p>
+
+      <h2>EmojiIcon</h2>
+      <pre><code class="language-python">EmojiIcon(
+    char: str,   # e.g. "🎵"
+    size=32,
+    color=None,  # tint color, defaults to iOSTheme.label
+    anchor="top_left", x=0, y=0,
+)</code></pre>
+      <p>Renders a single emoji using NotoColorEmoji via Pillow. Falls back gracefully (nothing rendered) if Pillow is not installed.</p>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="widgets-display.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Display Widgets</div>
+      </a>
+      <a href="utilities.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Storage &amp; Scaling →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

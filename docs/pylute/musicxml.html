@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — load_musicxml()</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylute.html" class="sidebar-back">← PyLute</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core Classes</span>
+    <a href="score.html">Score</a>
+    <a href="elements.html">Staff, Bar, Note, Rest</a>
+    <a href="elements.html#notation">Clef, Key, Time, Brace</a>
+    <span class="sidebar-group-label">MusicXML</span>
+    <a href="musicxml.html" class="active">load_musicxml()</a>
+    <span class="sidebar-group-label">Canvas</span>
+    <a href="canvas.html">ScoreCanvas &amp; ScorePager</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Pitch, Durations, Font</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>load_musicxml()</h1>
+      <p class="page-subtitle">Import a MusicXML file and return a fully populated Score object ready to render.</p>
+      <div class="page-meta"><span class="meta-item">pylute.load_musicxml</span><span class="meta-item">musicxml.py</span></div>
+    </div>
+
+    <section class="doc-section" id="signature">
+      <h2>Signature</h2>
+      <pre><code class="language-python">load_musicxml(
+    filepath: str,
+    surface=None,
+    length=1100,
+    bars_per_system=None,
+) -> Score</code></pre>
+      <table class="param-table">
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">filepath</td><td class="col-type">str</td><td></td><td>Path to a <code>.xml</code>, <code>.musicxml</code>, or compressed <code>.mxl</code> file.</td></tr>
+          <tr><td class="col-name">surface</td><td class="col-type">pygame.Surface | None</td><td class="col-default">None</td><td>Render target. Can be assigned later via <code>score.surface = screen</code>.</td></tr>
+          <tr><td class="col-name">length</td><td class="col-type">int</td><td class="col-default">1100</td><td>Staff width in pixels passed to the resulting Score.</td></tr>
+          <tr><td class="col-name">bars_per_system</td><td class="col-type">int | None</td><td class="col-default">None</td><td>Override automatic bars-per-system calculation.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="what-is-imported">
+      <h2>What is imported</h2>
+      <p>The importer reads the MusicXML file and populates a Score object with notes and rests. Metadata fields (<code>score.title</code>, <code>score.composer</code>, etc.) are set from the MusicXML header if present.</p>
+      <p>Supported:</p>
+      <ul>
+        <li>All standard note durations (whole through sixteenth, dotted variants)</li>
+        <li>Rests of all durations</li>
+        <li>Key signatures (all major and minor keys)</li>
+        <li>Time signatures (any numerator/denominator combination)</li>
+        <li>Treble and bass clef detection from the first part</li>
+        <li>Compressed <code>.mxl</code> files (automatically decompressed)</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="simplifications">
+      <h2>Simplifications applied</h2>
+      <div class="doc-warning">
+        <strong>PyLute is a renderer, not a full MusicXML validator.</strong> Several elements of the MusicXML format are intentionally simplified or ignored to keep the renderer scope manageable.
+      </div>
+      <table class="param-table">
+        <thead><tr><th>MusicXML element</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">Multiple &lt;part&gt; elements</td><td>Only the first part is imported. Multi-instrument scores show only instrument 1.</td></tr>
+          <tr><td class="col-name">Chords</td><td>Only the first note of each chord is kept. Simultaneous notes are dropped.</td></tr>
+          <tr><td class="col-name">Multiple voices</td><td>Only voice 1 is imported. Voice 2, 3, 4 are ignored.</td></tr>
+          <tr><td class="col-name">Grace notes</td><td>Skipped entirely.</td></tr>
+          <tr><td class="col-name">Tuplets / triplets</td><td>Skipped (duration does not fit the beat grid).</td></tr>
+          <tr><td class="col-name">Ties and slurs</td><td>Ignored — tied notes appear as two separate notes.</td></tr>
+          <tr><td class="col-name">Dynamics, articulations, lyrics</td><td>Not rendered.</td></tr>
+          <tr><td class="col-name">Repeats and da capo</td><td>Not followed — score renders linearly.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="finding-musicxml">
+      <h2>Finding MusicXML files</h2>
+      <p>MusicXML files are widely available:</p>
+      <ul>
+        <li><strong>MuseScore</strong> (<code>musescore.com</code>) — the largest public collection. Download individual scores as <code>.mxl</code>.</li>
+        <li><strong>IMSLP</strong> — public-domain classical music in MusicXML format under each score's "Files" section.</li>
+        <li><strong>MuseScore Desktop</strong> — export any score you create or edit as <code>.musicxml</code>.</li>
+        <li><strong>Flat.io</strong> — online notation editor that exports to MusicXML.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="example">
+      <h2>Example</h2>
+      <pre><code class="language-python">import pygame as pg
+import pylute
+
+pg.init()
+screen = pg.display.set_mode((1200, 800), pg.RESIZABLE)
+
+try:
+    score = pylute.load_musicxml("bach_prelude.xml", surface=screen, length=1100)
+    print(score.title)       # "Prelude in C Major"
+    print(score.composer)    # "Johann Sebastian Bach"
+    print(len(score.staffs)) # 2 (treble + bass for piano)
+except FileNotFoundError:
+    print("File not found")
+    pg.quit()
+    exit()
+
+clock = pg.time.Clock()
+while True:
+    for event in pg.event.get():
+        if event.type == pg.QUIT: pg.quit(); exit()
+        if event.type == pg.VIDEORESIZE:
+            screen = pg.display.set_mode(event.size, pg.RESIZABLE)
+            score.surface = screen
+    screen.fill((255, 255, 255))
+    score.draw()
+    pg.display.flip()
+    clock.tick(60)</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="elements.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Staff, Bar, Note, Rest</div>
+      </a>
+      <a href="canvas.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">ScoreCanvas &amp; ScorePager →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — Display Widgets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html" class="active">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Display Widgets</h1>
+      <p class="page-subtitle">Non-interactive display elements: Label, ProgressBar, LineChart, CodeViewer.</p>
+    </div>
+
+    <!-- Label -->
+    <section class="doc-section" id="label">
+      <h2>Label</h2>
+      <pre><code class="language-python">Label(
+    text: str | State,
+    font_size=16,
+    font_name="Arial",
+    color=None,         # defaults to iOSTheme.label
+    bold=False,
+    wrap_width=None,    # None = single line; int = word-wrap at this pixel width
+    anchor="top_left", x=0, y=0, width=100, height=30,
+)</code></pre>
+      <p>Pass a <code>State</code> object as <code>text</code> and the label updates automatically whenever the state changes. The value is converted to string via <code>str()</code>.</p>
+      <pre><code class="language-python">from pylay import Label, State
+
+score = State(0)
+lbl = Label(score, font_size=32, bold=True,
+            anchor="top_left", x=0, y=0, width=1.0, height=56)
+
+# Long text with wrapping:
+desc = Label(
+    "This is a long description that will wrap at 400 pixels.",
+    wrap_width=400,
+    color=iOSTheme.secondary_label,
+    anchor="top_left", x=0, y=0, width=1.0, height=80,
+)</code></pre>
+    </section>
+
+    <!-- ProgressBar -->
+    <section class="doc-section" id="progress">
+      <h2>ProgressBar</h2>
+      <pre><code class="language-python">ProgressBar(
+    progress: float | State = 0.0,  # 0.0 to 1.0
+    anchor="top_left", x=0, y=0, width=200, height=8,
+    active_color=None,              # defaults to ColorPalette.BLUE
+)</code></pre>
+      <p>Animates the fill from its current position to the target value. When <code>progress</code> is a <code>State</code>, the bar tracks it automatically.</p>
+      <pre><code class="language-python">lesson_progress = State(0.0)
+bar = ProgressBar(progress=lesson_progress,
+                  active_color=ColorPalette.GREEN,
+                  anchor="top_left", x=0, y=0, width=1.0, height=6)
+
+# Update progress:
+lesson_progress.value = notes_correct / notes_total</code></pre>
+    </section>
+
+    <!-- LineChart -->
+    <section class="doc-section" id="chart">
+      <h2>LineChart</h2>
+      <pre><code class="language-python">LineChart(
+    data: list[float],
+    labels: list[str] | None = None,
+    active_color=None,
+    title="Metric Trend",
+    anchor="top_left", x=0, y=0, width=400, height=220,
+)</code></pre>
+      <p>Renders a line chart that morphs up from zero on load using a spring animation. An interactive tooltip tracks the mouse along the line and displays the exact value at that position. X-axis labels (if provided) appear below the chart.</p>
+      <pre><code class="language-python">from pylay import LineChart, ColorPalette
+
+chart = LineChart(
+    data=[42, 58, 61, 74, 88, 79, 95],
+    labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    active_color=ColorPalette.TEAL,
+    title="Weekly Accuracy (%)",
+    anchor="top_left", x=0, y=0, width=1.0, height=240,
+)</code></pre>
+    </section>
+
+    <!-- CodeViewer -->
+    <section class="doc-section" id="code">
+      <h2>CodeViewer</h2>
+      <pre><code class="language-python">CodeViewer(
+    code_text: str | State,
+    anchor="top_left", x=0, y=0, width=500, height=300,
+)</code></pre>
+      <p>A scrollable Python code display with syntax highlighting (keywords, strings, numbers, comments) and a gutter with line numbers. Useful for displaying lesson code or error messages. Pass a <code>State</code> to update the displayed code dynamically.</p>
+      <pre><code class="language-python">from pylay import CodeViewer, State
+
+code = State("# Your code here\nprint('Hello, world!')")
+
+viewer = CodeViewer(
+    code_text=code,
+    anchor="top_left", x=0, y=0, width=1.0, height=0.6,
+)
+
+# Update dynamically:
+code.set("def greet(name):\n    print(f'Hello, {name}!')")</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="widgets-controls.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Control Widgets</div>
+      </a>
+      <a href="widgets-advanced.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Advanced Widgets →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

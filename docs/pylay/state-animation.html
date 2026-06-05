@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — State, Spring &amp; Theme</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html" class="active">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>State, Spring &amp; Theme</h1>
+      <p class="page-subtitle">The reactive data layer, the spring physics animation solver, and the iOS-inspired colour theming system.</p>
+      <div class="page-meta"><span class="meta-item">pylay.State</span><span class="meta-item">pylay.Spring</span><span class="meta-item">pylay.iOSTheme</span><span class="meta-item">pylay.ColorPalette</span></div>
+    </div>
+
+    <!-- State -->
+    <section class="doc-section" id="state">
+      <h2>State</h2>
+      <p>An observable value container. Any widget that accepts a <code>State</code> object subscribes to it and re-renders automatically when the value changes. Use <code>State</code> any time you have data that multiple widgets need to reflect, or that changes at runtime.</p>
+
+      <div class="class-block">
+        <div class="class-block-header"><div class="class-name">class State</div><div class="class-desc">Observable value. Fires bound callbacks on change.</div></div>
+        <div class="class-block-body">
+          <pre><code class="language-python">State(initial_value: Any)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Property / Method</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">value</td><td>Read or write the current value. Writing fires all listeners if the value changed (uses <code>!=</code> comparison).</td></tr>
+              <tr><td class="col-name">set(new_val)</td><td>Alias for <code>.value = new_val</code>.</td></tr>
+              <tr><td class="col-name">bind(callback)</td><td>Register a callback. Called immediately with the current value, then on every future change.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <pre><code class="language-python">from pylay import State, Label, Slider
+
+volume = State(0.8)
+
+# Widgets auto-bind to state:
+label  = Label(volume, font_size=14, ...)   # shows "0.8", updates automatically
+slider = Slider(value=volume, ...)           # slider position tracks state
+
+# Manual bind:
+volume.bind(lambda v: print(f"Volume changed to {v:.2f}"))
+
+# Update from anywhere:
+volume.value = 0.5     # label and slider both update; callback fires
+volume.set(1.0)        # same effect</code></pre>
+
+      <h3>State with non-widget code</h3>
+      <pre><code class="language-python">from pylay import State
+
+is_playing = State(False)
+
+def on_play_change(playing):
+    if playing:
+        audio.start()
+    else:
+        audio.stop()
+
+is_playing.bind(on_play_change)
+
+# Toggle from a button:
+btn = Button("Play / Pause",
+             on_click=lambda: is_playing.set(not is_playing.value), ...)</code></pre>
+    </section>
+
+    <!-- Spring -->
+    <section class="doc-section" id="spring">
+      <h2>Spring</h2>
+      <p>An analytical spring physics solver. All PyLay animations — button press scale, tab bar sliding, switch toggle, focus ring expansion — run through this class. Use it directly for custom animations.</p>
+
+      <div class="class-block">
+        <div class="class-block-header"><div class="class-name">class Spring</div></div>
+        <div class="class-block-body">
+          <pre><code class="language-python">Spring(value=0.0, response=0.35, damping_fraction=0.7, velocity=0.0)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">value</td><td>Initial position. The spring starts here.</td></tr>
+              <tr><td class="col-name">response</td><td>Natural period in seconds (SwiftUI-style). Lower values = faster spring. Typical range: 0.2–0.6.</td></tr>
+              <tr><td class="col-name">damping_fraction</td><td>Bounciness. <code>1.0</code> = critically damped (no overshoot). <code>0.7</code> = slight bounce. <code>0.0</code> = infinite oscillation.</td></tr>
+              <tr><td class="col-name">velocity</td><td>Initial velocity. Use for momentum-preserving animations.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="method-block">
+            <div class="method-sig">update(dt: float) → float</div>
+            <p class="method-desc">Advance the spring by <code>dt</code> seconds using an exact analytical solution (stable at any frame rate). Returns the new position.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">snap_to(value: float) → None</div>
+            <p class="method-desc">Instantly jump to <code>value</code> with zero velocity. Use to skip animations when needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <pre><code class="language-python">from pylay import Spring
+
+# Custom animation: fade in an overlay (0 → 1 over ~0.3s)
+fade = Spring(value=0.0, response=0.3, damping_fraction=0.85)
+fade.target = 1.0
+
+# In your update loop:
+def update(dt):
+    alpha = fade.update(dt)
+    overlay.set_alpha(int(alpha * 255))</code></pre>
+    </section>
+
+    <!-- Theme -->
+    <section class="doc-section" id="theme">
+      <h2>Theme &amp; ColorPalette</h2>
+      <p>The global <code>iOSTheme</code> instance holds all theme-aware colours. Widget renderers read from it directly. Call <code>app.apply_theme(dark)</code> to switch — all cached colours are invalidated and the next frame redraws everything.</p>
+
+      <h3>iOSTheme colour properties</h3>
+      <table class="param-table">
+        <thead><tr><th>Property</th><th>Light mode</th><th>Dark mode</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">background</td><td>White</td><td>Near-black</td></tr>
+          <tr><td class="col-name">secondary_background</td><td>Light grey</td><td>Dark grey</td></tr>
+          <tr><td class="col-name">tertiary_background</td><td>Very light grey</td><td>Darker grey</td></tr>
+          <tr><td class="col-name">label</td><td>Black</td><td>White</td></tr>
+          <tr><td class="col-name">secondary_label</td><td>Dark grey</td><td>Light grey</td></tr>
+          <tr><td class="col-name">tertiary_label</td><td>Medium grey</td><td>Medium grey</td></tr>
+          <tr><td class="col-name">fill / fill_secondary / fill_tertiary</td><td colspan="2">Semi-transparent fills, progressively lighter</td></tr>
+          <tr><td class="col-name">accent</td><td colspan="2">Blue (ColorPalette.BLUE) — primary interactive colour</td></tr>
+          <tr><td class="col-name">success / warning / danger</td><td colspan="2">Green / Orange / Red</td></tr>
+        </tbody>
+      </table>
+
+      <h3>ColorPalette constants</h3>
+      <pre><code class="language-python">from pylay import ColorPalette
+
+ColorPalette.BLUE    # pygame.Color(0, 122, 255)
+ColorPalette.GREEN   # pygame.Color(52, 199, 89)
+ColorPalette.RED     # pygame.Color(255, 59, 48)
+ColorPalette.ORANGE  # pygame.Color(255, 149, 0)
+ColorPalette.YELLOW  # pygame.Color(255, 204, 0)
+ColorPalette.TEAL    # pygame.Color(48, 176, 199)
+ColorPalette.PURPLE  # pygame.Color(175, 82, 222)
+ColorPalette.PINK    # pygame.Color(255, 45, 85)
+
+# Use in widget constructors:
+switch = Switch(active_color=ColorPalette.TEAL, ...)</code></pre>
+
+      <h3>Reading theme colours in custom rendering</h3>
+      <pre><code class="language-python">from pylay import iOSTheme, PygameCanvas
+import pygame as pg
+
+class MyWidget(PygameCanvas):
+    def draw_content(self, surface, rect):
+        # Always read from iOSTheme — auto-updates on theme switch
+        bg   = iOSTheme.secondary_background
+        text = iOSTheme.label
+        pg.draw.rect(surface, bg, rect, border_radius=8)
+        # ... render text ...</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="app-core.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">App &amp; UIElement</div>
+      </a>
+      <a href="layouts.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Layouts &amp; Router →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

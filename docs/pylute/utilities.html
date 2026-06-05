@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — Utilities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylute.html" class="sidebar-back">← PyLute</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core Classes</span>
+    <a href="score.html">Score</a>
+    <a href="elements.html">Staff, Bar, Note, Rest</a>
+    <a href="elements.html#notation">Clef, Key, Time, Brace</a>
+    <span class="sidebar-group-label">MusicXML</span>
+    <a href="musicxml.html">load_musicxml()</a>
+    <span class="sidebar-group-label">Canvas</span>
+    <a href="canvas.html">ScoreCanvas &amp; ScorePager</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html" class="active">Pitch, Durations, Font</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Utilities</h1>
+      <p class="page-subtitle">Pitch parsing, duration values, and font size management.</p>
+    </div>
+
+    <section class="doc-section" id="pitch">
+      <h2>Pitch utilities</h2>
+      <p>These functions convert between pitch string notation and internal step values used for vertical positioning on the staff.</p>
+
+      <div class="method-block">
+        <div class="method-sig">parse_pitch(pitch_str: str) → tuple[str, str, int]</div>
+        <p class="method-desc">Decompose a scientific pitch string into <code>(step, accidental, octave)</code>.</p>
+      </div>
+      <pre><code class="language-python">from pylute import parse_pitch
+
+parse_pitch("C4")   # ("C", "", 4)
+parse_pitch("F#4")  # ("F", "#", 4)
+parse_pitch("Bb3")  # ("B", "b", 3)
+parse_pitch("Eb5")  # ("E", "b", 5)</code></pre>
+
+      <div class="method-block">
+        <div class="method-sig">pitch_to_step(pitch_str: str, clef="treble") → int</div>
+        <p class="method-desc">Convert a pitch string to a staff step integer used for vertical note positioning. Step 0 = bottom staff line, step 1 = first space, step 4 = top line. Steps below 0 or above 8 produce ledger lines.</p>
+      </div>
+      <pre><code class="language-python">from pylute import pitch_to_step
+
+pitch_to_step("E4", "treble")  # 0  (bottom line in treble clef)
+pitch_to_step("G4", "treble")  # 1  (first space)
+pitch_to_step("B4", "treble")  # 2  (second line)
+pitch_to_step("G2", "bass")    # 0  (bottom line in bass clef)</code></pre>
+
+      <div class="method-block">
+        <div class="method-sig">parse_key(key: str | int) → int</div>
+        <p class="method-desc">Convert a key name to a signed accidental count. Negative = flats, positive = sharps. Integers pass through unchanged.</p>
+      </div>
+      <pre><code class="language-python">from pylute import parse_key
+
+parse_key("C")   # 0
+parse_key("G")   # 1
+parse_key("Bb")  # -2
+parse_key("F#")  # 6
+parse_key(-3)    # -3 (pass-through)</code></pre>
+    </section>
+
+    <section class="doc-section" id="durations">
+      <h2>Durations</h2>
+      <p>The <code>VALUES</code> dictionary maps duration type strings to their fractional beat value, where 1.0 = one whole note. A 4/4 bar has capacity 1.0; a 3/4 bar has capacity 0.75.</p>
+
+      <table class="const-table">
+        <thead><tr><th>Duration type</th><th>Beat value</th><th>Fills a 4/4 bar</th></tr></thead>
+        <tbody>
+          <tr><td>whole</td><td>1.0</td><td>Exactly</td></tr>
+          <tr><td>half</td><td>0.5</td><td>2 per bar</td></tr>
+          <tr><td>quarter</td><td>0.25</td><td>4 per bar</td></tr>
+          <tr><td>eighth</td><td>0.125</td><td>8 per bar</td></tr>
+          <tr><td>sixteenth</td><td>0.0625</td><td>16 per bar</td></tr>
+          <tr><td>dotted_half</td><td>0.75</td><td>1 per 3/4 bar</td></tr>
+          <tr><td>dotted_quarter</td><td>0.375</td><td>—</td></tr>
+          <tr><td>dotted_eighth</td><td>0.1875</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-python">from pylute import VALUES, get_value
+
+get_value("quarter")       # 0.25
+get_value("dotted_half")   # 0.75
+
+# You can also access the dict directly:
+VALUES["eighth"]           # 0.125</code></pre>
+    </section>
+
+    <section class="doc-section" id="font">
+      <h2>Font management</h2>
+      <p>PyLute uses the <strong>Bravura SMuFL</strong> music font for all glyphs. Font size is global and controls the visual scale of all notation elements.</p>
+
+      <table class="param-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">get_font_size() → int</td><td>Current global font size in points. Default: 70.</td></tr>
+          <tr><td class="col-name">set_font_size(size: int) → None</td><td>Set the global font size. Clamped to a minimum of 28. Affects the rendered size of all glyphs and staff spacing. Call before creating any Score.</td></tr>
+          <tr><td class="col-name">get_font() → pygame.freetype.Font</td><td>Returns the cached Bravura font instance at the current size.</td></tr>
+          <tr><td class="col-name">make_font(size: int) → pygame.freetype.Font</td><td>Create a new font instance at a specific size, independent of the global setting.</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-python">from pylute.font import set_font_size, get_font_size
+
+# Smaller notation (good for dense scores or small windows)
+set_font_size(50)
+print(get_font_size())  # 50
+
+# Back to default
+set_font_size(70)</code></pre>
+
+      <div class="doc-note">
+        <strong>Call set_font_size() before creating any Score.</strong> Changing the font size after scores are created does not retroactively update their layout — create a new Score after changing font size.
+      </div>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="canvas.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">ScoreCanvas &amp; ScorePager</div>
+      </a>
+      <div></div>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

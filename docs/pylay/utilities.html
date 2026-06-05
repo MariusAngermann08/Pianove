@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — Storage &amp; Scaling</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html" class="active">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Storage &amp; Scaling</h1>
+      <p class="page-subtitle">Persistent key-value storage and the window-scale utility used for resolution-independent layouts.</p>
+      <div class="page-meta"><span class="meta-item">pylay.Storage</span><span class="meta-item">pylay.UI_SCALE</span><span class="meta-item">pylay.scaled_px</span></div>
+    </div>
+
+    <!-- Storage -->
+    <section class="doc-section" id="storage">
+      <h2>Storage</h2>
+      <p>A simple persistent key-value store backed by a JSON file in the user's home directory (<code>~/.{app_name}/storage.json</code>). All reads and writes are synchronous. Use it for preferences, progress, and any data that must survive application restarts.</p>
+
+      <div class="class-block">
+        <div class="class-block-header"><div class="class-name">class Storage</div><div class="class-desc">Persistent JSON key-value store.</div></div>
+        <div class="class-block-body">
+          <pre><code class="language-python">Storage(app_name="app")</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Method</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">get(key, default=None)</td><td>Read a value by key. Returns <code>default</code> if the key does not exist.</td></tr>
+              <tr><td class="col-name">set(key, value)</td><td>Write a value and immediately flush to disk.</td></tr>
+              <tr><td class="col-name">remove(key)</td><td>Delete a key. No-op if the key does not exist.</td></tr>
+              <tr><td class="col-name">clear()</td><td>Delete all stored keys.</td></tr>
+              <tr><td class="col-name">"key" in store</td><td>Check whether a key exists (<code>__contains__</code>).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <pre><code class="language-python">from pylay import Storage
+
+store = Storage("Pianove")
+
+# Save user preferences
+store.set("dark_mode", True)
+store.set("volume", 0.8)
+store.set("streak", 7)
+
+# Read on next launch
+dark = store.get("dark_mode", default=True)
+vol  = store.get("volume", default=1.0)
+
+# Check existence
+if "streak" in store:
+    print(f"Streak: {store.get('streak')}")
+
+# Reset a value
+store.remove("streak")
+store.clear()   # wipe everything</code></pre>
+
+      <div class="doc-note">
+        Values must be JSON-serialisable: <code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>None</code>, <code>list</code>, or <code>dict</code>. Passing a <code>pygame.Color</code> or other non-serialisable type will raise a <code>TypeError</code>.
+      </div>
+    </section>
+
+    <!-- Scaling -->
+    <section class="doc-section" id="scaling">
+      <h2>UI Scaling</h2>
+      <p>PyLay scales the UI proportionally to the window size relative to a reference resolution (default 1024 × 768). The global <code>UI_SCALE</code> factor is applied automatically to font sizes and pixel values when you use the <code>scaled_*</code> functions.</p>
+
+      <table class="param-table">
+        <thead><tr><th>Function / Variable</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">UI_SCALE</td><td>Global float scale factor. <code>1.0</code> at the reference resolution (1024 × 768). Read-only; updated by <code>set_window_size()</code>.</td></tr>
+          <tr><td class="col-name">set_window_size(w, h, ref_w=1024, ref_h=768)</td><td>Recompute <code>UI_SCALE</code> for a new window size. Call in every resize handler.</td></tr>
+          <tr><td class="col-name">scaled_px(base_px)</td><td>Convert a base pixel value to scaled pixels. Returns an <code>int</code>.</td></tr>
+          <tr><td class="col-name">scaled_font_size(base_size)</td><td>Convert a base font size to scaled size. Returns an <code>int</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-python">from pylay import App, set_window_size, scaled_px, scaled_font_size
+
+app = App("Scalable App", 1024, 768)
+
+def on_resize(w, h):
+    set_window_size(w, h)
+    # Re-solve all layout constraints for the new scale:
+    app.root.layout()
+
+app.on_resize = on_resize
+
+# Use scaled values in your custom drawing:
+padding = scaled_px(20)          # 20px at 1024×768, ~30px at 1536×1152
+font    = scaled_font_size(16)   # proportional font size</code></pre>
+
+      <div class="doc-note">
+        PyLay's built-in widgets already use <code>UI_SCALE</code> internally. You only need <code>scaled_px</code> when doing custom rendering in a <code>PygameCanvas</code> or <code>UIElement.render()</code> override.
+      </div>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="widgets-advanced.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Advanced Widgets</div>
+      </a>
+      <div></div>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

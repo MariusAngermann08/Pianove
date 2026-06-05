@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — App &amp; UIElement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html" class="active">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>App &amp; UIElement</h1>
+      <p class="page-subtitle">The application host and the base class shared by every widget and layout.</p>
+      <div class="page-meta"><span class="meta-item">pylay.App</span><span class="meta-item">pylay.UIElement</span><span class="meta-item">core/app.py · core/element.py</span></div>
+    </div>
+
+    <!-- App -->
+    <section class="doc-section" id="app">
+      <h2>App</h2>
+      <div class="class-block">
+        <div class="class-block-header">
+          <div class="class-name">class App</div>
+          <div class="class-desc">Application host. Manages the window, event loop, animation clock, and root layout.</div>
+        </div>
+        <div class="class-block-body">
+          <pre><code class="language-python">App(
+    title="App",
+    width=960,
+    height=680,
+    dark_mode=True,
+    managed_display=True,
+)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">title</td><td class="col-type">str</td><td class="col-default">"App"</td><td>Window title bar text (managed mode only).</td></tr>
+              <tr><td class="col-name">width / height</td><td class="col-type">int</td><td class="col-default">960 / 680</td><td>Initial window size in pixels.</td></tr>
+              <tr><td class="col-name">dark_mode</td><td class="col-type">bool</td><td class="col-default">True</td><td>Initial theme. Toggle later with <code>app.apply_theme()</code> or <code>app.toggle_theme()</code>.</td></tr>
+              <tr><td class="col-name">managed_display</td><td class="col-type">bool</td><td class="col-default">True</td><td><code>True</code>: App creates and owns the pygame window and calls the event loop via <code>run()</code>. <code>False</code>: Embedded mode — you supply the surface and drive the loop.</td></tr>
+            </tbody>
+          </table>
+
+          <h4>Key properties</h4>
+          <table class="param-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">root</td><td class="col-type">UIElement</td><td>Root layout. Add all top-level widgets and layouts here via <code>app.root.add_child(...)</code>.</td></tr>
+              <tr><td class="col-name">width / height</td><td class="col-type">int</td><td>Current window dimensions. Updated automatically on resize.</td></tr>
+              <tr><td class="col-name">screen</td><td class="col-type">pygame.Surface | None</td><td>Active pygame surface. <code>None</code> in embedded mode before <code>attach()</code> is called.</td></tr>
+              <tr><td class="col-name">on_resize</td><td class="col-type">Callable[[int, int], None] | None</td><td>Called with the new <code>(width, height)</code> whenever the window is resized.</td></tr>
+            </tbody>
+          </table>
+
+          <h4>Methods</h4>
+          <div class="method-block">
+            <div class="method-sig">set_root(root_element: UIElement) → None</div>
+            <p class="method-desc">Replace the root layout. The previous root is discarded. Use this to swap between top-level views.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">apply_theme(dark: bool | None = None) → None</div>
+            <p class="method-desc">Set the theme. Calls <code>iOSTheme.update_theme()</code> and invalidates all widget theme caches. Pass <code>None</code> to toggle. Pass <code>True</code> for dark, <code>False</code> for light.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">toggle_theme() → None</div>
+            <p class="method-desc">Shorthand for <code>apply_theme(not iOSTheme.dark)</code>.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">process_event(event: pygame.event.Event) → bool</div>
+            <p class="method-desc">Feed one pygame event into the UI tree. Returns <code>False</code> if the app should quit (QUIT event received).</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">process_events(events=None) → bool</div>
+            <p class="method-desc">Feed multiple events. If <code>events</code> is <code>None</code>, calls <code>pygame.event.get()</code> internally. Returns <code>False</code> to quit.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">frame(dt=None, *, clear=True) → float</div>
+            <p class="method-desc">Advance all spring animations by <code>dt</code> seconds, then draw. Returns the actual delta time used. Call inside your own loop in embedded mode.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">run() → None</div>
+            <p class="method-desc">Start the built-in main loop. Blocks until the window is closed. Only valid when <code>managed_display=True</code>.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">attach(surface: pygame.Surface) → None</div>
+            <p class="method-desc">Bind an external surface (embedded mode). Must be called before <code>frame()</code> or <code>process_events()</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>Embedded mode example</h3>
+      <pre><code class="language-python">import pygame as pg
+from pylay import App, VStack, Button
+
+pg.init()
+screen = pg.display.set_mode((1024, 768), pg.RESIZABLE)
+
+app = App(managed_display=False)
+app.attach(screen)
+
+root = VStack(padding=24, anchor="top_left", x=0, y=0, width=1.0, height=1.0)
+root.add_child(Button("Press me", on_click=lambda: print("!"),
+                      anchor="top_left", x=0, y=0, width=150, height=44))
+app.set_root(root)
+
+clock = pg.time.Clock()
+running = True
+while running:
+    dt = clock.tick(60) / 1000
+    if not app.process_events():
+        running = False
+    app.frame(dt)</code></pre>
+    </section>
+
+    <!-- UIElement -->
+    <section class="doc-section" id="uielement">
+      <h2>UIElement</h2>
+      <p>Base class for every widget and layout. Provides the layout constraint resolver, event dispatch, spring animation, and the render pipeline. You rarely subclass this directly — use <code>FloatLayout</code> or <code>PygameCanvas</code> as starting points.</p>
+
+      <div class="class-block">
+        <div class="class-block-header">
+          <div class="class-name">class UIElement</div>
+          <div class="class-desc">Base UI element. All widgets and layouts extend this.</div>
+        </div>
+        <div class="class-block-body">
+          <pre><code class="language-python">UIElement(
+    anchor="top_left",
+    x=0, y=0,
+    width=100, height=100,
+    visible=True,
+    enabled=True,
+)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">anchor</td><td class="col-type">str</td><td><code>"top_left"</code>, <code>"top_center"</code>, <code>"top_right"</code>, <code>"center_left"</code>, <code>"center"</code>, <code>"center_right"</code>, <code>"bottom_left"</code>, <code>"bottom_center"</code>, <code>"bottom_right"</code></td></tr>
+              <tr><td class="col-name">x / y</td><td class="col-type">int | float</td><td>Offset from the anchor point. Positive values move right / down. Float 0.0–1.0 = fraction of parent size.</td></tr>
+              <tr><td class="col-name">width / height</td><td class="col-type">int | float</td><td>Element size. <code>1.0</code> = fill parent, <code>0.5</code> = 50% of parent, integer = absolute pixels.</td></tr>
+              <tr><td class="col-name">visible</td><td class="col-type">bool</td><td>Hidden elements do not render but still occupy space in layout.</td></tr>
+              <tr><td class="col-name">enabled</td><td class="col-type">bool</td><td>Disabled elements do not receive input events.</td></tr>
+            </tbody>
+          </table>
+
+          <h4>Key properties</h4>
+          <table class="param-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">rect</td><td class="col-type">pygame.Rect</td><td>Resolved pixel bounding box. Updated by <code>layout()</code>. Use this for hit testing or custom rendering.</td></tr>
+              <tr><td class="col-name">children</td><td class="col-type">list[UIElement]</td><td>Direct child elements.</td></tr>
+              <tr><td class="col-name">parent</td><td class="col-type">UIElement | None</td><td>Parent element, or <code>None</code> if this is the root.</td></tr>
+              <tr><td class="col-name">clips_to_bounds</td><td class="col-type">bool</td><td>If <code>True</code>, children are clipped to this element's rect. Automatically <code>True</code> on Layout and PygameCanvas.</td></tr>
+            </tbody>
+          </table>
+
+          <h4>Key methods</h4>
+          <div class="method-block">
+            <div class="method-sig">add_child(child: UIElement) → None</div>
+            <p class="method-desc">Append a child to this element. Sets <code>child.parent = self</code>. The child's layout is resolved on the next frame.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">remove_child(child: UIElement) → None</div>
+            <p class="method-desc">Remove a child from this element.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">animate_to(property_name, target, response=0.35, damping_fraction=0.7) → None</div>
+            <p class="method-desc">Start a spring animation on any numeric property of this element. <code>response</code> is the natural period in seconds (lower = faster). <code>damping_fraction</code> is bounciness: 1.0 = no overshoot, 0.5 = light bounce.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">layout(parent_rect=None, skip_self=False) → None</div>
+            <p class="method-desc">Resolve layout constraints to <code>self.rect</code>, then propagate to all children. Called automatically each frame — you rarely need to call this manually.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="getting-started.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Getting Started</div>
+      </a>
+      <a href="state-animation.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">State, Spring &amp; Theme →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

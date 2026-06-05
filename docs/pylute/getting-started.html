@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — Getting Started</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a>
+    <a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylute.html" class="sidebar-back">← PyLute</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html" class="active">Getting Started</a>
+    <span class="sidebar-group-label">Core Classes</span>
+    <a href="score.html">Score</a>
+    <a href="elements.html">Staff, Bar, Note, Rest</a>
+    <a href="elements.html#notation">Clef, Key, Time, Brace</a>
+    <span class="sidebar-group-label">MusicXML</span>
+    <a href="musicxml.html">load_musicxml()</a>
+    <span class="sidebar-group-label">Canvas</span>
+    <a href="canvas.html">ScoreCanvas &amp; ScorePager</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Pitch, Durations, Font</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Getting Started with PyLute</h1>
+      <p class="page-subtitle">Understand the core concepts, avoid common pitfalls, and build your first score in ten minutes.</p>
+    </div>
+
+    <!-- Installation -->
+    <section class="doc-section" id="installation">
+      <h2>Installation</h2>
+      <p>PyLute is distributed as a directory within the Pianove repository. Copy the <code>PyLute/pylute/</code> and <code>PyLute/assets/</code> folders into your project, then install the only dependency:</p>
+      <pre><code class="language-bash">pip install pygame</code></pre>
+      <p>Import the library:</p>
+      <pre><code class="language-python">import pylute
+# or selectively:
+from pylute import Score, load_musicxml, ScoreCanvas, ScorePager</code></pre>
+      <div class="doc-note">
+        <strong>Note:</strong> The Bravura SMuFL font file (<code>assets/Bravura.otf</code>) must be on a path accessible relative to the <code>pylute/</code> module directory. Do not move the font file independently of the module.
+      </div>
+    </section>
+
+    <!-- Core concepts -->
+    <section class="doc-section" id="concepts">
+      <h2>Core concepts</h2>
+
+      <h3>The object hierarchy</h3>
+      <p>Every score in PyLute is structured as a strict hierarchy:</p>
+      <pre><code class="language-python">Score
+└── Staff  (one per staff line, e.g. treble + bass for piano)
+    └── Bar  (one measure)
+        └── Note | Rest  (musical events in order)</code></pre>
+      <p>You never instantiate <code>Staff</code>, <code>Bar</code>, or most notation elements directly. The <code>Score</code> constructor creates them, and <code>addNote()</code> / <code>addRest()</code> populate them automatically.</p>
+
+      <h3 id="layout-model">Responsive layout</h3>
+      <p>PyLute reflows the score dynamically. Every call to <code>score.draw()</code> reads <code>score.surface.get_size()</code> and recalculates bar widths, system breaks, and vertical spacing. This means:</p>
+      <ul>
+        <li>You must set <code>score.surface = screen</code> when the window is resized before calling <code>draw()</code>.</li>
+        <li><code>draw()</code> is idempotent — calling it 60 times per second is the correct pattern.</li>
+        <li>You do not need to call any layout method manually after adding notes.</li>
+      </ul>
+
+      <h3>Bars fill up</h3>
+      <p>Each bar has a fixed beat capacity determined by the time signature. In 4/4, a bar holds exactly 1.0 whole-note worth of beats. When a bar is full, <code>addNote()</code> automatically moves to the next bar. If all bars are full, new notes are silently ignored — create a <code>Score</code> with more bars up front.</p>
+
+      <h3>Surface ownership</h3>
+      <p>PyLute does not create or own a pygame window. You create the surface, hand it to the score, and call <code>draw()</code> inside your loop. PyLute draws on top of whatever is already on the surface — clear it yourself before drawing.</p>
+    </section>
+
+    <!-- How to learn -->
+    <section class="doc-section" id="how-to-learn">
+      <h2>Recommended learning path</h2>
+      <p>Follow this sequence when learning PyLute. Each step builds on the previous one.</p>
+
+      <h3>Step 1 — Build a score programmatically</h3>
+      <p>Start by creating a <code>Score</code> and adding notes manually. This teaches you the object model without dealing with file parsing.</p>
+      <pre><code class="language-python">import pygame as pg
+import pylute
+
+pg.init()
+screen = pg.display.set_mode((1200, 600), pg.RESIZABLE)
+
+score = pylute.Score(surface=screen, staffs=1, bars=4, key="C", time=(4, 4))
+score.addNote("quarter", "C4")
+score.addNote("quarter", "E4")
+score.addNote("quarter", "G4")
+score.addNote("quarter", "C5")
+
+# Fill a second bar
+score.addNote("half", "G4")
+score.addNote("half", "E4")
+
+clock = pg.time.Clock()
+while True:
+    for event in pg.event.get():
+        if event.type == pg.QUIT: pg.quit(); exit()
+        if event.type == pg.VIDEORESIZE:
+            score.surface = pg.display.set_mode(event.size, pg.RESIZABLE)
+
+    screen.fill((255, 255, 255))
+    score.draw()
+    pg.display.flip()
+    clock.tick(60)</code></pre>
+
+      <div class="doc-image-placeholder">
+        <strong>Screenshot: Score with 6 notes across 2 bars</strong>
+        <span>Add docs/img/pylute-score-basic.png</span>
+      </div>
+
+      <h3>Step 2 — Load a MusicXML file</h3>
+      <p>Once you understand the manual API, load a real piece. MusicXML files are available from MuseScore, IMSLP, and many other sources.</p>
+      <pre><code class="language-python">score = pylute.load_musicxml(
+    "bach_minuet.xml",
+    surface=screen,
+    length=1100,          # staff width in pixels
+)
+# score.title, score.composer, etc. are populated automatically
+print(score.title)        # "Minuet in G Major"
+
+screen.fill((255, 255, 255))
+score.draw()</code></pre>
+
+      <h3>Step 3 — Add scrolling with ScoreCanvas</h3>
+      <p>For long scores, wrap the renderer in a <code>ScoreCanvas</code> and hand it to PyLay's <code>ScrollableCanvas</code> widget. This gives you spring-physics scrolling with no extra code.</p>
+      <pre><code class="language-python">from pylute import ScoreCanvas
+from pylay import App, ScrollableCanvas
+
+app = App("Score Viewer", 1200, 800)
+sc = ScoreCanvas()
+sc.load("chopin_nocturne.xml")
+
+widget = ScrollableCanvas(target=sc, anchor="top_left",
+                          x=0, y=0, width=1.0, height=1.0)
+app.root.add_child(widget)
+app.run()</code></pre>
+
+      <h3>Step 4 — Paginate with ScorePager</h3>
+      <p>For an app-style presentation, use <code>ScorePager</code> to split the score into pages and navigate between them.</p>
+      <pre><code class="language-python">from pylute import ScorePager
+from pylay import App, Button, FloatLayout
+
+app = App("Paged Score", 1200, 800)
+pager = ScorePager()
+pager.load("piece.xml")
+pager.on_page_change = lambda cur, total: print(f"Page {cur}/{total}")
+
+router = pager.build_view(app=app)
+app.root.add_child(router)
+
+# Navigation buttons:
+prev = Button("◀", on_click=pager.go_prev, anchor="bottom_left", x=20, y=20, width=80, height=36)
+next_ = Button("▶", on_click=pager.go_next, anchor="bottom_right", x=20, y=20, width=80, height=36)
+app.root.add_child(prev)
+app.root.add_child(next_)
+app.run()</code></pre>
+    </section>
+
+    <!-- Common pitfalls -->
+    <section class="doc-section" id="pitfalls">
+      <h2>Common pitfalls</h2>
+
+      <div class="doc-warning">
+        <strong>Bars that are already full:</strong> If you call <code>addNote()</code> after all bars are full, the note is silently dropped. Always create a <code>Score</code> with enough bars, or check <code>bar.spaceAvailable()</code> before adding.
+      </div>
+
+      <table class="param-table">
+        <thead><tr><th>Pitfall</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="col-name">Blank screen on draw()</td>
+            <td>score.surface is None</td>
+            <td>Pass surface to Score() constructor or set score.surface before draw()</td>
+          </tr>
+          <tr>
+            <td class="col-name">Notes missing after resize</td>
+            <td>surface not updated on VIDEORESIZE</td>
+            <td>Set <code>score.surface = new_surface</code> in the resize handler</td>
+          </tr>
+          <tr>
+            <td class="col-name">MusicXML import only shows part of the piece</td>
+            <td>Only the first &lt;part&gt; is imported; only voice 1 is kept</td>
+            <td>Expected behaviour — chords, multiple voices, and grace notes are simplified</td>
+          </tr>
+          <tr>
+            <td class="col-name">Font not found error at startup</td>
+            <td>Bravura.otf not at expected relative path</td>
+            <td>Keep assets/ and pylute/ in the same parent directory</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Next steps -->
+    <section class="doc-section" id="next-steps">
+      <h2>Next steps</h2>
+      <p>You now understand the fundamentals. The reference pages cover every parameter and method in detail:</p>
+      <ul>
+        <li><a href="score.html">Score class reference</a> — all constructor parameters, methods, and properties</li>
+        <li><a href="elements.html">Staff, Bar, Note, Rest</a> — the event hierarchy in depth</li>
+        <li><a href="musicxml.html">load_musicxml()</a> — what is and is not supported from the MusicXML spec</li>
+        <li><a href="canvas.html">ScoreCanvas &amp; ScorePager</a> — PyLay integration</li>
+      </ul>
+    </section>
+
+    <div class="doc-nav-footer">
+      <div></div>
+      <a href="score.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Score →</div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="../js/landing.js"></script>
+<script src="../js/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — ScoreCanvas &amp; ScorePager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylute.html" class="sidebar-back">← PyLute</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core Classes</span>
+    <a href="score.html">Score</a>
+    <a href="elements.html">Staff, Bar, Note, Rest</a>
+    <a href="elements.html#notation">Clef, Key, Time, Brace</a>
+    <span class="sidebar-group-label">MusicXML</span>
+    <a href="musicxml.html">load_musicxml()</a>
+    <span class="sidebar-group-label">Canvas</span>
+    <a href="canvas.html" class="active">ScoreCanvas &amp; ScorePager</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Pitch, Durations, Font</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>ScoreCanvas &amp; ScorePager</h1>
+      <p class="page-subtitle">PyLay integration classes that embed a Score into a scrollable or paged UI widget.</p>
+      <div class="page-meta"><span class="meta-item">pylute.ScoreCanvas</span><span class="meta-item">pylute.ScorePager</span><span class="meta-item">canvas.py</span></div>
+    </div>
+
+    <section class="doc-section" id="scorecanvas">
+      <h2>ScoreCanvas</h2>
+      <p>Adapts a <code>Score</code> to PyLay's <code>ScrollableCanvas</code> protocol. It implements <code>draw(surface, rect)</code> and <code>content_height(canvas_w)</code>, which are the two methods <code>ScrollableCanvas</code> requires. The result is a score that scrolls vertically with spring physics inside any PyLay layout.</p>
+
+      <div class="class-block">
+        <div class="class-block-header">
+          <div class="class-name">class ScoreCanvas</div>
+          <div class="class-desc">Bridge between Score and PyLay's ScrollableCanvas. Zero-argument constructor.</div>
+        </div>
+        <div class="class-block-body">
+          <table class="param-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">score</td><td class="col-type">Score | None</td><td>The loaded Score object. <code>None</code> before <code>load()</code> is called.</td></tr>
+              <tr><td class="col-name">error</td><td class="col-type">str</td><td>Error message from the last failed <code>load()</code> call. Empty string on success.</td></tr>
+              <tr><td class="col-name">dirty</td><td class="col-type">bool</td><td>Set to <code>True</code> by the framework when the score needs a redraw on the next frame.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="method-block">
+            <div class="method-sig">load(path: str) → bool</div>
+            <p class="method-desc">Load a MusicXML file. Returns <code>True</code> on success, <code>False</code> on error. Check <code>.error</code> for the error message.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">content_height(canvas_w: int) → int</div>
+            <p class="method-desc">Returns the total pixel height the score needs at the given canvas width. Called automatically by <code>ScrollableCanvas</code> to set its scroll bounds.</p>
+          </div>
+          <div class="method-block">
+            <div class="method-sig">draw(surface: pygame.Surface, rect: pygame.Rect) → None</div>
+            <p class="method-desc">Renders the score clipped to <code>rect</code>. Called automatically by <code>ScrollableCanvas</code> each frame.</p>
+          </div>
+        </div>
+      </div>
+
+      <pre><code class="language-python">from pylute import ScoreCanvas
+from pylay import App, ScrollableCanvas, VStack, Label, Button
+
+app = App("Score Viewer", 1200, 800)
+
+sc = ScoreCanvas()
+if not sc.load("bach_prelude.xml"):
+    print("Error:", sc.error)
+
+# Wrap in ScrollableCanvas for spring-scrolling
+score_widget = ScrollableCanvas(
+    target=sc,
+    anchor="top_left", x=0, y=0, width=1.0, height=1.0,
+)
+app.root.add_child(score_widget)
+app.run()</code></pre>
+
+      <div class="doc-image-placeholder">
+        <strong>Screenshot: ScoreCanvas in a PyLay window, scrolling a long piece</strong>
+        <span>Add docs/img/pylute-scorecanvas.png</span>
+      </div>
+    </section>
+
+    <!-- ScorePager -->
+    <section class="doc-section" id="scorepager">
+      <h2>ScorePager</h2>
+      <p>Splits a score into A4-style pages and presents them in a PyLay <code>PageRouter</code>. Each page shows one screen's worth of music. Users navigate with <code>go_prev()</code> and <code>go_next()</code>. This is the approach used inside Pianove.</p>
+
+      <div class="class-block">
+        <div class="class-block-header">
+          <div class="class-name">class ScorePager</div>
+          <div class="class-desc">Paged score view built on PageRouter. Splits score at system boundaries.</div>
+        </div>
+        <div class="class-block-body">
+          <pre><code class="language-python">ScorePager(score_canvas: ScoreCanvas | None = None)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Property / Method</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">score</td><td class="col-type">Score | None</td><td>The underlying Score object.</td></tr>
+              <tr><td class="col-name">error</td><td class="col-type">str</td><td>Error message from last failed load.</td></tr>
+              <tr><td class="col-name">on_page_change</td><td class="col-type">Callable[[int, int], None] | None</td><td>Called with <code>(current_page, total_pages)</code> when the page changes. Use to update a page counter label.</td></tr>
+              <tr><td class="col-name">load(path)</td><td class="col-type">bool</td><td>Load a MusicXML file and reset to page 1. Returns success.</td></tr>
+              <tr><td class="col-name">go_prev()</td><td class="col-type">None</td><td>Navigate to the previous page. No-op on page 1.</td></tr>
+              <tr><td class="col-name">go_next()</td><td class="col-type">None</td><td>Navigate to the next page. No-op on the last page.</td></tr>
+              <tr><td class="col-name">build_view(y_offset=80, app=None)</td><td class="col-type">PageRouter</td><td>Build and return a <code>PageRouter</code> widget ready to add to the UI tree. Pass <code>app</code> to auto-size the widget to the window height.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <pre><code class="language-python">from pylute import ScorePager
+from pylay import App, Button, Label, FloatLayout
+
+app = App("Paged Score", 1200, 800)
+
+pager = ScorePager()
+pager.load("chopin_nocturne.xml")
+
+# Page indicator label backed by reactive state
+from pylay import State
+page_label = State("Page 1")
+pager.on_page_change = lambda cur, total: page_label.set(f"Page {cur} / {total}")
+
+# Build the page view
+router = pager.build_view(app=app)
+app.root.add_child(router)
+
+# Navigation controls
+prev_btn = Button("◀  Previous", on_click=pager.go_prev,
+                  anchor="bottom_left", x=20, y=20, width=140, height=40)
+next_btn = Button("Next  ▶", on_click=pager.go_next,
+                  anchor="bottom_right", x=20, y=20, width=140, height=40)
+counter  = Label(page_label, anchor="bottom_center", x=0, y=26, width=200, height=28)
+
+app.root.add_child(prev_btn)
+app.root.add_child(next_btn)
+app.root.add_child(counter)
+app.run()</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="musicxml.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">load_musicxml()</div>
+      </a>
+      <a href="utilities.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Utilities →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

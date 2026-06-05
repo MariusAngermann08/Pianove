@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pianove — Quick Start</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/style.css"><link rel="stylesheet" href="../../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../../index.html#story">Story</a>
+    <a href="../../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../../docs.html" class="sidebar-back">← Docs</a>
+    <span class="sidebar-group-label">Getting Started</span>
+    <a href="quickstart.html" class="active">Quick Start</a>
+    <a href="requirements.html">System Requirements</a>
+    <a href="installation.html">Installation</a>
+    <span class="sidebar-group-label">Using Pianove</span>
+    <a href="midi-setup.html">MIDI Setup</a>
+    <a href="lessons.html">Built-in Lessons</a>
+    <a href="musicxml.html">Importing MusicXML</a>
+    <span class="sidebar-group-label">Features</span>
+    <a href="progress.html">Progress &amp; Statistics</a>
+    <a href="synthesiser.html">Built-in Synthesiser</a>
+    <a href="settings.html">Settings &amp; Language</a>
+    <span class="sidebar-group-label">For Developers</span>
+    <a href="lesson-format.html">Lesson File Format</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Quick Start</h1>
+      <p class="page-subtitle">Install Pianove and play your first lesson in under five minutes.</p>
+      <div class="page-meta"><span class="meta-item">Python 3.10 +</span><span class="meta-item">pygame</span><span class="meta-item">MIDI optional</span></div>
+    </div>
+
+    <section class="doc-section" id="prerequisites">
+      <h2>Prerequisites</h2>
+      <p>Pianove requires Python 3.10 or later and the <code>pygame</code> library. A MIDI keyboard is optional — you can use Pianove with your computer keyboard for testing, but a MIDI keyboard is required to follow along with lessons in real time.</p>
+      <pre><code class="language-bash">python --version   # must be 3.10 or later
+pip install pygame</code></pre>
+    </section>
+
+    <section class="doc-section" id="clone">
+      <h2>1. Clone the repository</h2>
+      <pre><code class="language-bash">git clone https://github.com/MariusAngermann08/Pianove-main.git
+cd Pianove-main</code></pre>
+    </section>
+
+    <section class="doc-section" id="launch">
+      <h2>2. Launch Pianove</h2>
+      <pre><code class="language-bash">python main.py</code></pre>
+      <p>The application window opens. If a MIDI keyboard is connected, it will be detected automatically.</p>
+
+      <div class="doc-image-placeholder">
+        <strong>Screenshot: Pianove home screen on first launch</strong>
+        <span>Add docs/img/pianove-home.png</span>
+      </div>
+    </section>
+
+    <section class="doc-section" id="first-lesson">
+      <h2>3. Start your first lesson</h2>
+      <ol>
+        <li>Click <strong>Lessons</strong> in the left sidebar.</li>
+        <li>Select <strong>Lesson 1 — Single Notes</strong>.</li>
+        <li>The sheet music appears at the top. The first note to play is highlighted on the keyboard display.</li>
+        <li>Play the highlighted key on your MIDI keyboard (or press the corresponding key on your computer keyboard in test mode).</li>
+        <li>Pianove advances to the next note when the correct key is detected.</li>
+      </ol>
+
+      <div class="doc-image-placeholder">
+        <strong>Screenshot: Lesson 1 in progress, first note highlighted</strong>
+        <span>Add docs/img/pianove-lesson1.png</span>
+      </div>
+    </section>
+
+    <section class="doc-section" id="import-musicxml">
+      <h2>4. Import a MusicXML file</h2>
+      <p>To practice any piece you find online:</p>
+      <ol>
+        <li>Click <strong>Library</strong> in the left sidebar.</li>
+        <li>Click <strong>Import MusicXML</strong>.</li>
+        <li>Select a <code>.xml</code>, <code>.musicxml</code>, or <code>.mxl</code> file from your computer.</li>
+        <li>The piece is loaded and displayed as sheet music. Press <strong>Practice</strong> to start.</li>
+      </ol>
+      <p>MusicXML files are available from <a href="https://musescore.com" target="_blank" rel="noopener">MuseScore.com</a> and <a href="https://imslp.org" target="_blank" rel="noopener">IMSLP.org</a>.</p>
+    </section>
+
+    <section class="doc-section" id="next-steps">
+      <h2>Next steps</h2>
+      <ul>
+        <li><a href="midi-setup.html">MIDI Setup</a> — configure your keyboard device if it was not detected automatically.</li>
+        <li><a href="lessons.html">Lessons overview</a> — a description of all 16 built-in lessons and their skill targets.</li>
+        <li><a href="musicxml.html">Importing MusicXML</a> — supported formats, where to find files, and known limitations.</li>
+        <li><a href="settings.html">Settings</a> — change the language, theme, and synthesiser volume.</li>
+      </ul>
+    </section>
+
+    <div class="doc-nav-footer">
+      <div></div>
+      <a href="requirements.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">System Requirements →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../../js/landing.js"></script><script src="../../js/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — Score</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a>
+    <a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylute.html" class="sidebar-back">← PyLute</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core Classes</span>
+    <a href="score.html" class="active">Score</a>
+    <a href="elements.html">Staff, Bar, Note, Rest</a>
+    <a href="elements.html#notation">Clef, Key, Time, Brace</a>
+    <span class="sidebar-group-label">MusicXML</span>
+    <a href="musicxml.html">load_musicxml()</a>
+    <span class="sidebar-group-label">Canvas</span>
+    <a href="canvas.html">ScoreCanvas &amp; ScorePager</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Pitch, Durations, Font</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Score</h1>
+      <p class="page-subtitle">The top-level object. Owns all staves, manages system layout and reflow, and is the primary entry point for adding notes and rendering.</p>
+      <div class="page-meta">
+        <span class="meta-item">pylute.Score</span>
+        <span class="meta-item">score.py</span>
+      </div>
+    </div>
+
+    <section class="doc-section" id="constructor">
+      <h2>Constructor</h2>
+      <div class="class-block">
+        <div class="class-block-header">
+          <div class="class-name">class Score</div>
+          <div class="class-desc">Top-level score object. Creates and owns all Staff, Bar, and notation element instances.</div>
+        </div>
+        <div class="class-block-body">
+          <pre><code class="language-python">Score(
+    surface=None,
+    staffs=1,
+    length=500,
+    bars=3,
+    clef_types=None,
+    key="C",
+    time=(4, 4),
+    bars_per_system=None,
+)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">surface</td><td class="col-type">pygame.Surface | None</td><td class="col-default">None</td><td>Render target. Can be set later: <code>score.surface = screen</code>. Required before <code>draw()</code>.</td></tr>
+              <tr><td class="col-name">staffs</td><td class="col-type">int</td><td class="col-default">1</td><td>Number of staves. Use <code>2</code> for piano grand staff (treble + bass). Staves are indexed 0-based.</td></tr>
+              <tr><td class="col-name">length</td><td class="col-type">int</td><td class="col-default">500</td><td>Staff width in pixels. Affects bar spacing and how many bars fit per system.</td></tr>
+              <tr><td class="col-name">bars</td><td class="col-type">int</td><td class="col-default">3</td><td>Total number of bars per staff across all systems. Create more bars than you need — full bars are silently skipped by <code>addNote()</code>.</td></tr>
+              <tr><td class="col-name">clef_types</td><td class="col-type">list[str] | None</td><td class="col-default">None</td><td>Clef for each staff. <code>["treble", "bass"]</code> for piano. Defaults to all <code>"treble"</code> if omitted.</td></tr>
+              <tr><td class="col-name">key</td><td class="col-type">str | int</td><td class="col-default">"C"</td><td>Key signature as a name (<code>"G"</code>, <code>"Bb"</code>, <code>"F#"</code>, <code>"Cb"</code>) or a signed accidental count (−7 to +7). <code>0</code> or <code>"C"</code> = no accidentals.</td></tr>
+              <tr><td class="col-name">time</td><td class="col-type">tuple[int, int]</td><td class="col-default">(4, 4)</td><td>Time signature as <code>(beats_per_bar, beat_type)</code>. E.g. <code>(3, 4)</code> for waltz, <code>(6, 8)</code> for compound duple.</td></tr>
+              <tr><td class="col-name">bars_per_system</td><td class="col-type">int | None</td><td class="col-default">None</td><td>Override the automatic bars-per-system calculation. Useful for fixed-width layouts.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="hierarchy">
+      <h2>Object hierarchy</h2>
+      <pre><code class="language-python">score = pylute.Score(staffs=2, bars=8, key="G", time=(3, 4))
+
+score.staffs          # [Staff, Staff]
+score.staffs[0].bars  # [Bar, Bar, Bar, Bar, Bar, Bar, Bar, Bar]
+score.staffs[0].bars[0].events  # [] initially, filled by addNote()</code></pre>
+      <div class="doc-image-placeholder">
+        <strong>Diagram: Score → Staff → Bar → Note/Rest hierarchy</strong>
+        <span>Add docs/img/pylute-hierarchy.png</span>
+      </div>
+    </section>
+
+    <section class="doc-section" id="properties">
+      <h2>Properties</h2>
+      <table class="param-table">
+        <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">surface</td><td class="col-type">pygame.Surface | None</td><td>Active render target. Update on every VIDEORESIZE event.</td></tr>
+          <tr><td class="col-name">staffs</td><td class="col-type">list[Staff]</td><td>All Staff objects, one per staff line.</td></tr>
+          <tr><td class="col-name">time</td><td class="col-type">tuple[int, int]</td><td>Time signature as (beats, beat_type).</td></tr>
+          <tr><td class="col-name">key_accidentals</td><td class="col-type">int</td><td>Signed accidental count. Negative = flats, positive = sharps.</td></tr>
+          <tr><td class="col-name">key_notes</td><td class="col-type">dict[str, str]</td><td>Accidentals in the current key, e.g. <code>{"F": "#"}</code> for G major. Used internally to apply key accidentals to note rendering.</td></tr>
+          <tr><td class="col-name">frontal_offset</td><td class="col-type">int</td><td>Pixel width of the frontal area (clef + key signature + time signature) before bar 1. Read-only.</td></tr>
+          <tr><td class="col-name">title / subtitle / composer / lyricist / copyright</td><td class="col-type">str</td><td>Metadata strings. Populated automatically by <code>load_musicxml()</code>. Empty string by default.</td></tr>
+          <tr><td class="col-name">clefs</td><td class="col-type">list[Clef]</td><td>One Clef per staff, in order.</td></tr>
+          <tr><td class="col-name">brace</td><td class="col-type">Brace | None</td><td>Vertical brace connecting staves. Created automatically when <code>staffs &gt; 1</code>.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="methods">
+      <h2>Methods</h2>
+
+      <div class="method-block">
+        <div class="method-sig">addNote(ntype="whole", pitch="C4", staff_index=0) → None</div>
+        <p class="method-desc">Append a note to the next available position across all bars on the given staff. Automatically advances to the next bar when the current bar is at capacity. If all bars are full, the note is silently dropped.</p>
+        <table class="param-table">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">ntype</td><td class="col-type">str</td><td>Duration: <code>"whole"</code>, <code>"half"</code>, <code>"quarter"</code>, <code>"eighth"</code>, <code>"sixteenth"</code>, <code>"dotted_half"</code>, <code>"dotted_quarter"</code>, <code>"dotted_eighth"</code>.</td></tr>
+            <tr><td class="col-name">pitch</td><td class="col-type">str</td><td>Scientific pitch notation. Octave 4 = middle C octave. Examples: <code>"C4"</code>, <code>"F#4"</code>, <code>"Bb3"</code>, <code>"D5"</code>.</td></tr>
+            <tr><td class="col-name">staff_index</td><td class="col-type">int</td><td>Which staff to add to (0 = first, 1 = second, etc.).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">addRest(rtype="quarter", staff_index=0) → None</div>
+        <p class="method-desc">Append a rest. Identical behaviour to <code>addNote()</code> but with no pitch. Accepts the same duration types.</p>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">draw() → None</div>
+        <p class="method-desc">Render the complete score to <code>self.surface</code>. Reads the current surface size and reflows all systems. Call this once per frame inside your pygame loop, after clearing the screen. Has no effect if <code>surface</code> is <code>None</code>.</p>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">total_content_height(canvas_w=None) → int</div>
+        <p class="method-desc">Returns the total pixel height required for all systems at a given canvas width. Called by <code>ScoreCanvas</code> to compute the scrollable area. Pass a width to simulate the layout at that width.</p>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">system_height() → int</div>
+        <p class="method-desc">Height in pixels of a single system (all staves + inter-staff gaps). Constant across all systems in the score.</p>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">system_y_tops() → list[int]</div>
+        <p class="method-desc">Y coordinates of the top line of each system. Used by <code>ScorePager</code> to compute page breaks at system boundaries.</p>
+      </div>
+    </section>
+
+    <section class="doc-section" id="example">
+      <h2>Example</h2>
+      <pre><code class="language-python">import pygame as pg
+import pylute
+
+pg.init()
+screen = pg.display.set_mode((1200, 700), pg.RESIZABLE)
+
+# Piano grand staff, G major, 3/4 (waltz)
+score = pylute.Score(
+    surface=screen,
+    staffs=2,
+    length=1100,
+    bars=16,
+    clef_types=["treble", "bass"],
+    key="G",
+    time=(3, 4),
+)
+
+# Add melody to treble staff
+for pitch in ["D5", "B4", "G4", "A4", "B4", "C5", "D5", "G4"]:
+    score.addNote("quarter", pitch, staff_index=0)
+
+# Add bass line
+score.addNote("quarter", "G3", staff_index=1)
+score.addNote("half", "G2", staff_index=1)
+
+clock = pg.time.Clock()
+while True:
+    for event in pg.event.get():
+        if event.type == pg.QUIT: pg.quit(); exit()
+        if event.type == pg.VIDEORESIZE:
+            screen = pg.display.set_mode(event.size, pg.RESIZABLE)
+            score.surface = screen
+
+    screen.fill((255, 255, 255))
+    score.draw()
+    pg.display.flip()
+    clock.tick(60)</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="getting-started.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Getting Started</div>
+      </a>
+      <a href="elements.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Staff, Bar, Note, Rest →</div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="../js/landing.js"></script>
+<script src="../js/docs.js"></script>
+</body>
+</html>

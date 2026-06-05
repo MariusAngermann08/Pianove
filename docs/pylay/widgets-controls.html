@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLay — Control Widgets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylay.html" class="sidebar-back">← PyLay</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core</span>
+    <a href="app-core.html">App &amp; UIElement</a>
+    <a href="state-animation.html">State, Spring &amp; Theme</a>
+    <span class="sidebar-group-label">Layouts</span>
+    <a href="layouts.html">Layouts &amp; Router</a>
+    <span class="sidebar-group-label">Widgets</span>
+    <a href="widgets-controls.html" class="active">Controls</a>
+    <a href="widgets-display.html">Display</a>
+    <a href="widgets-advanced.html">Advanced</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Storage &amp; Scaling</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Control Widgets</h1>
+      <p class="page-subtitle">Interactive input controls: Button, Switch, Slider, TextField, Checkbox, RadioButton, SegmentedControl.</p>
+    </div>
+
+    <!-- Button -->
+    <section class="doc-section" id="button">
+      <h2>Button</h2>
+      <pre><code class="language-python">Button(
+    text: str,
+    on_click: Callable[[], None] | None = None,
+    anchor="top_left", x=0, y=0, width=160, height=44,
+    background_color=None,   # defaults to iOSTheme.accent
+    text_color=None,         # defaults to white
+    border_radius=-1,        # -1 = fully rounded pill
+    font_size=16,
+    font_name="Arial",
+)</code></pre>
+      <p>Scales to 0.92 on press and returns to 1.0 with a spring. <code>border_radius=-1</code> produces a fully rounded pill shape.</p>
+      <pre><code class="language-python">from pylay import Button, ColorPalette
+
+btn = Button("Save", on_click=lambda: save(),
+             background_color=ColorPalette.GREEN,
+             anchor="bottom_right", x=20, y=20, width=120, height=44)</code></pre>
+    </section>
+
+    <!-- Switch -->
+    <section class="doc-section" id="switch">
+      <h2>Switch</h2>
+      <pre><code class="language-python">Switch(
+    value: bool | State = False,
+    on_change: Callable[[bool], None] | None = None,
+    anchor="top_left", x=0, y=0, width=51, height=31,
+    active_color=None,   # defaults to ColorPalette.GREEN
+)</code></pre>
+      <p>iOS-style toggle. The track and knob position animate via spring. Accepts a <code>State</code> for <code>value</code> — the switch both reflects and updates the state.</p>
+      <pre><code class="language-python">dark = State(True)
+Switch(value=dark, on_change=lambda v: app.apply_theme(v), ...)</code></pre>
+    </section>
+
+    <!-- Slider -->
+    <section class="doc-section" id="slider">
+      <h2>Slider</h2>
+      <pre><code class="language-python">Slider(
+    value: float | State = 0.5,
+    min_val=0.0, max_val=1.0,
+    on_change: Callable[[float], None] | None = None,
+    anchor="top_left", x=0, y=0, width=150, height=28,
+    active_color=None,   # defaults to ColorPalette.BLUE
+)</code></pre>
+      <p>Horizontal slider. Track becomes thicker and knob enlarges on hover via spring animations. Value is clamped to <code>[min_val, max_val]</code>.</p>
+      <pre><code class="language-python">vol = State(0.75)
+Slider(value=vol, on_change=lambda v: audio.set_volume(v),
+       anchor="top_left", x=0, y=0, width=1.0, height=30)</code></pre>
+    </section>
+
+    <!-- TextField -->
+    <section class="doc-section" id="text">
+      <h2>TextField</h2>
+      <pre><code class="language-python">TextField(
+    text: str | State = "",
+    placeholder="Enter text...",
+    on_change: Callable[[str], None] | None = None,
+    anchor="top_left", x=0, y=0, width=200, height=44,
+    font_size=15,
+)</code></pre>
+      <p>Single-line text input. Supports full keyboard input, cursor positioning, and selection. A spring-driven focus ring expands around the field when active.</p>
+      <pre><code class="language-python">name = State("")
+TextField(text=name, placeholder="Player name",
+          on_change=lambda v: prefs.set("name", v),
+          anchor="top_left", x=0, y=0, width=1.0, height=44)</code></pre>
+    </section>
+
+    <!-- Checkbox -->
+    <section class="doc-section" id="check">
+      <h2>Checkbox</h2>
+      <pre><code class="language-python">Checkbox(
+    value: bool | State = False,
+    on_change: Callable[[bool], None] | None = None,
+    anchor="top_left", x=0, y=0, size=24,
+    active_color=None,   # defaults to ColorPalette.GREEN
+)</code></pre>
+      <p>Square checkbox. The checkmark pops in with a spring-scale animation on activation.</p>
+    </section>
+
+    <!-- RadioButton -->
+    <section class="doc-section" id="radio">
+      <h2>RadioButton</h2>
+      <pre><code class="language-python">RadioButton(
+    group_state: State,     # shared State for all buttons in the group
+    choice_value: Any,      # this button's value
+    on_change: Callable[[Any], None] | None = None,
+    anchor="top_left", x=0, y=0, size=24,
+    active_color=None,
+)</code></pre>
+      <p>Multiple <code>RadioButton</code>s share a single <code>State</code>. Selecting one updates the shared state to that button's <code>choice_value</code> and deselects all others.</p>
+      <pre><code class="language-python">lang = State("en")
+
+rb_en = RadioButton(lang, "en", anchor="top_left", x=0, y=0, size=22)
+rb_de = RadioButton(lang, "de", anchor="top_left", x=0, y=36, size=22)
+rb_fr = RadioButton(lang, "fr", anchor="top_left", x=0, y=72, size=22)
+
+# When rb_de is clicked: lang.value == "de", rb_en and rb_fr deselect</code></pre>
+    </section>
+
+    <!-- SegmentedControl -->
+    <section class="doc-section" id="seg">
+      <h2>SegmentedControl</h2>
+      <pre><code class="language-python">SegmentedControl(
+    segments: list[str],
+    selected_index: int | State = 0,
+    on_change: Callable[[int], None] | None = None,
+    anchor="top_left", x=0, y=0, width=300, height=36,
+)</code></pre>
+      <p>Tab bar with a spring-animated sliding selection pill. Use for switching between views without navigating to a new screen.</p>
+      <pre><code class="language-python">tab = State(0)
+ctrl = SegmentedControl(
+    segments=["Notes", "Rests", "Chords"],
+    selected_index=tab,
+    on_change=lambda i: show_panel(i),
+    anchor="top_left", x=0, y=0, width=1.0, height=36,
+)</code></pre>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="layouts.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Layouts &amp; Router</div>
+      </a>
+      <a href="widgets-display.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Display Widgets →</div>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

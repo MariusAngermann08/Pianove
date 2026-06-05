@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLute — Staff, Bar, Note, Rest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../index.html#story">Story</a><a href="../docs.html">Docs</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../pylute.html" class="sidebar-back">← PyLute</a>
+    <span class="sidebar-group-label">Start Here</span>
+    <a href="getting-started.html">Getting Started</a>
+    <span class="sidebar-group-label">Core Classes</span>
+    <a href="score.html">Score</a>
+    <a href="elements.html" class="active">Staff, Bar, Note, Rest</a>
+    <a href="elements.html#notation">Clef, Key, Time, Brace</a>
+    <span class="sidebar-group-label">MusicXML</span>
+    <a href="musicxml.html">load_musicxml()</a>
+    <span class="sidebar-group-label">Canvas</span>
+    <a href="canvas.html">ScoreCanvas &amp; ScorePager</a>
+    <span class="sidebar-group-label">Utilities</span>
+    <a href="utilities.html">Pitch, Durations, Font</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Staff, Bar, Note, Rest</h1>
+      <p class="page-subtitle">The core hierarchy beneath Score. These objects are created automatically — this reference covers their public properties and the methods you may call directly.</p>
+    </div>
+
+    <!-- Staff -->
+    <section class="doc-section" id="staff">
+      <h2>Staff</h2>
+      <p>A single staff — five horizontal lines and a list of bars. Instantiated by <code>Score</code>. Access via <code>score.staffs[index]</code>.</p>
+      <table class="param-table">
+        <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">bars</td><td class="col-type">list[Bar]</td><td>All bars on this staff, in order.</td></tr>
+          <tr><td class="col-name">clef_type</td><td class="col-type">str</td><td><code>"treble"</code> or <code>"bass"</code>.</td></tr>
+          <tr><td class="col-name">space</td><td class="col-type">int</td><td>Pixel distance between adjacent staff lines. Derived from the font size.</td></tr>
+          <tr><td class="col-name">position</td><td class="col-type">list[int]</td><td>[x, y] pixel origin of this staff on the current surface.</td></tr>
+          <tr><td class="col-name">length</td><td class="col-type">int</td><td>Staff width in pixels (equals <code>Score.length</code>).</td></tr>
+          <tr><td class="col-name">score</td><td class="col-type">Score</td><td>Back-reference to the owning Score.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Bar -->
+    <section class="doc-section" id="bar">
+      <h2>Bar</h2>
+      <p>A single measure. Holds events (notes and rests), tracks beat capacity, and handles beam grouping for eighth/sixteenth notes. Access via <code>staff.bars[index]</code>.</p>
+      <table class="param-table">
+        <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">events</td><td class="col-type">list[Note | Rest]</td><td>All note and rest events in chronological order.</td></tr>
+          <tr><td class="col-name">index</td><td class="col-type">int</td><td>Zero-based bar index within the staff.</td></tr>
+          <tr><td class="col-name">time</td><td class="col-type">tuple[int, int]</td><td>Local time signature (always equal to the score's time signature).</td></tr>
+          <tr><td class="col-name">bar_start_x</td><td class="col-type">float</td><td>Pixel X of the bar's left barline within the system.</td></tr>
+          <tr><td class="col-name">barspace</td><td class="col-type">float</td><td>Allocated pixel width for this bar.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="method-block">
+        <div class="method-sig">spaceAvailable() → float</div>
+        <p class="method-desc">Returns remaining beat capacity in this bar as a float (0.0 = full). One whole note = 1.0 unit of capacity. A 4/4 bar starts at 1.0 and decreases as events are added.</p>
+      </div>
+
+      <pre><code class="language-python">bar = score.staffs[0].bars[0]
+print(bar.spaceAvailable())  # 1.0 (empty 4/4 bar)
+
+score.addNote("half", "C4")
+print(bar.spaceAvailable())  # 0.5
+
+score.addNote("half", "E4")
+print(bar.spaceAvailable())  # 0.0 (bar full)
+</code></pre>
+    </section>
+
+    <!-- Note -->
+    <section class="doc-section" id="note">
+      <h2>Note</h2>
+      <p>A single notated pitch. Instantiated by <code>Score.addNote()</code>. Access via <code>bar.events</code>.</p>
+      <div class="class-block">
+        <div class="class-block-header">
+          <div class="class-name">class Note</div>
+        </div>
+        <div class="class-block-body">
+          <pre><code class="language-python">Note(ntype="whole", pitch="C4", staff=None)</code></pre>
+          <table class="param-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="col-name">type</td><td class="col-type">str</td><td>Duration type string, e.g. <code>"quarter"</code>.</td></tr>
+              <tr><td class="col-name">pitch</td><td class="col-type">str</td><td>Scientific pitch notation, e.g. <code>"F#4"</code>.</td></tr>
+              <tr><td class="col-name">color</td><td class="col-type">tuple | None</td><td>RGB color override for the notehead. <code>None</code> uses the default (black). Set to a color tuple to highlight a note: <code>note.color = (220, 60, 60)</code>.</td></tr>
+              <tr><td class="col-name">beamed</td><td class="col-type">bool</td><td>Set to <code>True</code> by the bar renderer when this note is part of a beam group. Read-only in practice.</td></tr>
+              <tr><td class="col-name">offset</td><td class="col-type">float</td><td>Fractional horizontal position within the bar (0.0 = start, 1.0 = end). Computed by <code>Bar.calculateMetrics()</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>Highlight a note</h3>
+      <p>Set <code>note.color</code> to an RGB tuple to draw attention to specific notes — for example, highlighting the currently played key in Pianove.</p>
+      <pre><code class="language-python">bar = score.staffs[0].bars[0]
+note = bar.events[0]
+note.color = (52, 199, 89)   # green highlight
+# Returns to normal on next frame if you reset it:
+note.color = None</code></pre>
+    </section>
+
+    <!-- Rest -->
+    <section class="doc-section" id="rest">
+      <h2>Rest</h2>
+      <p>A rest symbol. Instantiated by <code>Score.addRest()</code>. Accepts the same duration types as <code>Note</code>. Rests have no pitch and render as standard music notation rest glyphs (half rest, quarter rest, etc.) using the Bravura font.</p>
+      <pre><code class="language-python">Rest(rtype="quarter", staff=None)</code></pre>
+      <table class="param-table">
+        <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">type</td><td class="col-type">str</td><td>Duration type string.</td></tr>
+          <tr><td class="col-name">offset</td><td class="col-type">float</td><td>Horizontal position within the bar (computed by Bar).</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Notation elements -->
+    <section class="doc-section" id="notation">
+      <h2>Clef, KeySignature, TimeSignature, Brace</h2>
+      <p>These elements are created automatically by <code>Score</code>. You generally do not interact with them directly. They are listed here for completeness.</p>
+
+      <h3>Clef</h3>
+      <pre><code class="language-python">Clef(ctype="treble", staff=None)
+# ctype: "treble" or "bass"
+# Accessed via: score.clefs[staff_index]</code></pre>
+
+      <h3>KeySignature</h3>
+      <pre><code class="language-python">KeySignature(accidentals=0, staff=None)
+# accidentals: -7 (7 flats) to +7 (7 sharps). 0 = C major.
+# Accessed via: score.key_signatures[staff_index]</code></pre>
+      <p>The <code>width</code> property returns the pixel width of the rendered key signature — used internally to compute <code>score.frontal_offset</code>.</p>
+
+      <h3>TimeSignature</h3>
+      <pre><code class="language-python">TimeSignature(staff=None)
+# Reads time from score.time
+# Accessed via: score.time_signatures[staff_index]</code></pre>
+
+      <h3>Brace</h3>
+      <pre><code class="language-python">Brace(staves: list[Staff], surface: pygame.Surface)
+# Created automatically when staffs > 1
+# Accessed via: score.brace</code></pre>
+      <p>The brace renders the vertical curly bracket connecting two staves (standard for piano notation). Call <code>score.brace.reset()</code> if you update the staff layout manually.</p>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="score.html" class="doc-nav-link doc-nav-link--prev">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">Score</div>
+      </a>
+      <a href="musicxml.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">load_musicxml() →</div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="../js/landing.js"></script>
+<script src="../js/docs.js"></script>
+</body>
+</html>
