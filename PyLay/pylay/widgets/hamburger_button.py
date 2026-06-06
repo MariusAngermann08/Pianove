@@ -40,9 +40,15 @@ class HamburgerButton(UIElement):
         # Animatable morph progression (0.0 = hamburger, 1.0 = X)
         self.open_progress = 1.0 if self.is_open else 0.0
         self._last_open = self.is_open
-        
+
         self.is_hovered = False
         self.hover_highlight = 0.0
+
+        # Cached surfaces — rebuilt only on size change
+        self._hover_surf: Optional[pygame.Surface] = None
+        self._hover_surf_size: Optional[tuple] = None
+        self._mid_surf: Optional[pygame.Surface] = None
+        self._mid_surf_size: Optional[tuple] = None
         
     def _on_state_update(self, val: Any):
         self.is_open = bool(val)
@@ -83,12 +89,15 @@ class HamburgerButton(UIElement):
         # Render a subtle iOS-style circular hover backdrop
         hv = self.hover_highlight
         if hv > 0.02:
-            alpha = int(hv * 26) # max 10% opacity
+            alpha = int(hv * 26)
             circle_col = pygame.Color(255, 255, 255, alpha) if iOSTheme.dark else pygame.Color(0, 0, 0, alpha)
-            # Create a tiny temp surface for alpha blending circular background
-            temp = pygame.Surface((w, h), pygame.SRCALPHA)
-            pygame.draw.circle(temp, circle_col, (w // 2, h // 2), w // 2)
-            surface.blit(temp, (rx, ry))
+            size_key = (w, h)
+            if self._hover_surf is None or self._hover_surf_size != size_key:
+                self._hover_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+                self._hover_surf_size = size_key
+            self._hover_surf.fill((0, 0, 0, 0))
+            pygame.draw.circle(self._hover_surf, circle_col, (w // 2, h // 2), w // 2)
+            surface.blit(self._hover_surf, (rx, ry))
             
         t = self.open_progress
         line_w = int(w * 0.5)
@@ -141,8 +150,12 @@ class HamburgerButton(UIElement):
             
             # Translucent drawing requires an alpha surface
             if mid_alpha < 255:
-                temp_mid = pygame.Surface((w, h), pygame.SRCALPHA)
-                pygame.draw.line(temp_mid, mid_col, (w // 2 - mid_half_l, h // 2), (w // 2 + mid_half_l, h // 2), 3)
-                surface.blit(temp_mid, (rx, ry))
+                size_key = (w, h)
+                if self._mid_surf is None or self._mid_surf_size != size_key:
+                    self._mid_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+                    self._mid_surf_size = size_key
+                self._mid_surf.fill((0, 0, 0, 0))
+                pygame.draw.line(self._mid_surf, mid_col, (w // 2 - int(mid_half_l), h // 2), (w // 2 + int(mid_half_l), h // 2), 3)
+                surface.blit(self._mid_surf, (rx, ry))
             else:
                 pygame.draw.line(surface, line_col, p1_mid, p2_mid, width=3)

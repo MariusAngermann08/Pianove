@@ -1,3 +1,5 @@
+__version__ = "0.1.0"
+
 from pylay.core.storage import Storage
 from pylay.core.element import UIElement
 from pylay.core.physics import Spring

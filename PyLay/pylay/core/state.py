@@ -1,4 +1,6 @@
 from typing import Callable, Any, List
+from pylay.core import _dirty
+
 
 class State:
     """
@@ -18,6 +20,7 @@ class State:
     def value(self, new_val: Any):
         if self._value != new_val:
             self._value = new_val
+            _dirty.mark()
             for callback in list(self._listeners):
                 try:
                     callback(new_val)

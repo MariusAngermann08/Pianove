@@ -2,6 +2,8 @@ import pygame
 from pylay.core.element import UIElement
 from pylay.core.theme import iOSTheme, ColorPalette
 from pylay.core.scale import scaled_font_size
+from pylay.core import font_loader
+from pylay.core.render_utils import make_aa_rect, make_shadow, SHADOW_BLUR
 from typing import Callable, Optional, Union, Tuple
 
 class Button(UIElement):
@@ -49,9 +51,15 @@ class Button(UIElement):
         self._cached_surf: Optional[pygame.Surface] = None
         self._cache_key: Optional[Tuple] = None
 
+        # Shadow surface cache
+        self._shadow_surf: Optional[pygame.Surface] = None
+        self._shadow_key: Optional[Tuple] = None
+
     def _on_theme_changed(self):
         self._cached_surf = None
         self._cache_key = None
+        self._shadow_surf = None
+        self._shadow_key = None
         if hasattr(self, "_ov_surf"):
             del self._ov_surf
         if hasattr(self, "_ov_size"):
@@ -62,24 +70,19 @@ class Button(UIElement):
         self._font_px = 0
         self._cached_surf = None
         self._cache_key = None
+        self._shadow_surf = None
+        self._shadow_key = None
 
     def _get_font(self) -> pygame.font.Font:
         px = scaled_font_size(self.font_size)
         if self._font is None or self._font_px != px:
-            pygame.font.get_init() or pygame.font.init()
-            for f in [self.font_name, "Segoe UI", "Helvetica Neue", "Arial"]:
-                try:
-                    self._font = pygame.font.SysFont(f, px, bold=True)
-                    break
-                except Exception:
-                    pass
-            if self._font is None:
-                self._font = pygame.font.Font(None, px)
+            override = self.font_name if self.font_name != "Arial" else None
+            self._font = font_loader.load_font(self.font_size, bold=True, override_name=override)
             self._font_px = px
         return self._font
 
     def update(self, dt: float):
-        target_scale = 0.92 if self.is_pressed and self.enabled else 1.0
+        target_scale = 0.96 if self.is_pressed and self.enabled else 1.0
         target_hover = 1.0 if self.is_hovered and self.enabled else 0.0
         target_disabled = 0.0 if self.enabled else 1.0
         self.animate_to("scale",           target_scale, response=0.12, damping_fraction=0.55)
@@ -109,7 +112,7 @@ class Button(UIElement):
         return False
 
     def _get_base_surf(self, w: int, h: int) -> pygame.Surface:
-        """Return cached base surface (background + text). Re-renders only on change."""
+        """Return cached base surface (AA background + text). Re-renders only on change."""
         bg  = self.background_color if self.background_color is not None else iOSTheme.accent
         fg  = self.text_color       if self.text_color       is not None else pygame.Color(255, 255, 255)
         rad = self.border_radius if self.border_radius >= 0 else h // 2
@@ -118,11 +121,17 @@ class Button(UIElement):
         if key == self._cache_key and self._cached_surf is not None:
             return self._cached_surf
 
-        surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        pygame.draw.rect(surf, bg, (0, 0, w, h), border_radius=rad)
+        # AA rounded rect via 2× render + smoothscale
+        surf = make_aa_rect(w, h, bg, rad)
         font = self._get_font()
         ts   = font.render(self.text, True, fg)
         surf.blit(ts, ts.get_rect(center=(w // 2, h // 2)))
+
+        # Rebuild shadow at same time (same invalidation key)
+        shadow_key = (w, h, rad)
+        if self._shadow_key != shadow_key:
+            self._shadow_surf = make_shadow(w, h, rad)
+            self._shadow_key  = shadow_key
 
         self._cached_surf = surf
         self._cache_key   = key
@@ -151,6 +160,10 @@ class Button(UIElement):
 
         sc = self.scale
         if abs(sc - 1.0) < 5e-3:
+            # Blit shadow behind button (only in dark mode — subtle depth)
+            if self._shadow_surf is not None and iOSTheme.dark:
+                surface.blit(self._shadow_surf,
+                             (self.rect.x - SHADOW_BLUR, self.rect.y - SHADOW_BLUR))
             surface.blit(base, self.rect.topleft)
             if hv > 0.02:
                 surface.blit(self._ov_surf, self.rect.topleft)

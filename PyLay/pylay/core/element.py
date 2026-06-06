@@ -33,8 +33,31 @@ class UIElement:
         # {property_name: Spring}
         self._active_animations: dict = {}
 
+        # Count of active springs in this element + all descendants.
+        # Incremented when a spring starts, decremented when it settles.
+        # Root._subtree_animations == 0 means the entire tree is idle.
+        self._subtree_animations: int = 0
+
+        # Set True to request a root layout pass at end of App.frame()
+        self._layout_requested: bool = False
+
         # Clip children to self.rect during draw
         self.clips_to_bounds = False
+
+    # ------------------------------------------------------------------
+    # Subtree animation counter helpers
+    # ------------------------------------------------------------------
+    def _inc_subtree(self, delta: int):
+        """Propagate a subtree animation count change up to the root."""
+        node = self
+        while node is not None:
+            node._subtree_animations += delta
+            node = node.parent
+
+    def request_layout(self):
+        """Ask the root to do one layout pass at the end of App.frame()."""
+        root = self.get_root()
+        root._layout_requested = True
 
     # ------------------------------------------------------------------
     # Hierarchy
@@ -122,8 +145,8 @@ class UIElement:
         layout_needed = False
 
         if self._active_animations:
-            for prop in list(self._active_animations.keys()):
-                spring = self._active_animations[prop]
+            _to_delete = []
+            for prop, spring in self._active_animations.items():
                 old_val = getattr(self, prop)
 
                 spring.update(dt)
@@ -139,20 +162,25 @@ class UIElement:
                     elif val_diff > 0.5:
                         layout_needed = True
 
-                # Snap and clean up settled springs
+                # Mark settled springs for removal
                 if abs(spring.value - spring.target) < 1e-4 and abs(spring.velocity) < 1e-3:
                     setattr(self, prop, spring.target)
-                    del self._active_animations[prop]
-                    # Only layout-spec snaps need a reflow; visual springs (slider_index,
-                    # scroll_offset, pill_y, etc.) settling must not trigger full layout.
+                    _to_delete.append(prop)
                     if prop in ("x_spec", "y_spec", "width_spec", "height_spec"):
                         layout_needed = True
 
+            for prop in _to_delete:
+                del self._active_animations[prop]
+                self._inc_subtree(-1)  # Spring settled
+
         if layout_needed:
-            # Re-solve from the topmost root element downward to keep layout trees in perfect sync
-            self.get_root().layout()
+            # Defer to a single layout pass at end of App.frame() rather than re-solving immediately
+            self.request_layout()
 
         for child in self.children:
+            # Skip branches that are invisible and have no active animations anywhere below
+            if not child.visible and child._subtree_animations == 0:
+                continue
             child.update(dt)
 
     def animate_to(self, property_name: str, target: float,
@@ -180,6 +208,7 @@ class UIElement:
                             damping_fraction=damping_fraction)
             spring.target = target
             self._active_animations[property_name] = spring
+            self._inc_subtree(1)  # New spring started
 
     # ------------------------------------------------------------------
     # Events
@@ -187,6 +216,10 @@ class UIElement:
     def handle_event(self, event: pygame.event.Event) -> bool:
         if not self.visible or not self.enabled:
             return False
+
+        # No spatial culling here: MOUSEMOTION must reach every child (hover-exit
+        # detection), and MOUSEBUTTONDOWN must reach overlay widgets whose backdrop
+        # extends beyond their rect (e.g. SidebarDrawer close-on-tap-outside).
         for child in reversed(self.children):
             if child.handle_event(event):
                 return True

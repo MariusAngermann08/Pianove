@@ -3,7 +3,9 @@ from pylay.core.element import UIElement
 from pylay.core.state import State
 from pylay.core.theme import iOSTheme, ColorPalette
 from pylay.core.scale import scaled_font_size
-from typing import Callable, Optional, Union, List, Any
+from pylay.core import font_loader
+from pylay.core.render_utils import make_aa_rect
+from typing import Callable, Optional, Union, List, Any, Optional, Tuple
 
 class SegmentedControl(UIElement):
     """
@@ -35,23 +37,35 @@ class SegmentedControl(UIElement):
         self._font = None
         self._font_px: int = 0
 
+        # AA surface caches
+        self._track_surf: Optional[pygame.Surface] = None
+        self._track_key: Optional[Tuple] = None
+        self._pill_surf: Optional[pygame.Surface] = None
+        self._pill_key: Optional[Tuple] = None
+
     def _on_state_update(self, val: Any):
         self.selected_index = int(val)
 
     def _on_scale_changed(self):
         self._font = None
         self._font_px = 0
+        self._track_surf = None
+        self._track_key = None
+        self._pill_surf = None
+        self._pill_key = None
 
     def _on_theme_changed(self):
         self._font = None
         self._font_px = 0
+        self._track_surf = None
+        self._track_key = None
+        self._pill_surf = None
+        self._pill_key = None
 
     def _get_font(self) -> pygame.font.Font:
         px = scaled_font_size(13)
         if self._font is None or self._font_px != px:
-            if not pygame.font.get_init():
-                pygame.font.init()
-            self._font = pygame.font.SysFont("Arial", px, bold=True)
+            self._font = font_loader.load_font(13, bold=True)
             self._font_px = px
         return self._font
         
@@ -90,27 +104,31 @@ class SegmentedControl(UIElement):
         if w <= 4 or h <= 4:
             return
             
-        # Draw background track directly on main surface
+        # Draw AA background track — cached
         bg_color = iOSTheme.fill_secondary if iOSTheme.dark else pygame.Color(230, 230, 235)
         radius = h // 2
-        pygame.draw.rect(surface, bg_color, self.rect, border_radius=radius)
-        
-        # Draw sliding selector highlight pill directly on main surface
+        track_key = (w, h, bg_color.r, bg_color.g, bg_color.b, bg_color.a)
+        if self._track_surf is None or self._track_key != track_key:
+            self._track_surf = make_aa_rect(w, h, bg_color, radius)
+            self._track_key = track_key
+        surface.blit(self._track_surf, self.rect.topleft)
+
+        # Draw sliding AA pill
         num_segs = len(self.segments)
         seg_w = w / num_segs
-        
-        # Pill has 2px padding inside track
-        pill_w = seg_w - 4
+
+        pill_w = max(1, int(seg_w) - 4)
         pill_h = h - 4
         pill_radius = pill_h // 2
-        
-        pill_x = self.rect.left + 2 + self.slider_index * seg_w
+        pill_x = self.rect.left + 2 + int(self.slider_index * seg_w)
         pill_color = iOSTheme.secondary_background if iOSTheme.dark else pygame.Color(255, 255, 255)
-        
-        # Draw pill shadow (very subtle in dark mode)
-        if not iOSTheme.dark:
-            pygame.draw.rect(surface, pygame.Color(200, 200, 200, 100), (pill_x, self.rect.top + 2, pill_w, pill_h), border_radius=pill_radius)
-        pygame.draw.rect(surface, pill_color, (pill_x, self.rect.top + 2, pill_w, pill_h), border_radius=pill_radius)
+
+        # AA pill — rebuilt only when size or color changes
+        pill_key = (pill_w, pill_h, pill_color.r, pill_color.g, pill_color.b)
+        if self._pill_surf is None or self._pill_key != pill_key:
+            self._pill_surf = make_aa_rect(pill_w, pill_h, pill_color, pill_radius)
+            self._pill_key = pill_key
+        surface.blit(self._pill_surf, (pill_x, self.rect.top + 2))
         
         # Render text labels on top directly on main surface
         font = self._get_font()

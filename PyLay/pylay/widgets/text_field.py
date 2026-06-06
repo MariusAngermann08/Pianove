@@ -3,6 +3,7 @@ from pylay.core.element import UIElement
 from pylay.core.theme import iOSTheme, ColorPalette
 from pylay.core.scale import scaled_font_size
 from pylay.core.state import State
+from pylay.core import font_loader, _dirty
 from typing import Optional, Union, Callable, Any
 
 class TextField(UIElement):
@@ -40,11 +41,14 @@ class TextField(UIElement):
         # Focus & Cursor states
         self.is_focused = False
         self.focus_ring = 0.0  # Spring-driven border focus scale
-        
+
         # Cursor blink timer
         self.cursor_visible = True
         self.cursor_timer = 0.0
-        
+
+        # Horizontal scroll offset — keeps cursor in view when text overflows
+        self._scroll_x: int = 0
+
         self._font: Optional[pygame.font.Font] = None
         self._font_px: int = 0
 
@@ -58,8 +62,7 @@ class TextField(UIElement):
     def _get_font(self) -> pygame.font.Font:
         px = scaled_font_size(self.font_size)
         if self._font is None or self._font_px != px:
-            pygame.font.get_init() or pygame.font.init()
-            self._font = pygame.font.SysFont("Arial", px)
+            self._font = font_loader.load_font(self.font_size, bold=False)
             self._font_px = px
         return self._font
         
@@ -74,6 +77,7 @@ class TextField(UIElement):
             if self.cursor_timer >= 0.5:
                 self.cursor_visible = not self.cursor_visible
                 self.cursor_timer = 0.0
+                _dirty.mark()
         else:
             self.cursor_visible = False
             
@@ -115,11 +119,22 @@ class TextField(UIElement):
                     
         return False
         
+    def _update_scroll_x(self):
+        """Keep the cursor visible: scroll right when text overflows the field."""
+        font = self._get_font()
+        avail_w = self.rect.width - 24
+        text_w = font.size(self.text_val)[0]
+        if text_w > avail_w:
+            self._scroll_x = text_w - avail_w
+        else:
+            self._scroll_x = 0
+
     def _notify_change(self):
         if self._state:
             self._state.value = self.text_val
         if self.on_change:
             self.on_change(self.text_val)
+        self._update_scroll_x()
             
     def render(self, surface: pygame.Surface):
         rx, ry = self.rect.left, self.rect.top
@@ -154,13 +169,24 @@ class TextField(UIElement):
         else:
             text_surf = font.render(self.text_val, True, iOSTheme.label)
             
-        # Align text left with 12px padding
-        text_rect = text_surf.get_rect(left=rx + 12, centery=ry + h // 2)
+        # Clip text to the inner field area so it never bleeds past the border
+        pad = 12
+        text_clip = pygame.Rect(rx + pad, ry, w - pad * 2, h)
+        old_clip = surface.get_clip()
+        surface.set_clip(text_clip.clip(old_clip) if old_clip.width > 0 else text_clip)
+
+        # Apply horizontal scroll offset so cursor stays in view
+        text_x = rx + pad - self._scroll_x
+        text_rect = text_surf.get_rect(left=text_x, centery=ry + h // 2)
         surface.blit(text_surf, text_rect)
-        
+
         # Draw cursor if focused and blink state is visible
         if self.is_focused and self.cursor_visible:
-            cursor_x = text_rect.right if len(self.text_val) > 0 else rx + 12
+            cursor_x = rx + pad + text_surf.get_width() - self._scroll_x
+            if len(self.text_val) == 0:
+                cursor_x = rx + pad
             cursor_y1 = ry + h // 2 - 10
             cursor_y2 = ry + h // 2 + 10
             pygame.draw.line(surface, iOSTheme.accent, (cursor_x, cursor_y1), (cursor_x, cursor_y2), 2)
+
+        surface.set_clip(old_clip)

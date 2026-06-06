@@ -2,6 +2,7 @@ import pygame
 from pylay.core.element import UIElement
 from pylay.core.theme import iOSTheme
 from pylay.core.scale import scaled_font_size, scaled_px
+from pylay.core import font_loader
 from typing import Optional, List, Union
 
 class Label(UIElement):
@@ -29,6 +30,8 @@ class Label(UIElement):
         self._font: Optional[pygame.font.Font] = None
         self._font_px: int = 0
         self._wrapped_lines: List[str] = []
+        # Text surface cache: (line_text, color_rgba, font_px) -> Surface
+        self._text_surf_cache: dict = {}
         
         # State binding
         self._state = None
@@ -40,30 +43,37 @@ class Label(UIElement):
             self.text = str(text)
 
     def _on_state_update(self, val):
-        self.text = str(val)
-        # Recalculate layout from the topmost root container downward to keep all widgets in perfect sync
-        self.get_root().layout()
+        new_text = str(val)
+        if new_text == self.text:
+            return
+        self.text = new_text
+        # Only trigger a full root re-layout when the label's rendered size actually changes.
+        # Labels with explicit int/float size specs (set by the user) keep the same rect regardless
+        # of text content, so no re-layout is needed for those — just a redraw.
+        font = self._get_font()
+        if self.wrap_width is not None:
+            # Wrapped label: line count can change, so always re-layout
+            self.get_root().layout()
+        else:
+            new_w, new_h = font.size(new_text)
+            if new_w != self.rect.width or new_h != self.rect.height:
+                self.get_root().layout()
 
 
 
     def _on_scale_changed(self):
         self._font = None
         self._font_px = 0
+        self._text_surf_cache.clear()
+
+    def _on_theme_changed(self):
+        self._text_surf_cache.clear()
 
     def _get_font(self) -> pygame.font.Font:
         px = scaled_font_size(self.font_size)
         if self._font is None or self._font_px != px:
-            if not pygame.font.get_init():
-                pygame.font.init()
-            fonts_to_try = [self.font_name, "Segoe UI", "SF Pro Text", "Helvetica Neue", "Helvetica", "Arial"]
-            for f in fonts_to_try:
-                try:
-                    self._font = pygame.font.SysFont(f, px, bold=self.bold)
-                    break
-                except Exception:
-                    continue
-            if self._font is None:
-                self._font = pygame.font.Font(None, px)
+            override = self.font_name if self.font_name != "Arial" else None
+            self._font = font_loader.load_font(self.font_size, bold=self.bold, override_name=override)
             self._font_px = px
         return self._font
 
@@ -130,7 +140,12 @@ class Label(UIElement):
         for idx, line in enumerate(self._wrapped_lines):
             if not line:
                 continue
-            text_surf = font.render(line, True, color)
-            # Offset vertical position of each line sequentially
+            # Cache rendered text surfaces — avoids rasterization on unchanged frames
+            col_key = color.r, color.g, color.b, color.a if hasattr(color, 'a') else 255
+            cache_key = (line, col_key, self._font_px)
+            text_surf = self._text_surf_cache.get(cache_key)
+            if text_surf is None:
+                text_surf = font.render(line, True, color)
+                self._text_surf_cache[cache_key] = text_surf
             dest_pos = (self.rect.left, self.rect.top + idx * line_height)
             surface.blit(text_surf, dest_pos)

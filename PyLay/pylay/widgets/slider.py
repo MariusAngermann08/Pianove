@@ -123,5 +123,5 @@ class Slider(UIElement):
         knob_cx = max(rx + knob_r, min(rx + w - knob_r, raw_kx))
         knob_cy = ry + h // 2
 
+        pygame.draw.circle(surface, pygame.Color(160, 160, 160), (knob_cx, knob_cy + 1), knob_r + 1)
         pygame.draw.circle(surface, pygame.Color(255, 255, 255), (knob_cx, knob_cy), knob_r)
-        pygame.draw.circle(surface, pygame.Color(180, 180, 180), (knob_cx, knob_cy), knob_r, 1)

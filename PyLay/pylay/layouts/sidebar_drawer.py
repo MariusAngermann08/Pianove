@@ -51,9 +51,14 @@ class SidebarDrawer(FloatLayout):
         self.slide_progress = 1.0 if self.is_open else 0.0
         self._last_open = self.is_open
         self.visible = self.is_open
+        self._last_layout_x: int = int(-self.drawer_width * (0 if self.is_open else 1))
         
     def _on_state_update(self, val: Any):
         self.is_open = bool(val)
+        # Make visible immediately on open so update() isn't skipped due to
+        # the "invisible + no active animations" early-out in element.py.
+        if self.is_open:
+            self.visible = True
         
     def update(self, dt: float):
         if self.is_open != self._last_open:
@@ -61,20 +66,21 @@ class SidebarDrawer(FloatLayout):
             self.animate_to("slide_progress", target, response=0.28, damping_fraction=0.82)
             self._last_open = self.is_open
             
-        old_x = self.x_spec
         super().update(dt)
-        
+
         # Update self position based on slide spring progress
-        # x_spec should map: 0.0 (closed) -> -drawer_width, 1.0 (open) -> 0
+        # x_spec maps: 0.0 (closed) -> -drawer_width, 1.0 (open) -> 0
         t = self.slide_progress
-        self.x_spec = int(-self.drawer_width * (1.0 - t))
-        
+        new_x = int(-self.drawer_width * (1.0 - t))
+        self.x_spec = new_x
+
         # Make drawer invisible when completely closed to skip draw ticks
         self.visible = (t > 0.001)
-        
-        # Force layout recalculation if coordinates changed during slide tick
-        if self.x_spec != old_x:
-            self.get_root().layout()
+
+        # Only trigger a layout when the integer pixel position actually changes
+        if new_x != self._last_layout_x:
+            self._last_layout_x = new_x
+            self.request_layout()
         
     def handle_event(self, event: pygame.event.Event) -> bool:
         if not self.visible:

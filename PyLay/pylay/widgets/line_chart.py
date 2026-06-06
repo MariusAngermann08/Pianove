@@ -4,6 +4,7 @@ from pylay.core.element import UIElement
 from pylay.core.theme import iOSTheme, ColorPalette
 from pylay.core.state import State
 from pylay.core.scale import scaled_font_size
+from pylay.core import font_loader
 from typing import List, Dict, Union, Optional, Tuple
 
 class LineChart(UIElement):
@@ -35,44 +36,41 @@ class LineChart(UIElement):
         # Spring progress: 0.0 -> 1.0 (controls visual spline load-in)
         self.load_progress = 0.0
         self.animate_to("load_progress", 1.0, response=0.45, damping_fraction=0.75)
-        
+
         # Interactive hover tracking state
         self.is_hovered = False
         self.hover_x = 0.0 # Raw mouse horizontal offset
-        
+
         # Spring-driven tracking variables for the tooltip and dot
         self.tracker_x = 0.0
         self.tracker_y = 0.0
         self.tracker_alpha = 0.0
-        
+
         self._font_title = None
         self._font_metrics = None
         self._font_px: int = 0
 
+        # Gradient fill surface cache — keyed by (w, h, color_r, color_g, color_b)
+        self._grad_surf: Optional[pygame.Surface] = None
+        self._grad_key: Optional[tuple] = None
+
     def _on_scale_changed(self):
         self._font_title = self._font_metrics = None
         self._font_px = 0
+        self._grad_surf = None
+        self._grad_key = None
 
     def _on_theme_changed(self):
         self._font_title = self._font_metrics = None
         self._font_px = 0
+        self._grad_surf = None
+        self._grad_key = None
 
     def _get_fonts(self) -> Tuple[pygame.font.Font, pygame.font.Font]:
         px = scaled_font_size(13)
         if self._font_title is None or self._font_px != px:
-            if not pygame.font.get_init():
-                pygame.font.init()
-            px_sm = scaled_font_size(11)
-            for f in ["SF Pro Text", "Helvetica Neue", "Arial"]:
-                try:
-                    self._font_title   = pygame.font.SysFont(f, px,    bold=True)
-                    self._font_metrics = pygame.font.SysFont(f, px_sm, bold=False)
-                    break
-                except Exception:
-                    pass
-            if self._font_title is None:
-                self._font_title   = pygame.font.Font(None, px)
-                self._font_metrics = pygame.font.Font(None, scaled_font_size(11))
+            self._font_title   = font_loader.load_font(13, bold=True)
+            self._font_metrics = font_loader.load_font(11, bold=False)
             self._font_px = px
         return self._font_title, self._font_metrics
 
@@ -185,20 +183,23 @@ class LineChart(UIElement):
             ny = ry + h - pad_y_bottom - (norm_val * avail_h * self.load_progress)
             points.append((nx, ny))
             
-        # 4. Draw Gradient Fill beneath path (using size-cached alpha surface)
+        # 4. Draw Gradient Fill beneath path (cached alpha surface — only rebuilt on size/color change)
         if len(points) >= 2:
-            grad_surf = pygame.Surface((w, h), pygame.SRCALPHA)
-            
-            # Make a closed polygon tracing the baseline path
+            grad_key = (w, h, self.active_color.r, self.active_color.g, self.active_color.b)
+            if self._grad_surf is None or self._grad_key != grad_key:
+                self._grad_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+                self._grad_key = grad_key
+
+            self._grad_surf.fill((0, 0, 0, 0))
+
             poly_points = [(p[0] - rx, p[1] - ry) for p in points]
             poly_points.append((points[-1][0] - rx, h - pad_y_bottom))
             poly_points.append((points[0][0] - rx, h - pad_y_bottom))
-            
-            # Color fills
+
             fill_col = pygame.Color(self.active_color.r, self.active_color.g, self.active_color.b, 35)
-            pygame.draw.polygon(grad_surf, fill_col, poly_points)
-            
-            surface.blit(grad_surf, (rx, ry))
+            pygame.draw.polygon(self._grad_surf, fill_col, poly_points)
+
+            surface.blit(self._grad_surf, (rx, ry))
             
         # 5. Draw Primary Spline Line Path (Anti-aliased segment draws)
         for i in range(len(points) - 1):

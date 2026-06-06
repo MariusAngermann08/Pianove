@@ -115,6 +115,7 @@ class Layout(UIElement):
         shift = int(self.scroll_offset) if self.scroll_active else 0
         if shift:
             Layout._shift_tree(self.children, -shift)
+
         try:
             for child in reversed(self.children):
                 if child.handle_event(event):

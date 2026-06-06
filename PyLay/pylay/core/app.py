@@ -4,6 +4,7 @@ import time
 from pylay.core.element import UIElement
 from pylay.core.theme import iOSTheme
 from pylay.core.scale import set_window_size, REF_WIDTH, REF_HEIGHT
+from pylay.core import _dirty
 from pylay.layouts.float_layout import FloatLayout
 from typing import Callable, Optional, Union, Iterable
 
@@ -70,6 +71,7 @@ class App:
             anchor="top_left", x=0, y=0, width=1.0, height=1.0,
             background_color=iOSTheme.background,
         )
+        self._frame_was_idle: bool = False
 
     @property
     def background_color(self):
@@ -100,6 +102,7 @@ class App:
         iOSTheme.update_theme()
         self.root.background_color = iOSTheme.background
         self.root.invalidate_theme_caches()
+        _dirty.mark()
         if self.screen:
             self.root.layout(self.screen.get_rect())
         else:
@@ -131,6 +134,9 @@ class App:
             self._resize_time = time.time()
             return True
 
+        # Any user interaction must wake the draw loop for at least one frame
+        # (hover animations, cursor updates, and spring transitions all start here).
+        _dirty.mark()
         self.root.handle_event(event)
         return True
 
@@ -164,15 +170,33 @@ class App:
             self.root.invalidate_scale_caches()
             self.root.layout(self.screen.get_rect())
             self._pending_resize = None
+            _dirty.mark()
             if self.on_resize:
                 self.on_resize(w, h)
 
         self.root.update(dt)
 
-        if clear:
-            self.screen.fill(iOSTheme.background)
-        self.root.draw(self.screen)
+        # Deferred layout: collapse all layout requests into one pass per frame
+        if self.root._layout_requested:
+            self.root.layout(self.screen.get_rect())
+            self.root._layout_requested = False
+
+        # Idle skip: when no springs are active AND no State changed, the frame is visually
+        # identical to the previous one — skip fill + draw + flip entirely (DOUBLEBUF safe).
+        state_dirty = _dirty.consume()
+        self._frame_was_idle = (self.root._subtree_animations == 0) and not state_dirty
+        if not self._frame_was_idle:
+            if clear:
+                self.screen.fill(iOSTheme.background)
+            self.root.draw(self.screen)
+
         return dt
+
+    def _draw_initial_frame(self):
+        """Draw and flip one frame unconditionally — used on startup and after theme/resize."""
+        self.screen.fill(iOSTheme.background)
+        self.root.draw(self.screen)
+        pygame.display.flip()
 
     def run(self):
         """Start the built-in main loop (managed display mode)."""
@@ -185,13 +209,17 @@ class App:
             raise RuntimeError("No display surface available.")
 
         self.root.layout(self.screen.get_rect())
+        # Always show content on the very first frame before the idle-skip logic runs.
+        self._draw_initial_frame()
+
         running = True
         while running:
             if not self.process_events():
                 running = False
                 continue
             self.frame(clear=True)
-            pygame.display.flip()
+            if not self._frame_was_idle:
+                pygame.display.flip()
 
         pygame.quit()
         sys.exit()
