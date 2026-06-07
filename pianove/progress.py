@@ -53,6 +53,52 @@ def weekly_lessons() -> list[float]:
     return [float(dates_raw.count((monday + timedelta(days=i)).isoformat())) for i in range(7)]
 
 
+def record_practice_session(accuracy: float, note_count: int, bpm: int):
+    """Append a sight-reading session result to persistent storage."""
+    sessions = storage.get("practice_sessions", [])
+    sessions.append({
+        "date":     date.today().isoformat(),
+        "accuracy": round(accuracy, 4),
+        "notes":    note_count,
+        "bpm":      bpm,
+    })
+    storage.set("practice_sessions", sessions)
+
+
+def practice_sessions() -> list[dict]:
+    return storage.get("practice_sessions", [])
+
+
+def practice_sessions_total() -> int:
+    return len(practice_sessions())
+
+
+def practice_accuracy_avg(last_n: int = 10) -> float:
+    """Average accuracy over the most recent `last_n` practice sessions."""
+    sessions = practice_sessions()
+    if not sessions:
+        return 0.0
+    recent = sessions[-last_n:]
+    return sum(s["accuracy"] for s in recent) / len(recent)
+
+
+def weekly_practice_sessions() -> list[float]:
+    """Practice session count per day for the current Mon–Sun week."""
+    sessions = practice_sessions()
+    today  = date.today()
+    monday = today - timedelta(days=today.weekday())
+    counts = [0.0] * 7
+    for s in sessions:
+        try:
+            d = date.fromisoformat(s["date"])
+            day_idx = (d - monday).days
+            if 0 <= day_idx < 7:
+                counts[day_idx] += 1.0
+        except (ValueError, KeyError):
+            pass
+    return counts
+
+
 def course_complete(course_id: str) -> bool:
     from pianove.lesson_loader import list_courses
     done = completed_lessons()

@@ -133,5 +133,41 @@
   "creator_publish_section": "Veröffentlichen",
   "creator_export_pkg": "Paket exportieren",
   "creator_export_pkg_desc": "Lektion oder Kurs als .pianove-pkg exportieren",
-  "creator_open": "Öffnen"
+  "creator_open": "Öffnen",
+
+  "nav_practice": "Üben",
+
+  "practice_title": "Vom-Blatt-Lesen",
+  "practice_tab_title": "Üben",
+  "practice_tab_subtitle": "Noten generieren und auf deinem Niveau vom Blatt lesen.",
+  "practice_config_title": "Session-Einstellungen",
+  "practice_clef": "Schlüssel",
+  "practice_clef_treble": "Violinschlüssel",
+  "practice_clef_bass": "Bassschlüssel",
+  "practice_difficulty": "Schwierigkeit",
+  "practice_notes_label": "Noten",
+  "practice_bpm_label": "BPM",
+  "practice_key_label": "Tonart",
+  "practice_start": "▶  Session starten",
+  "practice_go_label": "Vom-Blatt-Lesen  ·  {bpm} BPM",
+  "practice_recent": "Letzte Sessions",
+  "practice_avg_accuracy": "Durchschn. Trefferquote (letzte 10)",
+  "practice_sessions_badge": "Sessions",
+  "practice_notes": "Noten",
+  "practice_hits": "Treffer",
+  "practice_bpm": "BPM",
+
+  "practice_session_done": "Session beendet",
+  "practice_accuracy_label": "Trefferquote",
+  "practice_try_again": "Nochmal",
+  "practice_new_session": "Neue Session",
+
+  "stats_lessons_section": "Lektionen",
+  "stats_practice_section": "Vom-Blatt-Lesen",
+  "stats_pr_sessions": "Sessions",
+  "stats_pr_accuracy": "Ø Trefferquote",
+  "stats_pr_week": "Übungen diese Woche",
+
+  "ach_sight_reader": "Blattleser",
+  "ach_sharp_eye": "Scharfes Auge"
 }

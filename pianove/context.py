@@ -25,3 +25,11 @@ score_song_id: str | None = None
 
 # Inner tab router (home shell) — set by home/container.py so tabs can self-refresh
 inner_router: "PageRouter | None" = None
+
+# Sight-reading practice mode (go mode — performance-only, no practice sections)
+practice_mode:      bool        = False
+practice_bars:      list | None = None   # pre-generated bars
+practice_bpm:       int         = 80
+practice_clef:      str         = "treble"
+practice_last_hits:  int        = 0      # filled when session completes
+practice_last_total: int        = 0

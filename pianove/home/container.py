@@ -4,7 +4,7 @@ from pylay import FloatLayout, State, SideNav, PageRouter, iOSTheme
 from pylay.core.scale import UI_SCALE
 from pianove.i18n import t
 from pianove.state import midi_device_state, creator_mode_state
-from pianove.home import tab_home, tab_songs, tab_lessons, tab_stats, tab_settings, tab_creator
+from pianove.home import tab_home, tab_songs, tab_lessons, tab_stats, tab_settings, tab_creator, tab_practice
 import pianove.context as ctx
 
 _active_tab = State(0)
@@ -58,7 +58,21 @@ def _icon_gear(surf, cx, cy, scale, color):
         pygame.draw.rect(surf, color, (tx - sw, ty - sw, sw * 2, sw * 2))
 
 
-_ICONS = [_icon_home, _icon_songs, _icon_lessons, _icon_stats, _icon_gear]
+def _icon_practice(surf, cx, cy, scale, color):
+    s  = int(7 * scale)
+    sw = max(1, int(2 * scale))
+    # Staff lines (3 horizontal lines)
+    for dy in [-s // 2, 0, s // 2]:
+        pygame.draw.line(surf, color, (cx - s, cy + dy), (cx + s - 2, cy + dy), sw)
+    # Quarter note: filled head + stem
+    r = max(2, int(3 * scale))
+    pygame.draw.circle(surf, color, (cx + s // 2, cy + s // 2), r)
+    pygame.draw.line(surf, color,
+                     (cx + s // 2 + r - 1, cy + s // 2),
+                     (cx + s // 2 + r - 1, cy - s // 2), sw)
+
+
+_ICONS = [_icon_home, _icon_songs, _icon_lessons, _icon_stats, _icon_practice, _icon_gear]
 
 
 # ── Builder ───────────────────────────────────────────────────────────────────
@@ -79,13 +93,14 @@ def build():
     content_w    = max(200, ctx.ui.width - nav_w)
     show_creator = bool(creator_mode_state.value)
 
-    tab_keys = ["home", "songs", "lessons", "stats", "settings"]
+    tab_keys = ["home", "songs", "lessons", "stats", "practice", "settings"]
     icons    = list(_ICONS)
     pages    = {
         "home":     tab_home.build,
         "songs":    tab_songs.build,
         "lessons":  tab_lessons.build,
         "stats":    tab_stats.build,
+        "practice": tab_practice.build,
         "settings": tab_settings.build,
     }
 

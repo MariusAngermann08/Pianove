@@ -133,5 +133,41 @@
   "creator_publish_section": "Publish",
   "creator_export_pkg": "Export Package",
   "creator_export_pkg_desc": "Export a lesson or course as .pianove-pkg",
-  "creator_open": "Open"
+  "creator_open": "Open",
+
+  "nav_practice": "Practice",
+
+  "practice_title": "Sight Reading",
+  "practice_tab_title": "Practice",
+  "practice_tab_subtitle": "Generate notes and sight-read at your chosen level.",
+  "practice_config_title": "Session Settings",
+  "practice_clef": "Clef",
+  "practice_clef_treble": "Treble",
+  "practice_clef_bass": "Bass",
+  "practice_difficulty": "Difficulty",
+  "practice_notes_label": "Notes",
+  "practice_bpm_label": "BPM",
+  "practice_key_label": "Key",
+  "practice_start": "▶  Start Session",
+  "practice_go_label": "Sight Reading  ·  {bpm} BPM",
+  "practice_recent": "Recent Sessions",
+  "practice_avg_accuracy": "Average accuracy (last 10)",
+  "practice_sessions_badge": "sessions",
+  "practice_notes": "notes",
+  "practice_hits": "hits",
+  "practice_bpm": "BPM",
+
+  "practice_session_done": "Session Complete",
+  "practice_accuracy_label": "Accuracy",
+  "practice_try_again": "Try Again",
+  "practice_new_session": "New Session",
+
+  "stats_lessons_section": "Lessons",
+  "stats_practice_section": "Sight Reading",
+  "stats_pr_sessions": "Sessions",
+  "stats_pr_accuracy": "Avg Accuracy",
+  "stats_pr_week": "Practice this week",
+
+  "ach_sight_reader": "Sight Reader",
+  "ach_sharp_eye": "Sharp Eye"
 }

@@ -1,5 +1,10 @@
 import pianove  # sets up sys.path for PyLay + PyLute
 
+import pygame
+# Must be called before pygame.init() (which App() triggers) so the mixer
+# starts with a small buffer. 256 samples @ 44100 Hz ≈ 5.8 ms round-trip.
+pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=256)
+
 from pylay import App, PageRouter
 from pylay.core.theme import iOSTheme
 import pianove.context as ctx

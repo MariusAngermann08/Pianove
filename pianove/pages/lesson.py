@@ -13,9 +13,10 @@ _GREEN      = pygame.Color(52, 199, 89)
 _RED        = pygame.Color(255, 59, 48)
 _ORANGE     = pygame.Color(255, 149, 0)
 _BLUE       = pygame.Color(0, 122, 255)
+_PURPLE     = pygame.Color(175, 82, 222)
 _PX_PER_BAR = 300
 _KB_H       = 130       # keyboard canvas height when visible
-_BPM        = 80        # performance mode tempo
+_BPM        = 80        # default performance tempo
 _SECTION_SZ = 4         # bars per practice section
 _PREP_BARS  = 2         # silent count-in bars before performance
 
@@ -47,7 +48,9 @@ class _WrongTracker:
 
 
 def _bars_from_song_or_lesson(lesson: dict) -> list[list[str]]:
-    """Return bars for the current context — song mode or lesson mode."""
+    """Return bars for the current context — practice, song, or lesson mode."""
+    if ctx.practice_mode and ctx.practice_bars is not None:
+        return ctx.practice_bars
     if ctx.current_song_id:
         from pianove.song_store import get_song_bars
         return get_song_bars(ctx.current_song_id, ctx.current_song_hand)
@@ -94,7 +97,11 @@ def _nav_back():
     ctx.lesson_section_idx = 0
     ctx.lesson_completed   = False
     ctx.lesson_phase       = "practice"
-    if ctx.current_song_id:
+    if ctx.practice_mode:
+        ctx.practice_mode  = False
+        ctx.practice_bars  = None
+        ctx.router.navigate("home", "left")
+    elif ctx.current_song_id:
         ctx.router.navigate("song_setup", "left")
     else:
         ctx.router.navigate("home", "left")
@@ -119,14 +126,17 @@ class _StaffView(PygameCanvas):
     """
 
     def __init__(self, bars: list[list[str]], phase: str,
-                 initial_idx: int = 0, on_advance=None, **kwargs):
+                 initial_idx: int = 0, on_advance=None,
+                 bpm: int = _BPM, clef: str = "treble", **kwargs):
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
+        self._bpm  = bpm
+        self._hits = 0
 
         # In performance mode, prepend _PREP_BARS whole-rest bars as a count-in.
         # PyLute renders proper rest symbols; no MIDI is expected during them.
         if phase == "performance":
-            beat_dur             = 60.0 / _BPM
+            beat_dur             = 60.0 / self._bpm
             self._prep_duration  = _PREP_BARS * 4 * beat_dur
             self._prep_elapsed   = 0.0
             self._in_prep        = True
@@ -141,7 +151,7 @@ class _StaffView(PygameCanvas):
         self._n_bars = n_bars
         self._score  = Score(
             surface=None, staffs=1, bars=n_bars,
-            clef_types=["treble"], key="C", time=(4, 4),
+            clef_types=[clef], key="C", time=(4, 4),
             bars_per_system=n_bars,
         )
         for _ in range(n_prep):
@@ -204,9 +214,14 @@ class _StaffView(PygameCanvas):
 
     # ── Performance ───────────────────────────────────────────────────────────
 
+    @property
+    def hits(self) -> int:
+        return self._hits
+
     def mark_hit(self):
         if self.current_idx < len(self._note_list):
             self._perf_hit = True
+            self._hits += 1
             self._note_list[self.current_idx].color = _GREEN
             self._dirty = True
 
@@ -296,7 +311,7 @@ class _StaffView(PygameCanvas):
 
         if self._phase == "performance" and self.current_idx < len(self._note_list):
             self._perf_timer += dt
-            note_dur = 60.0 / _BPM
+            note_dur = 60.0 / self._bpm
 
             if self._note_xs:
                 idx   = min(self.current_idx, len(self._note_xs) - 1)
@@ -460,6 +475,91 @@ class _LessonPiano:
                           rect.bottom - status_h + (status_h - ls.get_height()) // 2))
 
 
+# ── Practice completion view ──────────────────────────────────────────────────
+
+def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
+    accuracy = hits / total if total > 0 else 0.0
+    pct      = int(accuracy * 100)
+    acc_color = (
+        _GREEN  if pct >= 80 else
+        _ORANGE if pct >= 50 else
+        _RED
+    )
+
+    def _try_again():
+        ctx.lesson_current_idx = 0
+        ctx.lesson_section_idx = 0
+        ctx.lesson_completed   = False
+        ctx.lesson_phase       = "performance"
+        ctx.router.refresh()
+
+    def _new_session():
+        ctx.practice_mode  = False
+        ctx.practice_bars  = None
+        ctx.lesson_completed = False
+        ctx.lesson_phase   = "practice"
+        ctx.router.navigate("home", "left")
+
+    root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
+    main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
+    root.add_child(main)
+
+    nav = FloatLayout(width=1.0, height=52,
+                      background_color=iOSTheme.secondary_background)
+    nav.add_child(Button(text=t("back"), on_click=_nav_back,
+                         anchor="left", x=12, y=0,
+                         width=72, height=34, font_size=14,
+                         background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                         border_radius=8))
+    nav.add_child(Label(text=t("practice_session_done"), font_size=16, bold=True,
+                        color=iOSTheme.label, anchor="center", x=0, y=0))
+    main.add_child(nav)
+    main.add_child(FloatLayout(width=1.0, height=1,
+                               background_color=pygame.Color(120, 120, 128, 60)))
+
+    body = VStack(spacing=16, padding=40, width=1.0, height=1.0)
+
+    body.add_child(EmojiIcon("🎯", size=64, color=acc_color,
+                             anchor="center", x=0, y=0))
+    body.add_child(Label(text=f"{pct}%", font_size=56, bold=True,
+                         color=acc_color, anchor="center", x=0, y=0, height=68))
+    body.add_child(Label(text=t("practice_accuracy_label"), font_size=14,
+                         color=iOSTheme.secondary_label,
+                         anchor="center", x=0, y=0))
+
+    # Stats row: notes + BPM
+    stats_row = FloatLayout(width=1.0, height=64)
+    for val, lbl, x in [
+        (str(hits),  t("practice_hits"),  0.08),
+        (str(total), t("practice_notes"), 0.38),
+        (str(bpm),   t("practice_bpm"),   0.68),
+    ]:
+        col = VStack(spacing=2, padding=10, anchor="top_left", x=x, y=0,
+                     width=0.26, height=1.0,
+                     background_color=iOSTheme.secondary_background,
+                     border_radius=10)
+        col.add_child(Label(text=val, font_size=20, bold=True,
+                            color=iOSTheme.label, height=28))
+        col.add_child(Label(text=lbl, font_size=11,
+                            color=iOSTheme.secondary_label, height=16))
+        stats_row.add_child(col)
+    body.add_child(stats_row)
+
+    btn_row = FloatLayout(width=1.0, height=50)
+    btn_row.add_child(Button(text=t("practice_try_again"), on_click=_try_again,
+                             anchor="left", x=16, y=0, width=0.42, height=44, font_size=14,
+                             background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                             border_radius=12))
+    btn_row.add_child(Button(text=t("practice_new_session"), on_click=_new_session,
+                             anchor="right", x=16, y=0, width=0.42, height=44, font_size=14,
+                             background_color=_PURPLE,
+                             text_color=pygame.Color(255, 255, 255),
+                             border_radius=12))
+    body.add_child(btn_row)
+    main.add_child(body)
+    return root
+
+
 # ── Completion view ───────────────────────────────────────────────────────────
 
 def _build_completion(lesson_title: str) -> FloatLayout:
@@ -520,21 +620,30 @@ def build():
 
     lesson_id    = ctx.current_lesson_id
     keyboard_vis = ctx.lesson_keyboard_vis
-    phase        = ctx.lesson_phase
     section_idx  = ctx.lesson_section_idx
     initial_idx  = ctx.lesson_current_idx
 
-    lesson = load_lesson(lesson_id)
-    if lesson is None:
-        lesson = {"title": lesson_id, "steps": []}
+    # Practice (go) mode: skip all lesson loading, force performance phase
+    is_practice = ctx.practice_mode
+    bpm         = ctx.practice_bpm if is_practice else _BPM
+    clef        = ctx.practice_clef if is_practice else "treble"
 
-    # In song mode, pull title from the song store instead
-    if ctx.current_song_id:
-        from pianove.song_store import get_song
-        _song = get_song(ctx.current_song_id)
-        lesson_title = _song["title"] if _song else ctx.current_song_id
+    if is_practice:
+        phase        = "performance"
+        ctx.lesson_phase = "performance"
+        lesson_title = t("practice_title")
+        lesson       = {"title": lesson_title, "steps": []}
     else:
-        lesson_title = lesson.get("title", lesson_id)
+        phase  = ctx.lesson_phase
+        lesson = load_lesson(lesson_id)
+        if lesson is None:
+            lesson = {"title": lesson_id, "steps": []}
+        if ctx.current_song_id:
+            from pianove.song_store import get_song
+            _song = get_song(ctx.current_song_id)
+            lesson_title = _song["title"] if _song else ctx.current_song_id
+        else:
+            lesson_title = lesson.get("title", lesson_id)
 
     all_bars     = _bars_from_song_or_lesson(lesson)
     sections     = _split_sections(all_bars)
@@ -547,6 +656,10 @@ def build():
 
     # Completion screen
     if ctx.lesson_completed and initial_idx >= n_notes:
+        if is_practice:
+            return _build_practice_completion(
+                ctx.practice_last_hits, ctx.practice_last_total, bpm
+            )
         return _build_completion(lesson_title)
 
     # ── Layout dimensions ─────────────────────────────────────────────────────
@@ -603,8 +716,18 @@ def build():
         ctx.router.refresh()
 
     def _complete_lesson():
-        from pianove.progress import mark_complete, record_session
-        if not ctx.current_song_id:
+        from pianove.progress import mark_complete, record_session, record_practice_session
+        if is_practice:
+            total = _sv[0].total_notes if _sv[0] else 1
+            hits  = _sv[0].hits        if _sv[0] else 0
+            record_practice_session(
+                accuracy   = hits / total if total > 0 else 0.0,
+                note_count = total,
+                bpm        = bpm,
+            )
+            ctx.practice_last_hits  = hits
+            ctx.practice_last_total = total
+        elif not ctx.current_song_id:
             mark_complete(lesson_id)
             record_session(lesson_id)
         ctx.lesson_completed = True
@@ -639,7 +762,9 @@ def build():
                 else:
                     _restart_section()
 
-    if phase == "performance":
+    if is_practice:
+        phase_label = t("practice_go_label", bpm=bpm)
+    elif phase == "performance":
         phase_label = t("lesson_final_go")
     elif n_sections > 1:
         phase_label = t("lesson_section_of", n=section_idx + 1, total=n_sections)
@@ -693,6 +818,7 @@ def build():
     staff_view = _StaffView(
         bars=active_bars, phase=phase,
         initial_idx=initial_idx, on_advance=_do_note_advance,
+        bpm=bpm, clef=clef,
         width=1.0, height=staff_h,
     )
     _sv[0] = staff_view

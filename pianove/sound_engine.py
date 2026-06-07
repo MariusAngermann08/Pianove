@@ -82,10 +82,16 @@ def _build_sound(midi_note: int) -> "pygame.mixer.Sound":
 # ── Cache ─────────────────────────────────────────────────────────────────────
 
 def _ensure(midi_note: int) -> "pygame.mixer.Sound":
+    # Fast path — no lock needed; dict reads are thread-safe via the GIL.
+    snd = _cache.get(midi_note)
+    if snd is not None:
+        return snd
+    # Build outside the lock so the warm thread never blocks play().
+    new_snd = _build_sound(midi_note)
     with _cache_lock:
         if midi_note not in _cache:
-            _cache[midi_note] = _build_sound(midi_note)
-        return _cache[midi_note]
+            _cache[midi_note] = new_snd
+    return _cache[midi_note]
 
 
 def _warm():
