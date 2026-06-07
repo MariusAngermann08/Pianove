@@ -2,9 +2,10 @@ import pygame
 import pianove.context as ctx
 from pianove.lesson_loader import list_courses, standalone_lessons, list_lessons
 from pianove.progress import is_complete
-from pylay import FloatLayout, VStack, Label, Button, EmojiIcon, ColorPalette, iOSTheme
+from pylay import FloatLayout, VStack, Card, Label, Button, EmojiIcon, ColorPalette, iOSTheme
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
+from pianove.components import section_subheader
 
 
 def _open_lesson(lesson_id: str, course_id: str | None = None, course_index: int = 0):
@@ -14,12 +15,8 @@ def _open_lesson(lesson_id: str, course_id: str | None = None, course_index: int
     ctx.router.navigate("lesson", "right")
 
 
-def _course_card(course: dict, all_lessons: dict) -> VStack:
-    card = VStack(
-        spacing=8, padding=16, width=1.0,
-        background_color=iOSTheme.secondary_background,
-        border_radius=14,
-    )
+def _course_card(course: dict, all_lessons: dict) -> Card:
+    card = Card(spacing=8, padding=16, width=1.0, border_radius=14)
 
     header = FloatLayout(width=1.0, height=32)
     header.add_child(EmojiIcon("🎓", size=26, color=ColorPalette.BLUE,
@@ -85,13 +82,9 @@ def _course_card(course: dict, all_lessons: dict) -> VStack:
     return card
 
 
-def _lesson_card(lesson: dict) -> VStack:
+def _lesson_card(lesson: dict) -> Card:
     done = is_complete(lesson["id"])
-    card = VStack(
-        spacing=10, padding=16, width=1.0,
-        background_color=iOSTheme.secondary_background,
-        border_radius=14,
-    )
+    card = Card(spacing=10, padding=16, width=1.0, border_radius=14)
 
     header = FloatLayout(width=1.0, height=32)
     header.add_child(EmojiIcon("🎵", size=26, color=ColorPalette.BLUE,
@@ -142,22 +135,12 @@ def build():
     all_lessons = {l["id"]: l for l in list_lessons()}
 
     if courses:
-        scroll.add_child(Label(
-            text=t("lessons_courses"),
-            font_size=13, bold=True,
-            color=iOSTheme.secondary_label,
-            width=1.0, height=22,
-        ))
+        scroll.add_child(section_subheader(t("lessons_courses")))
         for course in courses:
             scroll.add_child(_course_card(course, all_lessons))
 
     if standalone:
-        scroll.add_child(Label(
-            text=t("lessons_standalone"),
-            font_size=13, bold=True,
-            color=iOSTheme.secondary_label,
-            width=1.0, height=22,
-        ))
+        scroll.add_child(section_subheader(t("lessons_standalone")))
         for lesson in standalone:
             scroll.add_child(_lesson_card(lesson))
 

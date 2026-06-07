@@ -1,15 +1,13 @@
 import datetime
 import pygame
 import pianove.context as ctx
-from pylay import FloatLayout, VStack, Label, Button, ProgressBar, ColorPalette, iOSTheme, EmojiIcon
+from pylay import FloatLayout, VStack, Card, Label, Button, ProgressBar, Badge, ProgressRing, ColorPalette, iOSTheme, EmojiIcon
 from pianove.i18n import t
 from pianove.state import name_state
 from pianove.ui_utils import ui_dims
 from pianove.progress import streak, is_complete, weekly_lessons
 from pianove.lesson_loader import list_courses, load_lesson
-
-_ORANGE = pygame.Color(255, 149, 0)
-_GREEN  = pygame.Color(52, 199, 89)
+from pianove.components import ORANGE, GREEN, section_header
 
 
 def _greeting_key() -> str:
@@ -26,17 +24,6 @@ def _find_next(courses: list[dict]) -> tuple[dict | None, dict | None, int]:
             if not is_complete(lid):
                 return load_lesson(lid), course, i
     return None, None, 0
-
-
-def _section(text: str, U: dict) -> Label:
-    return Label(text=text, font_size=U["subtitle_size"], bold=True,
-                 color=iOSTheme.label, width=1.0, height=U["subtitle_size"] + 10)
-
-
-def _card(**kw) -> VStack:
-    return VStack(spacing=8, padding=14, width=1.0,
-                  background_color=iOSTheme.secondary_background,
-                  border_radius=12, **kw)
 
 
 def build():
@@ -64,33 +51,25 @@ def build():
         color=iOSTheme.label,
         anchor="left", x=0, y=0,
     ))
-    streak_badge = FloatLayout(
-        anchor="right", x=0, y=0, width=120, height=36,
-        background_color=_ORANGE if cur_streak > 0 else iOSTheme.fill,
-        border_radius=18,
-    )
-    streak_badge.add_child(EmojiIcon(
-        "🔥", size=20, color=pygame.Color(255, 255, 255),
-        anchor="left", x=10, y=0,
-    ))
-    streak_badge.add_child(Label(
+    greeting_row.add_child(Badge(
         text=t("streak_label", n=cur_streak),
-        font_size=13, bold=True,
-        color=pygame.Color(255, 255, 255) if cur_streak > 0 else iOSTheme.secondary_label,
-        anchor="left", x=36, y=0,
+        color=ORANGE if cur_streak > 0 else iOSTheme.fill,
+        icon="🔥", icon_size=20,
+        text_color=pygame.Color(255, 255, 255) if cur_streak > 0 else iOSTheme.secondary_label,
+        height=36, width=120,
+        anchor="right", x=0, y=0,
     ))
-    greeting_row.add_child(streak_badge)
     scroll.add_child(greeting_row)
 
     # ── Continue card ─────────────────────────────────────────────────────────
-    scroll.add_child(_section(t("continue_label"), U))
+    scroll.add_child(section_header(t("continue_label"), U))
 
     if next_lesson and next_course:
         n_total  = len(next_course["lessons"])
         n_done   = sum(1 for lid in next_course["lessons"] if is_complete(lid))
         progress = n_done / n_total
 
-        cont = _card(height=138)
+        cont = Card(width=1.0, height=138)
         cont.add_child(Label(
             text=next_lesson["title"],
             font_size=15, bold=True, color=iOSTheme.label, height=22,
@@ -123,8 +102,8 @@ def build():
         scroll.add_child(cont)
     else:
         # All lessons done
-        done_card = _card(height=92)
-        done_card.add_child(EmojiIcon("🏆", size=28, color=_ORANGE))
+        done_card = Card(width=1.0, height=92)
+        done_card.add_child(EmojiIcon("🏆", size=28, color=ORANGE))
         done_card.add_child(Label(
             text=t("home_all_done"),
             font_size=15, bold=True, color=iOSTheme.label, height=22,
@@ -132,22 +111,26 @@ def build():
         scroll.add_child(done_card)
 
     # ── Daily goal card ───────────────────────────────────────────────────────
-    scroll.add_child(_section(t("daily_goal"), U))
+    scroll.add_child(section_header(t("daily_goal"), U))
     goal_progress = min(today_count, 1.0)
-    goal = _card(height=68)
-    goal.add_child(ProgressBar(
-        progress=goal_progress, width=1.0, height=8,
-        active_color=_GREEN,
+    goal = Card(width=1.0, height=72)
+    goal_row = FloatLayout(width=1.0, height=44)
+    goal_row.add_child(ProgressRing(
+        progress=goal_progress, size=44, stroke=5,
+        active_color=GREEN,
+        anchor="left", x=0, y=0,
     ))
-    goal.add_child(Label(
+    goal_row.add_child(Label(
         text=t("home_today_progress", n=int(today_count)),
-        font_size=13, color=iOSTheme.secondary_label, height=18,
+        font_size=14, bold=True, color=iOSTheme.label,
+        anchor="left", x=56, y=0,
     ))
+    goal.add_child(goal_row)
     scroll.add_child(goal)
 
     # ── Your courses ──────────────────────────────────────────────────────────
     if courses:
-        scroll.add_child(_section(t("home_courses"), U))
+        scroll.add_child(section_header(t("home_courses"), U))
         for course in courses:
             lessons   = course["lessons"]
             n_total   = len(lessons)
@@ -158,7 +141,7 @@ def build():
             next_lid = next((lid for lid in lessons if not is_complete(lid)), lessons[0])
             next_ci  = lessons.index(next_lid)
 
-            c = _card(height=116)
+            c = Card(width=1.0, height=116)
             header = FloatLayout(width=1.0, height=30)
             header.add_child(EmojiIcon("🎓", size=22, color=ColorPalette.BLUE,
                                        anchor="left", x=0, y=0))
@@ -175,7 +158,7 @@ def build():
             c.add_child(header)
             c.add_child(ProgressBar(
                 progress=progress, width=1.0, height=6,
-                active_color=_GREEN if progress >= 1.0 else ColorPalette.BLUE,
+                active_color=GREEN if progress >= 1.0 else ColorPalette.BLUE,
             ))
 
             cid = course["id"]
@@ -192,7 +175,7 @@ def build():
                 text=btn_text,
                 on_click=_open_course,
                 width=0.4, height=32, font_size=13,
-                background_color=_GREEN if progress >= 1.0 else ColorPalette.BLUE,
+                background_color=GREEN if progress >= 1.0 else ColorPalette.BLUE,
                 text_color=pygame.Color(255, 255, 255),
                 border_radius=10,
             ))

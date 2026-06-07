@@ -5,9 +5,10 @@ import pygame
 import pianove.context as ctx
 from pylay import (
     FloatLayout, VStack, Label, Button, SegmentedControl,
-    State, EmojiIcon, iOSTheme, ColorPalette, FilePicker, ProgressBar, UIElement,
+    State, EmojiIcon, EmptyState, iOSTheme, ColorPalette, FilePicker, ProgressBar, UIElement,
 )
 from pianove.i18n import t
+from pianove.components import ORANGE, GREEN, RED
 
 _filter_state = State(0)
 _prev_filter_listener = None
@@ -24,13 +25,12 @@ _CARD_H     = 82
 _CARD_GAP   = 10
 
 _DIFF_COLORS = {
-    "beginner":     pygame.Color(52, 199, 89),
-    "intermediate": pygame.Color(255, 149, 0),
-    "advanced":     pygame.Color(255, 59, 48),
+    "beginner":     GREEN,
+    "intermediate": ORANGE,
+    "advanced":     RED,
 }
 
 _prev_import_listener = None
-_RED = pygame.Color(255, 59, 48)
 
 
 def _diff_index(diff: str) -> int:
@@ -97,7 +97,7 @@ def _song_card(song: dict) -> FloatLayout:
         anchor="right", x=-168, y=0,
         width=32, height=32, font_size=16,
         background_color=iOSTheme.fill,
-        text_color=_RED,
+        text_color=RED,
         border_radius=8,
     ))
 
@@ -259,7 +259,7 @@ def build():
 
     scroll.add_child(Label(
         text=_import_error_state,
-        font_size=12, color=_RED,
+        font_size=12, color=RED,
         width=1.0, height=18,
     ))
 
@@ -273,23 +273,12 @@ def build():
         for song in visible:
             scroll.add_child(_song_card(song))
     else:
-        empty = FloatLayout(width=1.0, height=max(200, list_h - 60))
-        empty.add_child(EmojiIcon("🎵", size=48, color=iOSTheme.secondary_label,
-                                  anchor="center", x=0, y=-28))
-        empty.add_child(Label(
-            text=t("songs_empty" if songs else "songs_coming_soon"),
-            font_size=15, bold=True,
-            color=iOSTheme.secondary_label,
-            anchor="center", x=0, y=16,
+        scroll.add_child(EmptyState(
+            icon="🎵",
+            title=t("songs_empty" if songs else "songs_coming_soon"),
+            subtitle=t("songs_import_hint") if not songs else "",
+            height=max(200, list_h - 60),
         ))
-        if not songs:
-            empty.add_child(Label(
-                text=t("songs_import_hint"),
-                font_size=13,
-                color=iOSTheme.secondary_label,
-                anchor="center", x=0, y=42,
-            ))
-        scroll.add_child(empty)
 
     root.add_child(scroll)
 

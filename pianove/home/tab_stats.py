@@ -1,5 +1,5 @@
 import pygame
-from pylay import FloatLayout, VStack, Label, LineChart, ColorPalette, iOSTheme, EmojiIcon
+from pylay import FloatLayout, VStack, Card, Label, LineChart, ColorPalette, iOSTheme, EmojiIcon
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
 from pianove.progress import (
@@ -7,15 +7,9 @@ from pianove.progress import (
     practice_sessions_total, practice_accuracy_avg, weekly_practice_sessions,
 )
 from pianove.state import storage
+from pianove.components import ORANGE, GREEN, RED, PURPLE, GOLD, GRAY, section_header
 
 _WEEK_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
-_ORANGE = pygame.Color(255, 149, 0)
-_GREEN  = pygame.Color(52, 199, 89)
-_GOLD   = pygame.Color(255, 200, 50)
-_GRAY   = pygame.Color(160, 160, 170)
-_PURPLE = pygame.Color(175, 82, 222)
-_RED    = pygame.Color(255, 59, 48)
 
 
 def _minutes_to_str(mins: int) -> str:
@@ -32,13 +26,11 @@ def _acc_to_str(acc: float) -> str:
 
 
 def _stat_card(value: str, label: str, color: pygame.Color, icon: str,
-               x_frac: float, w_frac: float = 0.31) -> VStack:
-    card = VStack(
+               x_frac: float, w_frac: float = 0.31) -> Card:
+    card = Card(
         spacing=4, padding=12,
         anchor="top_left", x=x_frac, y=0,
         width=w_frac, height=1.0,
-        background_color=iOSTheme.secondary_background,
-        border_radius=12,
     )
     card.add_child(EmojiIcon(icon, size=20, color=color))
     card.add_child(Label(text=value, font_size=22, bold=True, color=color, height=30))
@@ -47,29 +39,19 @@ def _stat_card(value: str, label: str, color: pygame.Color, icon: str,
 
 
 def _achievement(icon: str, label: str, color: pygame.Color,
-                 x_frac: float, earned: bool) -> VStack:
+                 x_frac: float, earned: bool) -> Card:
     bg    = color if earned else iOSTheme.secondary_background
-    alpha = pygame.Color(255, 255, 255) if earned else _GRAY
-    badge = VStack(
+    alpha = pygame.Color(255, 255, 255) if earned else GRAY
+    badge = Card(
         spacing=2, padding=6,
         anchor="top_left", x=x_frac, y=0.0,
         width=0.22, height=1.0,
         background_color=bg,
-        border_radius=12,
     )
     badge.add_child(EmojiIcon(icon, size=22, color=alpha,
                               anchor="center", x=0, y=0))
     badge.add_child(Label(text=label, font_size=10, bold=True, color=alpha))
     return badge
-
-
-def _section_label(text: str, U: dict) -> Label:
-    return Label(
-        text=text,
-        font_size=U["subtitle_size"],
-        bold=True, color=iOSTheme.label,
-        width=1.0, height=U["subtitle_size"] + 8,
-    )
 
 
 def build():
@@ -104,19 +86,19 @@ def build():
     from pylay.core.scale import scaled_px
 
     # ── Lesson stat cards ──────────────────────────────────────────────────────
-    scroll.add_child(_section_label(t("stats_lessons_section"), U))
+    scroll.add_child(section_header(t("stats_lessons_section"), U))
     stats_row = FloatLayout(width=1.0, height=scaled_px(104))
     cards = [
-        (_stat_card(str(cur_streak),            t("stats_streak"),  _ORANGE,           "🔥", 0.0)),
+        (_stat_card(str(cur_streak),            t("stats_streak"),  ORANGE,           "🔥", 0.0)),
         (_stat_card(str(lessons_done),           t("stats_lessons"), ColorPalette.BLUE, "🎓", 0.345)),
-        (_stat_card(_minutes_to_str(total_mins), t("stats_time"),    _GREEN,            "⏱", 0.69)),
+        (_stat_card(_minutes_to_str(total_mins), t("stats_time"),    GREEN,            "⏱", 0.69)),
     ]
     for card in cards:
         stats_row.add_child(card)
     scroll.add_child(stats_row)
 
     # ── Weekly lessons chart ───────────────────────────────────────────────────
-    scroll.add_child(_section_label(t("stats_week"), U))
+    scroll.add_child(section_header(t("stats_week"), U))
     scroll.add_child(LineChart(
         data=week_data,
         labels=_WEEK_LABELS,
@@ -126,36 +108,36 @@ def build():
     ))
 
     # ── Sight-reading section ──────────────────────────────────────────────────
-    scroll.add_child(_section_label(t("stats_practice_section"), U))
+    scroll.add_child(section_header(t("stats_practice_section"), U))
 
     pr_row = FloatLayout(width=1.0, height=scaled_px(104))
     pr_row.add_child(_stat_card(
-        str(pr_total),         t("stats_pr_sessions"), _PURPLE, "🎯", 0.0,   w_frac=0.47,
+        str(pr_total),         t("stats_pr_sessions"), PURPLE, "🎯", 0.0,   w_frac=0.47,
     ))
     pr_row.add_child(_stat_card(
-        _acc_to_str(pr_avg_acc), t("stats_pr_accuracy"), _GREEN,  "✅", 0.53, w_frac=0.47,
+        _acc_to_str(pr_avg_acc), t("stats_pr_accuracy"), GREEN,  "✅", 0.53, w_frac=0.47,
     ))
     scroll.add_child(pr_row)
 
     if any(v > 0 for v in pr_week_data):
-        scroll.add_child(_section_label(t("stats_pr_week"), U))
+        scroll.add_child(section_header(t("stats_pr_week"), U))
         scroll.add_child(LineChart(
             data=pr_week_data,
             labels=_WEEK_LABELS,
-            active_color=_PURPLE,
+            active_color=PURPLE,
             title=t("stats_pr_week"),
             width=1.0, height=scaled_px(140),
         ))
 
     # ── Achievements ──────────────────────────────────────────────────────────
-    scroll.add_child(_section_label(t("stats_achievements"), U))
+    scroll.add_child(section_header(t("stats_achievements"), U))
 
     # Row 1: classic achievements
     badges_row1 = FloatLayout(width=1.0, height=scaled_px(64))
     row1 = [
-        ("🎓", t("ach_first_lesson"), _GREEN,          0.0,   ach_first),
-        ("🏆", t("ach_course_done"),  _GOLD,           0.245, ach_course),
-        ("🔥", t("ach_streak_3"),     _ORANGE,         0.49,  ach_streak3),
+        ("🎓", t("ach_first_lesson"), GREEN,          0.0,   ach_first),
+        ("🏆", t("ach_course_done"),  GOLD,           0.245, ach_course),
+        ("🔥", t("ach_streak_3"),     ORANGE,         0.49,  ach_streak3),
         ("⭐", t("ach_dedicated"),    ColorPalette.BLUE, 0.735, ach_ded),
     ]
     for icon, label, color, x_frac, earned in row1:
@@ -165,8 +147,8 @@ def build():
     # Row 2: sight-reading achievements
     badges_row2 = FloatLayout(width=1.0, height=scaled_px(64))
     row2 = [
-        ("🎯", t("ach_sight_reader"), _PURPLE, 0.0,   ach_reader),
-        ("🔬", t("ach_sharp_eye"),    _GREEN,  0.245, ach_sharp),
+        ("🎯", t("ach_sight_reader"), PURPLE, 0.0,   ach_reader),
+        ("🔬", t("ach_sharp_eye"),    GREEN,  0.245, ach_sharp),
     ]
     for icon, label, color, x_frac, earned in row2:
         badges_row2.add_child(_achievement(icon, label, color, x_frac, earned))

@@ -1,15 +1,12 @@
 import pygame
-from pylay import FloatLayout, VStack, Label, Button, ColorPalette, iOSTheme, EmojiIcon
+from pylay import FloatLayout, VStack, Card, Label, Button, Badge, ColorPalette, iOSTheme, EmojiIcon
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
 from pianove.state import storage
 import pianove.context as ctx
+from pianove.components import ORANGE, GREEN, RED, PURPLE
 
-_BLUE   = ColorPalette.BLUE
-_GREEN  = pygame.Color(52, 199, 89)
-_ORANGE = pygame.Color(255, 149, 0)
-_PURPLE = pygame.Color(175, 82, 222)
-_RED    = pygame.Color(255, 59, 48)
+_BLUE = ColorPalette.BLUE
 
 # ── Persistent config state (survive tab switches) ────────────────────────────
 _CFG_KEY = "practice_config"
@@ -89,7 +86,7 @@ def _session_row(s: dict) -> FloatLayout:
     pct       = int(s.get("accuracy", 0) * 100)
     notes     = s.get("notes", 0)
     bpm       = s.get("bpm", 80)
-    acc_color = _GREEN if pct >= 80 else (_ORANGE if pct >= 50 else _RED)
+    acc_color = GREEN if pct >= 80 else (ORANGE if pct >= 50 else RED)
 
     row = FloatLayout(width=1.0, height=40,
                       background_color=iOSTheme.secondary_background,
@@ -141,17 +138,12 @@ def build():
         color=iOSTheme.label, anchor="left", x=0, y=0,
     ))
     if total_done > 0:
-        badge = FloatLayout(
-            anchor="right", x=0, y=0, width=110, height=34,
-            background_color=_PURPLE, border_radius=17,
-        )
-        badge.add_child(Label(
+        header_row.add_child(Badge(
             text=f"{total_done} {t('practice_sessions_badge')}",
-            font_size=12, bold=True,
-            color=pygame.Color(255, 255, 255),
-            anchor="center", x=0, y=0,
+            color=PURPLE,
+            font_size=12, height=34, width=110,
+            anchor="right", x=0, y=0,
         ))
-        header_row.add_child(badge)
     scroll.add_child(header_row)
 
     scroll.add_child(Label(
@@ -164,9 +156,7 @@ def build():
     _CARD_H = 20 + 5 * _ROW_H + 44 + 6 * 12 + 2 * 14
 
     # ── Config card ───────────────────────────────────────────────────────────
-    config_card = VStack(spacing=12, padding=14, width=1.0, height=_CARD_H,
-                         background_color=iOSTheme.secondary_background,
-                         border_radius=12)
+    config_card = Card(spacing=12, padding=14, width=1.0, height=_CARD_H)
 
     config_card.add_child(Label(
         text=t("practice_config_title"),
@@ -216,7 +206,7 @@ def build():
         text=t("practice_start"),
         on_click=_start,
         width=1.0, height=44, font_size=15,
-        background_color=_PURPLE,
+        background_color=PURPLE,
         text_color=pygame.Color(255, 255, 255),
         border_radius=12,
     ))
@@ -231,7 +221,7 @@ def build():
         ))
         if total_done > 0:
             avg_pct   = int(avg_acc * 100)
-            avg_color = _GREEN if avg_pct >= 80 else (_ORANGE if avg_pct >= 50 else _RED)
+            avg_color = GREEN if avg_pct >= 80 else (ORANGE if avg_pct >= 50 else RED)
             avg_row   = FloatLayout(width=1.0, height=36)
             avg_row.add_child(Label(
                 text=t("practice_avg_accuracy"),

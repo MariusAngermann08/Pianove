@@ -8,12 +8,13 @@ from pianove.midi.panel import WHITE_NOTES, BLACK_NOTES, BLACK_INDICES
 import pianove.context as ctx
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
+from pianove.components import ORANGE, GREEN, RED, PURPLE
 
-_GREEN      = pygame.Color(52, 199, 89)
-_RED        = pygame.Color(255, 59, 48)
-_ORANGE     = pygame.Color(255, 149, 0)
-_BLUE       = pygame.Color(0, 122, 255)
-_PURPLE     = pygame.Color(175, 82, 222)
+_GREEN  = GREEN
+_RED    = RED
+_ORANGE = ORANGE
+_PURPLE = PURPLE
+_BLUE   = ColorPalette.BLUE
 _PX_PER_BAR = 300
 _KB_H       = 130       # keyboard canvas height when visible
 _BPM        = 80        # default performance tempo
