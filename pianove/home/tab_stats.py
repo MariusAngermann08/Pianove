@@ -68,6 +68,7 @@ def _section_label(text: str, U: dict) -> Label:
         text=text,
         font_size=U["subtitle_size"],
         bold=True, color=iOSTheme.label,
+        width=1.0, height=U["subtitle_size"] + 8,
     )
 
 
@@ -100,9 +101,11 @@ def build():
         bold=True, color=iOSTheme.label,
     ))
 
+    from pylay.core.scale import scaled_px
+
     # ── Lesson stat cards ──────────────────────────────────────────────────────
     scroll.add_child(_section_label(t("stats_lessons_section"), U))
-    stats_row = FloatLayout(width=1.0, height=104)
+    stats_row = FloatLayout(width=1.0, height=scaled_px(104))
     cards = [
         (_stat_card(str(cur_streak),            t("stats_streak"),  _ORANGE,           "🔥", 0.0)),
         (_stat_card(str(lessons_done),           t("stats_lessons"), ColorPalette.BLUE, "🎓", 0.345)),
@@ -119,13 +122,13 @@ def build():
         labels=_WEEK_LABELS,
         active_color=ColorPalette.BLUE,
         title=t("stats_week"),
-        width=1.0, height=160,
+        width=1.0, height=scaled_px(160),
     ))
 
     # ── Sight-reading section ──────────────────────────────────────────────────
     scroll.add_child(_section_label(t("stats_practice_section"), U))
 
-    pr_row = FloatLayout(width=1.0, height=104)
+    pr_row = FloatLayout(width=1.0, height=scaled_px(104))
     pr_row.add_child(_stat_card(
         str(pr_total),         t("stats_pr_sessions"), _PURPLE, "🎯", 0.0,   w_frac=0.47,
     ))
@@ -141,14 +144,14 @@ def build():
             labels=_WEEK_LABELS,
             active_color=_PURPLE,
             title=t("stats_pr_week"),
-            width=1.0, height=140,
+            width=1.0, height=scaled_px(140),
         ))
 
     # ── Achievements ──────────────────────────────────────────────────────────
     scroll.add_child(_section_label(t("stats_achievements"), U))
 
     # Row 1: classic achievements
-    badges_row1 = FloatLayout(width=1.0, height=64)
+    badges_row1 = FloatLayout(width=1.0, height=scaled_px(64))
     row1 = [
         ("🎓", t("ach_first_lesson"), _GREEN,          0.0,   ach_first),
         ("🏆", t("ach_course_done"),  _GOLD,           0.245, ach_course),
@@ -160,7 +163,7 @@ def build():
     scroll.add_child(badges_row1)
 
     # Row 2: sight-reading achievements
-    badges_row2 = FloatLayout(width=1.0, height=64)
+    badges_row2 = FloatLayout(width=1.0, height=scaled_px(64))
     row2 = [
         ("🎯", t("ach_sight_reader"), _PURPLE, 0.0,   ach_reader),
         ("🔬", t("ach_sharp_eye"),    _GREEN,  0.245, ach_sharp),

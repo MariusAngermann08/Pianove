@@ -788,7 +788,7 @@ def build():
                         color=iOSTheme.label, anchor="center", x=0, y=0))
     nav.add_child(Label(text=counter_state, font_size=13,
                         color=iOSTheme.secondary_label,
-                        anchor="right", x=14, y=0, width=100, height=52))
+                        anchor="right", x=-14, y=0, width=100, height=52))
     main.add_child(nav)
     main.add_child(FloatLayout(width=1.0, height=1,
                                background_color=pygame.Color(120, 120, 128, 60)))
@@ -800,15 +800,15 @@ def build():
                              color=iOSTheme.secondary_label,
                              anchor="left", x=16, y=0, width=240, height=44))
     controls.add_child(Button(text="↺", on_click=_on_restart,
-                              anchor="right", x=126, y=0,
+                              anchor="right", x=-126, y=0,
                               width=36, height=32, font_size=18,
                               background_color=iOSTheme.fill, text_color=iOSTheme.label,
                               border_radius=8))
     controls.add_child(Label(text="Piano", font_size=13,
                              color=iOSTheme.secondary_label,
-                             anchor="right", x=80, y=0, width=42, height=44))
+                             anchor="right", x=-80, y=0, width=42, height=44))
     controls.add_child(Switch(value=keyboard_vis, on_change=_on_kb_toggle,
-                              anchor="right", x=8, y=0,
+                              anchor="right", x=-8, y=0,
                               width=51, height=31, active_color=ColorPalette.BLUE))
     main.add_child(controls)
     main.add_child(FloatLayout(width=1.0, height=1,

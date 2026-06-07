@@ -132,10 +132,6 @@ class LineChart(UIElement):
         bg_col = iOSTheme.secondary_background
         pygame.draw.rect(surface, bg_col, self.rect, border_radius=16)
         
-        # Border
-        border_col = iOSTheme.fill_tertiary
-        pygame.draw.rect(surface, border_col, self.rect, width=1, border_radius=16)
-        
         # Title text
         f_title, f_metrics = self._get_fonts()
         title_surf = f_title.render(self.title, True, iOSTheme.label)

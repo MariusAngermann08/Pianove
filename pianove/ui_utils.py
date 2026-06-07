@@ -102,7 +102,6 @@ def page_shell(
         width=U["card_width"],
         height=U["card_height"],
         border_radius=U["card_radius"],
-        border_width=1,
         background_color=iOSTheme.secondary_background,
     )
     root.add_child(card)

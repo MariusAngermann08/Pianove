@@ -160,10 +160,6 @@ class Button(UIElement):
 
         sc = self.scale
         if abs(sc - 1.0) < 5e-3:
-            # Blit shadow behind button (only in dark mode — subtle depth)
-            if self._shadow_surf is not None and iOSTheme.dark:
-                surface.blit(self._shadow_surf,
-                             (self.rect.x - SHADOW_BLUR, self.rect.y - SHADOW_BLUR))
             surface.blit(base, self.rect.topleft)
             if hv > 0.02:
                 surface.blit(self._ov_surf, self.rect.topleft)
