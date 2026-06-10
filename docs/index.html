@@ -7,27 +7,20 @@
   <meta name="description" content="Pianove is a free, open-source piano learning application built on PyLute and PyLay. Practice any MusicXML file with MIDI support, offline, no subscription.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script>
-    (function(){
-      var t = localStorage.getItem('pianove-theme');
-      if (!t) { t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
-      document.documentElement.setAttribute('data-theme', t);
-    })();
-  </script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
 
-<!-- ── Navigation ─────────────────────────────────────────────────────────── -->
 <nav class="nav" id="nav">
   <a class="nav-logo" href="index.html">Pianove</a>
   <div class="nav-links">
-    <a href="#story" data-section="story">Story</a>
-    <a href="docs.html">Docs</a>
+    <a href="story.html">Story</a>
+    <a href="docs.html">Pianove</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
-        Libraries
+        API Reference
         <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg>
       </button>
       <div class="nav-dropdown-menu" role="menu">
@@ -74,8 +67,8 @@
       </p>
       <p class="hero-meta">Python 3.x · pygame · MIT License</p>
       <div class="hero-cta">
-        <a href="quickstart.html" class="btn btn-primary">Get Started</a>
-        <a href="#story" class="btn btn-outline">Read the Story</a>
+        <a href="docs/quickstart.html" class="btn btn-primary">Get Started</a>
+        <a href="story.html" class="btn btn-outline">Read the Story</a>
         <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="btn btn-ghost">GitHub ↗</a>
       </div>
     </div>
@@ -88,190 +81,88 @@
   </div>
 </section>
 
-<!-- ── Story ──────────────────────────────────────────────────────────────── -->
-<main id="story">
+<!-- ── Highlights ─────────────────────────────────────────────────────────── -->
+<div class="landing-highlights">
+  <div class="landing-highlight">
+    <div class="landing-highlight-value">Free</div>
+    <div class="landing-highlight-label">No subscription, no account, no cost — ever</div>
+  </div>
+  <div class="landing-highlight">
+    <div class="landing-highlight-value">Any piece</div>
+    <div class="landing-highlight-label">Import any MusicXML file and practice immediately</div>
+  </div>
+  <div class="landing-highlight">
+    <div class="landing-highlight-value">Offline</div>
+    <div class="landing-highlight-label">No internet required after installation</div>
+  </div>
+  <div class="landing-highlight">
+    <div class="landing-highlight-value">MIT</div>
+    <div class="landing-highlight-label">Fully open source — read, modify, redistribute</div>
+  </div>
+</div>
 
-  <!-- 01 PyLute -->
-  <section id="s-pylute" class="story-section">
+<!-- ── Projects ───────────────────────────────────────────────────────────── -->
+<section class="landing-projects-section">
+  <div class="landing-projects-inner">
+    <p class="landing-projects-label">Three projects, one idea</p>
+    <div class="landing-projects">
 
-    <figure class="reveal">
-      <img src="img/pylute-sheet.png" alt="PyLute rendering a MusicXML score" class="screenshot-frame">
-      <figcaption>PyLute — MusicXML rendering output</figcaption>
-    </figure>
+      <div class="landing-project">
+        <div class="landing-project-header">
+          <span class="landing-project-name">PyLute</span>
+          <span class="landing-project-type">Library</span>
+        </div>
+        <p class="landing-project-desc">
+          Parses MusicXML files and renders proportional sheet music on any pygame surface.
+          Clefs, key signatures, accidentals, beams, ledger lines — all from the Bravura SMuFL font.
+        </p>
+        <a href="pylute.html" class="story-link">API Reference →</a>
+      </div>
 
-    <div class="story-text">
-      <span class="ch-num reveal">01</span>
-      <h2 class="reveal reveal-delay-1">A fun challenge</h2>
-      <p class="reveal reveal-delay-2">
-        My name is Marius. I'm learning piano and spend a lot of time on sites like
-        <strong>MuseScore</strong> — browsing sheet music, listening to scores, exploring notation.
-        At some point a thought stuck: <em>could I render this myself, in code?</em>
-      </p>
-      <p class="reveal reveal-delay-3">
-        To make it a real challenge, I set a constraint: do it in <strong>pygame</strong>.
-        No web stack, no existing notation engine — raw surfaces and rectangles.
-        The result was <strong>PyLute</strong>, a library that parses <strong>MusicXML files</strong>
-        and renders proportional sheet music on any pygame surface, at any size.
-      </p>
-      <p class="reveal reveal-delay-3">
-        At this point it was a standalone side project. I had no idea where it would lead.
-      </p>
-      <a href="pylute.html" class="story-link reveal reveal-delay-4">PyLute documentation →</a>
+      <div class="landing-project">
+        <div class="landing-project-header">
+          <span class="landing-project-name">PyLay</span>
+          <span class="landing-project-type">Library</span>
+        </div>
+        <p class="landing-project-desc">
+          A complete UI framework for pygame — 21 widgets, spring-based physics animations,
+          reactive state, and a theming system with dark and light mode.
+        </p>
+        <a href="pylay.html" class="story-link">API Reference →</a>
+      </div>
+
+      <div class="landing-project">
+        <div class="landing-project-header">
+          <span class="landing-project-name">Pianove</span>
+          <span class="landing-project-type">Application</span>
+        </div>
+        <p class="landing-project-desc">
+          The application built on top of both libraries. MIDI keyboard input, real-time note
+          detection, 16 built-in lessons, and a built-in synthesiser — entirely offline.
+        </p>
+        <a href="docs.html" class="story-link">Documentation →</a>
+      </div>
+
     </div>
+  </div>
+</section>
 
-  </section>
-
-  <!-- 02 The problem -->
-  <section id="s-problem" class="problem-section">
-    <div class="problem-inner">
-      <span class="ch-num reveal">02</span>
-      <h2 class="reveal reveal-delay-1">Then I wanted to practice — for free, forever</h2>
-
-      <p class="reveal reveal-delay-2">
-        Alongside PyLute, I started using apps like Simply Piano, Flowkey, and Playground.
-        They are well-built — but they all operate on the same model: a <strong>monthly subscription</strong>
-        and a fixed song library. Want to learn a piece they do not offer? Too bad.
-      </p>
-      <p class="reveal reveal-delay-2">
-        I wanted to practice <em>any</em> piece I could find a MusicXML file for —
-        a Chopin étude, a pop song, a Bach prelude — without paying, forever.
-        And I already had the hardest part built: a notation renderer.
-      </p>
-
-      <blockquote class="reveal reveal-delay-3">
-        What if I built my own app on top of PyLute and made it completely free?
-      </blockquote>
-
-      <p class="reveal reveal-delay-3">
-        So a renderer experiment became an ambition: a fully open-source piano learning application.
-        But an application needs a UI, and that is where things got complicated.
-      </p>
+<!-- ── CTA ────────────────────────────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <h2>Start playing in five minutes.</h2>
+    <p>
+      Clone the repository, install pygame, and run <code>python main.py</code>.
+      No account, no setup beyond Python and a MIDI keyboard.
+    </p>
+    <div class="cta-buttons">
+      <a href="docs/quickstart.html" class="btn btn-primary">Get Started</a>
+      <a href="story.html" class="btn btn-outline">Read the Story</a>
+      <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="btn btn-ghost">GitHub ↗</a>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- 03 PyLay -->
-  <section id="s-pylay" class="story-section story-section--reverse">
-
-    <div class="story-text">
-      <span class="ch-num reveal">03</span>
-      <h2 class="reveal reveal-delay-1">The UI problem</h2>
-      <p class="reveal reveal-delay-2">
-        Pygame UI libraries exist — <strong>pygame_gui, thorpy, pgzero</strong> and others.
-        They work. But every one of them looks like <strong>software from 2004</strong>:
-        flat grey rectangles, harsh borders, no animations, no visual cohesion.
-        That was not an acceptable baseline.
-      </p>
-      <p class="reveal reveal-delay-3">
-        I wanted something that felt like a <strong>modern desktop interface</strong> —
-        smooth, rounded, with physical animations.
-        Since nothing in the pygame ecosystem came close, I built one from scratch.
-      </p>
-      <p class="reveal reveal-delay-3">
-        I called it <strong>PyLay</strong> — <em>lay</em> as in layout.
-        A complete UI framework for pygame: theming system, spring-based physics,
-        and a reactive layout engine that scales to any window size.
-      </p>
-      <a href="pylay.html" class="story-link reveal reveal-delay-4">PyLay documentation →</a>
-    </div>
-
-    <figure class="reveal reveal-delay-1">
-      <img src="img/pylay-ui.png" alt="PyLay UI framework in use" class="screenshot-frame">
-      <figcaption>PyLay — settings screen, demonstrating widget library</figcaption>
-    </figure>
-
-  </section>
-
-  <!-- PyLay spec table -->
-  <section id="s-pylay-features" class="features-section">
-    <h2 class="reveal">PyLay — component overview</h2>
-    <dl class="pylay-specs reveal reveal-delay-1">
-      <div>
-        <dt>Physics Animations</dt>
-        <dd>Spring-based velocity-damped animations. Buttons bounce, panels slide with physical weight.</dd>
-      </div>
-      <div>
-        <dt>Reactive Layout</dt>
-        <dd>Rescales and reflows on window resize. Fractional sizing and flex-like stacks built in.</dd>
-      </div>
-      <div>
-        <dt>21 Widgets</dt>
-        <dd>Button, Switch, Slider, TextField, SegmentedControl, LineChart, FilePicker, and more.</dd>
-      </div>
-      <div>
-        <dt>Theming System</dt>
-        <dd>Dark and light mode with a full iOS-style colour system applied across every screen.</dd>
-      </div>
-      <div>
-        <dt>Observable State</dt>
-        <dd>Reactive state with bind callbacks — UI rebuilds automatically, no manual re-renders.</dd>
-      </div>
-      <div>
-        <dt>Page Router</dt>
-        <dd>Animated transitions with navigation history. Sidebar drawers and bottom nav included.</dd>
-      </div>
-    </dl>
-  </section>
-
-  <!-- 04 Pianove -->
-  <section id="s-pianove" class="pianove-section">
-
-    <div>
-      <span class="ch-num reveal" style="display:block">04</span>
-      <h2 class="reveal reveal-delay-1">Everything comes together</h2>
-      <p class="reveal reveal-delay-2">
-        With <strong>PyLute</strong> rendering the sheet music and <strong>PyLay</strong>
-        providing a coherent interface, the application came together.
-        What started as a renderer experiment became a fully featured, free piano learning tool.
-      </p>
-      <p class="reveal reveal-delay-3">
-        <strong>Pianove</strong> listens to a MIDI keyboard in real time, displays the notes
-        to play, tracks accuracy, and guides the user through structured lessons —
-        completely offline, at no cost. Any MusicXML file, any song, permanently.
-      </p>
-
-      <ul class="feature-list reveal reveal-delay-3">
-        <li>16 built-in lessons, beginner to intermediate</li>
-        <li>Import any MusicXML file and practice immediately</li>
-        <li>Real-time MIDI keyboard input</li>
-        <li>Built-in synthesiser — no soundfont required</li>
-        <li>Progress tracking, streaks, and weekly statistics</li>
-        <li>Fully offline — no account, no subscription</li>
-        <li>English and German language support</li>
-      </ul>
-    </div>
-
-    <figure class="reveal reveal-delay-2">
-      <img src="img/pianove-lesson.png" alt="Pianove — active lesson with sheet music and keyboard" class="screenshot-frame">
-      <figcaption>Pianove — lesson in progress, MIDI keyboard active</figcaption>
-    </figure>
-
-  </section>
-
-  <!-- Open source / closing -->
-  <section id="s-opensource" class="cta-section">
-    <div class="cta-inner">
-      <h2 class="reveal">One small idea. Three open-source projects.</h2>
-      <p class="reveal reveal-delay-1">
-        What began as a personal challenge — <em>can I render sheet music in pygame?</em> —
-        grew into something larger. Pianove was submitted to the
-        <strong>Free Software Foundation Europe's Youth Hacking For Freedom</strong> competition,
-        which celebrates young developers building software that respects user freedoms.
-      </p>
-      <p class="reveal reveal-delay-2">
-        Beyond the application itself, <strong>PyLute</strong> and <strong>PyLay</strong>
-        are independently released, open-source libraries — reusable contributions to the
-        pygame ecosystem. No vendor lock-in, no subscription, no telemetry.
-      </p>
-      <div class="cta-buttons reveal reveal-delay-3">
-        <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="btn btn-outline">View on GitHub ↗</a>
-        <a href="quickstart.html" class="btn btn-primary">Get Started</a>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
 <footer>
   <span>Marius Angermann · 2026</span>
   <span>

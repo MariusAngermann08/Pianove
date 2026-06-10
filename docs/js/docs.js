@@ -1,3 +1,9 @@
+/* ─── Frosted nav on scroll ──────────────────────────────────────────────── */
+const docsNav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  docsNav?.classList.toggle('nav--scrolled', window.scrollY > 40);
+}, { passive: true });
+
 /* ─── Syntax highlighting init ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof hljs !== 'undefined') {

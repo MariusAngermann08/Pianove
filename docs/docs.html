@@ -15,10 +15,10 @@
 <nav class="nav" id="nav">
   <a class="nav-logo" href="index.html">Pianove</a>
   <div class="nav-links">
-    <a href="index.html#story">Story</a>
-    <a href="docs.html">Docs</a>
+    <a href="story.html">Story</a>
+    <a href="docs.html" class="active">Pianove</a>
     <div class="nav-dropdown" id="nav-libraries">
-      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Libraries<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
         <a href="pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
         <a href="pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
@@ -39,22 +39,33 @@
 <div class="overview-content">
   <div class="overview-header">
     <div>
+      <p class="overview-eyebrow">Reference · v1.0</p>
       <h1>Pianove Documentation</h1>
       <p class="overview-desc">Everything you need to install, configure, and use Pianove — a free, fully offline piano learning application. No account, no subscription, no internet required.</p>
-      <p class="overview-desc">New here? The Quick Start gets you playing in under five minutes.</p>
-      <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+      <div class="overview-btn-group">
         <a href="docs/quickstart.html" class="btn btn-primary">Quick Start →</a>
         <a href="docs/installation.html" class="btn btn-outline">Full Installation Guide</a>
       </div>
     </div>
-    <div class="overview-meta">
-      <div class="overview-meta-row"><span>Platform</span><span>Windows · macOS · Linux</span></div>
-      <div class="overview-meta-row"><span>Python</span><span>3.10 +</span></div>
-      <div class="overview-meta-row"><span>Dependencies</span><span>pygame, pygame.freetype</span></div>
-      <div class="overview-meta-row"><span>MIDI</span><span>Any class-compliant USB keyboard</span></div>
-      <div class="overview-meta-row"><span>License</span><span>MIT</span></div>
-      <div class="overview-meta-row"><span>Network</span><span>Fully offline</span></div>
+    <div class="overview-meta-box">
+      <div class="overview-meta-box-label">Specification</div>
+      <div class="overview-meta">
+        <div class="overview-meta-row"><span>Platform</span><span>Windows · macOS · Linux</span></div>
+        <div class="overview-meta-row"><span>Python</span><span>3.10 +</span></div>
+        <div class="overview-meta-row"><span>Dependencies</span><span>pygame, pygame.freetype</span></div>
+        <div class="overview-meta-row"><span>MIDI</span><span>Any class-compliant USB keyboard</span></div>
+        <div class="overview-meta-row"><span>License</span><span>MIT</span></div>
+        <div class="overview-meta-row"><span>Network</span><span>Fully offline</span></div>
+      </div>
     </div>
+  </div>
+
+  <div class="start-here-banner">
+    <div>
+      <h3>New to Pianove?</h3>
+      <p>The Quick Start gets you installed and playing in under five minutes — no account, no subscription, fully offline.</p>
+    </div>
+    <a href="docs/quickstart.html" class="btn btn-primary" style="white-space:nowrap">Quick Start →</a>
   </div>
 
   <div class="category-grid">
@@ -82,12 +93,12 @@
         <li><a href="docs/settings.html">Settings &amp; Language <span>English / German, theme, device</span></a></li>
       </ul>
     </div>
-    <div class="category-group">
+    <div class="category-group category-group--dev">
       <div class="category-group-header">For Developers</div>
       <ul class="category-link-list">
         <li><a href="docs/lesson-format.html">Lesson File Format <span>Write your own lesson courses</span></a></li>
-        <li><a href="pylute.html">PyLute Library Reference <span>Notation renderer API</span></a></li>
-        <li><a href="pylay.html">PyLay Library Reference <span>UI framework API</span></a></li>
+        <li><a href="pylute.html">PyLute Library Reference <span>Notation renderer API ↗</span></a></li>
+        <li><a href="pylay.html">PyLay Library Reference <span>UI framework API ↗</span></a></li>
       </ul>
     </div>
   </div>

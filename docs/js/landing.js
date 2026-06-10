@@ -1,12 +1,15 @@
-/* ─── Scroll progress bar ────────────────────────────────────────────────── */
+/* ─── Scroll progress bar + frosted nav ──────────────────────────────────── */
 const progressBar = document.createElement('div');
 progressBar.className = 'scroll-progress';
 document.body.prepend(progressBar);
+
+const navEl = document.getElementById('nav');
 
 window.addEventListener('scroll', () => {
   const max    = document.documentElement.scrollHeight - window.innerHeight;
   const ratio  = max > 0 ? window.scrollY / max : 0;
   progressBar.style.transform = `scaleX(${ratio})`;
+  navEl?.classList.toggle('nav--scrolled', window.scrollY > 40);
 }, { passive: true });
 
 /* ─── Libraries dropdown ─────────────────────────────────────────────────── */

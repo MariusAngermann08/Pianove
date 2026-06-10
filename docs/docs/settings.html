@@ -1,1 +1,83 @@
-﻿<html><body>placeholder</body></html>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings & Language — Pianove</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../story.html">Story</a>
+    <a href="../docs.html">Pianove</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub &#x2197;</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <span class="sidebar-group-label">Getting Started</span>
+    <a href="quickstart.html">Quick Start</a>
+    <a href="requirements.html">System Requirements</a>
+    <a href="installation.html">Installation</a>
+    <span class="sidebar-group-label">Using Pianove</span>
+    <a href="midi-setup.html">MIDI Setup</a>
+    <a href="lessons.html">Built-in Lessons</a>
+    <a href="musicxml.html">Importing MusicXML</a>
+    <span class="sidebar-group-label">Features</span>
+    <a href="progress.html">Progress &amp; Statistics</a>
+    <a href="synthesiser.html">Built-in Synthesiser</a>
+    <a href="settings.html" class="active">Settings &amp; Language</a>
+    <span class="sidebar-group-label">For Developers</span>
+    <a href="lesson-format.html">Lesson File Format</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Settings & Language</h1>
+      <p class="page-subtitle">Configure theme, language, MIDI device, and synthesiser volume.</p>
+    </div>
+
+    <section class="doc-section" id="settings">
+      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="synthesiser.html" class="doc-nav-link">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">← Built-in Synthesiser</div>
+      </a>
+      <a href="lesson-format.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">Lesson File Format →</div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

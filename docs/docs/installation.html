@@ -1,1 +1,173 @@
-﻿<html><body>placeholder</body></html>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installation — Pianove</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../story.html">Story</a>
+    <a href="../docs.html">Pianove</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <span class="sidebar-group-label">Getting Started</span>
+    <a href="quickstart.html">Quick Start</a>
+    <a href="requirements.html">System Requirements</a>
+    <a href="installation.html" class="active">Installation</a>
+    <span class="sidebar-group-label">Using Pianove</span>
+    <a href="midi-setup.html">MIDI Setup</a>
+    <a href="lessons.html">Built-in Lessons</a>
+    <a href="musicxml.html">Importing MusicXML</a>
+    <span class="sidebar-group-label">Features</span>
+    <a href="progress.html">Progress &amp; Statistics</a>
+    <a href="synthesiser.html">Built-in Synthesiser</a>
+    <a href="settings.html">Settings &amp; Language</a>
+    <span class="sidebar-group-label">For Developers</span>
+    <a href="lesson-format.html">Lesson File Format</a>
+  </aside>
+
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <h1>Installation</h1>
+      <p class="page-subtitle">A complete guide to installing Pianove and its dependencies on Windows, macOS, and Linux.</p>
+      <div class="page-meta">
+        <span class="meta-item">Python 3.10 +</span>
+        <span class="meta-item">pygame</span>
+        <span class="meta-item">MIT License</span>
+      </div>
+    </div>
+
+    <section class="doc-section" id="requirements">
+      <h2>Requirements</h2>
+      <p>Before installing Pianove, make sure the following are available on your system:</p>
+      <ul>
+        <li><strong>Python 3.10 or later</strong> — Pianove uses match statements and union types introduced in 3.10.</li>
+        <li><strong>pip</strong> — included with all standard Python distributions.</li>
+        <li><strong>git</strong> — to clone the repository. Alternatively, download the ZIP from GitHub.</li>
+      </ul>
+      <p>A MIDI keyboard is optional for installation but required for interactive lessons. The built-in synthesiser works without a MIDI device.</p>
+    </section>
+
+    <section class="doc-section" id="python">
+      <h2>1. Install Python</h2>
+      <h3>Windows</h3>
+      <p>Download the installer from <a href="https://python.org/downloads" target="_blank" rel="noopener">python.org/downloads</a>. During installation, check <strong>Add Python to PATH</strong>. Verify with:</p>
+      <pre><code class="language-bash">python --version</code></pre>
+
+      <h3>macOS</h3>
+      <p>The system Python on macOS is 2.x and should not be used. Install via Homebrew:</p>
+      <pre><code class="language-bash">brew install python3
+python3 --version</code></pre>
+
+      <h3>Linux</h3>
+      <p>Most distributions ship Python 3. Install it via your package manager if needed:</p>
+      <pre><code class="language-bash"># Debian / Ubuntu
+sudo apt update && sudo apt install python3 python3-pip
+
+# Arch
+sudo pacman -S python python-pip
+
+python3 --version</code></pre>
+    </section>
+
+    <section class="doc-section" id="clone">
+      <h2>2. Get the source code</h2>
+      <h3>Option A — Clone with git</h3>
+      <pre><code class="language-bash">git clone https://github.com/MariusAngermann08/Pianove-main.git
+cd Pianove-main</code></pre>
+
+      <h3>Option B — Download ZIP</h3>
+      <p>Go to the <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub repository</a>, click <strong>Code → Download ZIP</strong>, extract it, and open a terminal in the extracted folder.</p>
+    </section>
+
+    <section class="doc-section" id="venv">
+      <h2>3. Create a virtual environment <span style="font-weight:400;color:var(--muted);font-size:0.875rem">(recommended)</span></h2>
+      <p>A virtual environment keeps Pianove's dependencies isolated from your system Python.</p>
+      <pre><code class="language-bash">python -m venv .venv
+
+# Activate — Windows
+.venv\Scripts\activate
+
+# Activate — macOS / Linux
+source .venv/bin/activate</code></pre>
+      <div class="doc-note"><strong>Note:</strong> You need to activate the virtual environment every time you open a new terminal before running Pianove.</div>
+    </section>
+
+    <section class="doc-section" id="dependencies">
+      <h2>4. Install dependencies</h2>
+      <pre><code class="language-bash">pip install pygame</code></pre>
+      <p>Pianove has no other required dependencies. <code>pygame.freetype</code> is included in the standard pygame distribution.</p>
+
+      <div class="doc-note"><strong>Optional:</strong> Install <code>Pillow</code> if you want PyLay to display PNG images inside the UI (not required for core lesson functionality).</div>
+      <pre><code class="language-bash">pip install Pillow</code></pre>
+    </section>
+
+    <section class="doc-section" id="launch">
+      <h2>5. Launch Pianove</h2>
+      <pre><code class="language-bash">python main.py</code></pre>
+      <p>The Pianove window opens. If a MIDI keyboard is already connected via USB, it will be detected automatically. If not, connect it now and go to <strong>Settings → MIDI Device</strong> to select it.</p>
+    </section>
+
+    <section class="doc-section" id="troubleshooting">
+      <h2>Troubleshooting</h2>
+
+      <h3><code>ModuleNotFoundError: No module named 'pygame'</code></h3>
+      <p>You are running Python from outside the virtual environment, or pygame was installed in a different environment. Activate the venv and re-run <code>pip install pygame</code>.</p>
+
+      <h3>Blank or black window on launch</h3>
+      <p>This is usually a graphics driver issue with pygame on some Linux configurations. Try running with the SDL software renderer:</p>
+      <pre><code class="language-bash">SDL_VIDEODRIVER=x11 python main.py</code></pre>
+
+      <h3>MIDI keyboard not detected</h3>
+      <p>Make sure the keyboard is connected <em>before</em> launching Pianove, or use <strong>Settings → MIDI Device → Refresh</strong> after connecting it. See <a href="midi-setup.html">MIDI Setup</a> for a full troubleshooting guide.</p>
+
+      <h3><code>python</code> command not found (macOS / Linux)</h3>
+      <p>Use <code>python3</code> instead of <code>python</code>, and <code>pip3</code> instead of <code>pip</code>.</p>
+    </section>
+
+    <div class="doc-nav-footer">
+      <a href="requirements.html" class="doc-nav-link">
+        <div class="doc-nav-dir">Previous</div>
+        <div class="doc-nav-title">← System Requirements</div>
+      </a>
+      <a href="midi-setup.html" class="doc-nav-link doc-nav-link--next">
+        <div class="doc-nav-dir">Next</div>
+        <div class="doc-nav-title">MIDI Setup →</div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>Marius Angermann · 2026</span>
+  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove-main" target="_blank" rel="noopener">GitHub</a></span>
+</footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>
