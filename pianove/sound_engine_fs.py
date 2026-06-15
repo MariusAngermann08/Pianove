@@ -42,11 +42,25 @@ _lock     = threading.Lock()
 
 # ── Internal ──────────────────────────────────────────────────────────────────
 
+_PLATFORM_DRIVERS: "dict[str, list[str]]" = {
+    "win32":  ["dsound"],
+    "darwin": ["coreaudio"],
+}
+_LINUX_DRIVERS = ["pulseaudio", "alsa", "jack", "oss"]
+
+
 def _load():
     global _fs, _sfid, _ready
     try:
         fs = fluidsynth.Synth(gain=0.6)
-        fs.start(driver="dsound")
+        candidates = _PLATFORM_DRIVERS.get(sys.platform, _LINUX_DRIVERS)
+        for driver in candidates:
+            fs.start(driver=driver)
+            if fs.audio_driver:   # NULL means the driver failed to init
+                break
+            fs.audio_driver = None
+        if not fs.audio_driver:
+            raise RuntimeError(f"No working audio driver found (tried: {candidates})")
         sfid = fs.sfload(_SF2_PATH)
         if sfid == -1:
             fs.delete()
