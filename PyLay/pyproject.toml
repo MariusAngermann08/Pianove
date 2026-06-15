@@ -16,4 +16,4 @@ where = ["."]
 include = ["pylay*"]
 
 [tool.setuptools.package-data]
-pylay = ["assets/*.ttf", "py.typed"]
+pylay = ["assets/*.ttf", "assets/fonts/*.ttf", "assets/fonts/*.codepoints", "py.typed"]

@@ -7,6 +7,7 @@ from pylay import (
     FloatLayout, VStack, Label, Button, SegmentedControl,
     State, EmojiIcon, EmptyState, iOSTheme, ColorPalette, FilePicker, ProgressBar, UIElement,
 )
+from pylay.widgets.icon import Icon
 from pianove.i18n import t
 from pianove.components import ORANGE, GREEN, RED
 
@@ -69,8 +70,8 @@ def _song_card(song: dict) -> FloatLayout:
         border_radius=14,
     )
 
-    card.add_child(EmojiIcon(
-        "🎵", size=28, color=iOSTheme.secondary_label,
+    card.add_child(Icon(
+        "music_note", size=28, color=iOSTheme.secondary_label,
         anchor="left", x=16, y=0,
     ))
 
@@ -90,12 +91,11 @@ def _song_card(song: dict) -> FloatLayout:
         anchor="right", x=-208, y=0,
     ))
 
-    # Delete button — small ×
     card.add_child(Button(
-        text="×",
+        icon_fn=Icon.as_icon_fn("delete", base_size=16),
         on_click=lambda _id=song_id: _delete_song(_id),
         anchor="right", x=-168, y=0,
-        width=32, height=32, font_size=16,
+        width=32, height=32,
         background_color=iOSTheme.fill,
         text_color=RED,
         border_radius=8,
@@ -191,10 +191,10 @@ def build():
         picker.pick(_on_file)
 
     header.add_child(Button(
-        text="+",
+        icon_fn=Icon.as_icon_fn("add", base_size=20),
         on_click=_do_import,
         anchor="right", x=-8, y=0,
-        width=36, height=36, font_size=22,
+        width=36, height=36,
         background_color=ColorPalette.BLUE,
         text_color=pygame.Color(255, 255, 255),
         border_radius=18,

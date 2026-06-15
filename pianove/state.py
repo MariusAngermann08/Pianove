@@ -10,6 +10,7 @@ name_state           = State(storage.get("name", ""))
 experience_state     = State(storage.get("experience", "none"))
 dark_mode_state      = State(bool(storage.get("dark_mode", True)))
 sound_enabled_state  = State(bool(storage.get("midi_sound", False)))
+sound_volume_state   = State(float(storage.get("midi_volume", 0.7)))
 creator_mode_state   = State(bool(storage.get("creator_mode", False)))
 midi_device_state    = State("")
 midi_key_played      = State(False)
@@ -30,9 +31,15 @@ def _on_dark_mode_change(val):
 
 
 def _on_sound_enabled_change(val):
-    from pianove.sound_engine import set_enabled
+    from pianove.sound_engine_fs import set_enabled
     set_enabled(bool(val))
     storage.set("midi_sound", bool(val))
+
+
+def _on_sound_volume_change(val):
+    from pianove.sound_engine_fs import set_volume
+    set_volume(float(val))
+    storage.set("midi_volume", float(val))
 
 
 def _on_creator_mode_change(val):
@@ -44,6 +51,7 @@ def _on_creator_mode_change(val):
 
 dark_mode_state.bind(_on_dark_mode_change)
 sound_enabled_state.bind(_on_sound_enabled_change)
+sound_volume_state.bind(_on_sound_volume_change)
 creator_mode_state.bind(_on_creator_mode_change)
 
 midi_panel = MidiPanel(

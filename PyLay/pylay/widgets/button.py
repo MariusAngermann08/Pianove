@@ -11,9 +11,12 @@ class Button(UIElement):
     An iOS-inspired Button widget with spring-loaded physical scaling.
     Render cache: the button background + text is re-drawn only when size,
     color, or text changes — not every frame.
+
+    Pass icon_fn (a Material Icon callable from Icon.as_icon_fn) to render an
+    icon centered on the button instead of text.
     """
     def __init__(self,
-                 text: str,
+                 text: str = "",
                  on_click: Optional[Callable[[], None]] = None,
                  anchor: str = "top_left",
                  x: Union[int, float] = 0,
@@ -25,6 +28,7 @@ class Button(UIElement):
                  border_radius: int = -1,
                  font_size: int = 16,
                  font_name: str = "Arial",
+                 icon_fn: Optional[Callable] = None,
                  **kwargs):
         super().__init__(anchor=anchor, x=x, y=y, width=width, height=height, **kwargs)
 
@@ -36,6 +40,7 @@ class Button(UIElement):
         self.border_radius    = border_radius
         self.font_size        = font_size
         self.font_name        = font_name
+        self.icon_fn          = icon_fn
 
         self.is_pressed = False
         self.is_hovered = False
@@ -117,15 +122,19 @@ class Button(UIElement):
         fg  = self.text_color       if self.text_color       is not None else pygame.Color(255, 255, 255)
         rad = self.border_radius if self.border_radius >= 0 else h // 2
 
-        key = (w, h, bg.r, bg.g, bg.b, fg.r, fg.g, fg.b, rad, self.text, iOSTheme.dark)
+        key = (w, h, bg.r, bg.g, bg.b, fg.r, fg.g, fg.b, rad, self.text,
+               id(self.icon_fn), iOSTheme.dark)
         if key == self._cache_key and self._cached_surf is not None:
             return self._cached_surf
 
         # AA rounded rect via 2× render + smoothscale
         surf = make_aa_rect(w, h, bg, rad)
-        font = self._get_font()
-        ts   = font.render(self.text, True, fg)
-        surf.blit(ts, ts.get_rect(center=(w // 2, h // 2)))
+        if self.icon_fn is not None:
+            self.icon_fn(surf, w // 2, h // 2, 1.0, fg)
+        else:
+            font = self._get_font()
+            ts   = font.render(self.text, True, fg)
+            surf.blit(ts, ts.get_rect(center=(w // 2, h // 2)))
 
         # Rebuild shadow at same time (same invalidation key)
         shadow_key = (w, h, rad)

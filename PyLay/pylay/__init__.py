@@ -3,7 +3,7 @@ __version__ = "0.1.0"
 from pylay.core.storage import Storage
 from pylay.core.element import UIElement
 from pylay.core.physics import Spring
-from pylay.core.theme import Theme, iOSTheme, ColorPalette
+from pylay.core.theme import Theme, PianoveTheme, iOSTheme, ColorPalette
 from pylay.core.state import State
 from pylay.core.app import App
 from pylay.core.scale import UI_SCALE, set_window_size, scaled_font_size, scaled_px
@@ -16,6 +16,7 @@ from pylay.widgets.button import Button
 from pylay.widgets.label import Label
 from pylay.widgets.switch import Switch
 from pylay.widgets.slider import Slider
+from pylay.widgets.stepper import Stepper
 from pylay.widgets.segmented_control import SegmentedControl
 from pylay.widgets.text_field import TextField
 from pylay.widgets.progress_bar import ProgressBar
@@ -39,6 +40,9 @@ from pylay.widgets.badge import Badge
 from pylay.widgets.progress_ring import ProgressRing
 from pylay.widgets.empty_state import EmptyState
 from pylay.widgets.avatar import Avatar
+from pylay.widgets.image_icon import ImageIcon
+from pylay.widgets.icon import Icon
+from pylay.core import icons as icon_registry
 from pylay.core import emoji as emoji_renderer
 
 __all__ = [
@@ -46,6 +50,7 @@ __all__ = [
     "UIElement",
     "Spring",
     "Theme",
+    "PianoveTheme",
     "iOSTheme",
     "ColorPalette",
     "State",
@@ -63,6 +68,7 @@ __all__ = [
     "Label",
     "Switch",
     "Slider",
+    "Stepper",
     "SegmentedControl",
     "TextField",
     "ProgressBar",
@@ -86,5 +92,8 @@ __all__ = [
     "ProgressRing",
     "EmptyState",
     "Avatar",
+    "ImageIcon",
+    "Icon",
+    "icon_registry",
     "emoji_renderer",
 ]

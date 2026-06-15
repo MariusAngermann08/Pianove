@@ -50,8 +50,8 @@ class ProgressRing(UIElement):
         arc_rect = pygame.Rect(cx - r, cy - r, r * 2, r * 2)
         cap_r    = max(1, ss // 2)
 
-        # ── Track ────────────────────────────────────────────────────────────
-        pygame.draw.arc(ring, iOSTheme.fill, arc_rect, 0, math.tau, ss)
+        # ── Track: circle outline — no seam, perfectly clean ─────────────────
+        pygame.draw.circle(ring, iOSTheme.fill, (cx, cy), r, ss)
 
         # ── Active arc + round caps ───────────────────────────────────────────
         if p > 0.005:
@@ -61,10 +61,7 @@ class ProgressRing(UIElement):
             pygame.draw.arc(ring, self.active_color, arc_rect,
                             start_a, math.pi / 2, ss)
 
-            # 12 o'clock cap (arc start)
-            pygame.draw.circle(ring, self.active_color, (cx, cy - r), cap_r)
-
-            # Trailing cap — skip when nearly full to avoid overdrawing start cap
+            # Trailing cap — skip when nearly full
             if p < 0.995:
                 ex = cx + int(round(r * math.cos(start_a)))
                 ey = cy - int(round(r * math.sin(start_a)))

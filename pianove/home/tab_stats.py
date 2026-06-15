@@ -1,5 +1,6 @@
 import pygame
 from pylay import FloatLayout, VStack, Card, Label, LineChart, ColorPalette, iOSTheme, EmojiIcon
+from pylay.widgets.icon import Icon
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
 from pianove.progress import (
@@ -40,17 +41,18 @@ def _stat_card(value: str, label: str, color: pygame.Color, icon: str,
 
 def _achievement(icon: str, label: str, color: pygame.Color,
                  x_frac: float, earned: bool) -> Card:
-    bg    = color if earned else iOSTheme.secondary_background
-    alpha = pygame.Color(255, 255, 255) if earned else GRAY
+    bg         = color if earned else iOSTheme.secondary_background
+    icon_color = pygame.Color(255, 255, 255) if earned else GRAY
+    text_color = pygame.Color(255, 255, 255) if earned else GRAY
     badge = Card(
         spacing=2, padding=6,
         anchor="top_left", x=x_frac, y=0.0,
         width=0.22, height=1.0,
         background_color=bg,
     )
-    badge.add_child(EmojiIcon(icon, size=22, color=alpha,
-                              anchor="center", x=0, y=0))
-    badge.add_child(Label(text=label, font_size=10, bold=True, color=alpha))
+    badge.add_child(Icon(icon, size=22, color=icon_color,
+                         anchor="center", x=0, y=0))
+    badge.add_child(Label(text=label, font_size=10, bold=True, color=text_color))
     return badge
 
 
@@ -135,10 +137,10 @@ def build():
     # Row 1: classic achievements
     badges_row1 = FloatLayout(width=1.0, height=scaled_px(64))
     row1 = [
-        ("🎓", t("ach_first_lesson"), GREEN,          0.0,   ach_first),
-        ("🏆", t("ach_course_done"),  GOLD,           0.245, ach_course),
-        ("🔥", t("ach_streak_3"),     ORANGE,         0.49,  ach_streak3),
-        ("⭐", t("ach_dedicated"),    ColorPalette.BLUE, 0.735, ach_ded),
+        ("school",                t("ach_first_lesson"), GREEN,             0.0,   ach_first),
+        ("emoji_events",          t("ach_course_done"),  GOLD,              0.245, ach_course),
+        ("local_fire_department", t("ach_streak_3"),     ORANGE,            0.49,  ach_streak3),
+        ("hotel_class",           t("ach_dedicated"),    ColorPalette.BLUE, 0.735, ach_ded),
     ]
     for icon, label, color, x_frac, earned in row1:
         badges_row1.add_child(_achievement(icon, label, color, x_frac, earned))
@@ -147,8 +149,8 @@ def build():
     # Row 2: sight-reading achievements
     badges_row2 = FloatLayout(width=1.0, height=scaled_px(64))
     row2 = [
-        ("🎯", t("ach_sight_reader"), PURPLE, 0.0,   ach_reader),
-        ("🔬", t("ach_sharp_eye"),    GREEN,  0.245, ach_sharp),
+        ("auto_stories",        t("ach_sight_reader"), PURPLE, 0.0,   ach_reader),
+        ("center_focus_strong", t("ach_sharp_eye"),    GREEN,  0.245, ach_sharp),
     ]
     for icon, label, color, x_frac, earned in row2:
         badges_row2.add_child(_achievement(icon, label, color, x_frac, earned))

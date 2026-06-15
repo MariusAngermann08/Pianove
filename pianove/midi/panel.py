@@ -103,15 +103,15 @@ class MidiPanel:
                     if msg.velocity > 0:
                         self.active_notes.add(msg.note)
                         self._on_key_pressed()
-                        from pianove.sound_engine import play as _snd_play
+                        from pianove.sound_engine_fs import play as _snd_play
                         _snd_play(msg.note, msg.velocity)
                     else:
                         self.active_notes.discard(msg.note)
-                        from pianove.sound_engine import stop as _snd_stop
+                        from pianove.sound_engine_fs import stop as _snd_stop
                         _snd_stop(msg.note)
                 elif msg.type == "note_off":
                     self.active_notes.discard(msg.note)
-                    from pianove.sound_engine import stop as _snd_stop
+                    from pianove.sound_engine_fs import stop as _snd_stop
                     _snd_stop(msg.note)
         except Exception as e:
             print(f"Error reading MIDI messages: {e}")

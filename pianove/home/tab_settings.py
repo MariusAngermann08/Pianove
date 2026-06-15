@@ -1,8 +1,8 @@
 import pygame
 import pianove.context as ctx
-from pylay import FloatLayout, VStack, Label, Button, Switch, OptionSelector, ListItem, Avatar, ColorPalette, iOSTheme
+from pylay import FloatLayout, VStack, Label, Button, Switch, OptionSelector, ListItem, Avatar, ColorPalette, iOSTheme, Slider
 from pianove.i18n import t, language_state, available_languages
-from pianove.state import name_state, midi_device_state, dark_mode_state, sound_enabled_state, creator_mode_state, storage
+from pianove.state import name_state, midi_device_state, dark_mode_state, sound_enabled_state, sound_volume_state, creator_mode_state, storage
 from pianove.ui_utils import ui_dims
 from pianove.components import section_subheader as _section_header, RED
 
@@ -52,6 +52,15 @@ def build():
         title=t("settings_midi_sound"),
         subtitle=t("settings_midi_sound_desc"),
         trailing=Switch(value=sound_enabled_state, enabled=True),
+    ))
+    scroll.add_child(ListItem(
+        title=t("settings_midi_volume"),
+        trailing=Slider(
+            value=sound_volume_state,
+            min_val=0.0, max_val=1.0,
+            width=160, height=28,
+            active_color=ColorPalette.BLUE,
+        ),
     ))
 
     # ── Language ───────────────────────────────────────────────────────────

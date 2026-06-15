@@ -2,3 +2,4 @@ pygame
 numpy
 mido
 python-rtmidi
+pyfluidsynth

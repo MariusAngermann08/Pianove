@@ -10,7 +10,7 @@ from pylay.core.theme import iOSTheme
 import pianove.context as ctx
 from pianove.state import midi_panel, storage
 from pianove.i18n import language_state
-from pianove.pages import language, name, welcome, experience, midi, ready, home, lesson, midi_setup, song_setup, song_score
+from pianove.pages import language, name, welcome, experience, midi, ready, home, lesson, midi_setup, song_setup, song_score, boot
 
 WIDTH, HEIGHT = 1024, 768
 
@@ -31,9 +31,10 @@ ctx.ui = ui
 
 # Boot the synthesiser AFTER App() so pygame.mixer is already initialised.
 # Apply the persisted setting; pre-generation starts in a background thread.
-from pianove.sound_engine import init as _sound_init, set_enabled as _sound_set
+from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_set, set_volume as _sound_vol
 _sound_init()
 _sound_set(bool(storage.get("midi_sound", False)))
+_sound_vol(float(storage.get("midi_volume", 0.7)))
 
 
 def _on_resize(w: int, h: int):
@@ -43,10 +44,11 @@ def _on_resize(w: int, h: int):
 
 ui.on_resize = _on_resize
 
-initial_page = "home" if storage.get("onboarding_complete") else "language"
+_after_boot = "home" if storage.get("onboarding_complete") else "language"
 
 router = PageRouter(
     pages={
+        "boot":       lambda: boot.build(next_page=_after_boot),
         "language":   language.build,
         "name":       name.build,
         "welcome":    welcome.build,
@@ -59,7 +61,7 @@ router = PageRouter(
         "midi_setup":  midi_setup.build,
         "song_score":  song_score.build,
     },
-    initial_page=initial_page,
+    initial_page="boot",
     anchor="top_left",
     x=0,
     y=0,
