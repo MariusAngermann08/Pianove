@@ -82,6 +82,17 @@ def build():
         width=1.0,
     ))
 
+    # Reconfigure keyboard range
+    content.add_child(Button(
+        text=t("midi_cal_reconfigure"),
+        on_click=midi_panel.reset_calibration,
+        width=1.0, height=40,
+        font_size=13,
+        background_color=iOSTheme.secondary_background,
+        text_color=ColorPalette.BLUE,
+        border_radius=8,
+    ))
+
     # Done button
     content.add_child(Button(
         text=t("done"),

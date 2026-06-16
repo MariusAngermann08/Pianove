@@ -10,7 +10,7 @@ name_state           = State(storage.get("name", ""))
 experience_state     = State(storage.get("experience", "none"))
 dark_mode_state      = State(bool(storage.get("dark_mode", True)))
 sound_enabled_state  = State(bool(storage.get("midi_sound", False)))
-sound_volume_state   = State(float(storage.get("midi_volume", 0.7)))
+sound_volume_state   = State(float(storage.get("midi_volume", 1.0)))
 creator_mode_state   = State(bool(storage.get("creator_mode", False)))
 midi_device_state    = State("")
 midi_key_played      = State(False)
@@ -58,6 +58,7 @@ midi_panel = MidiPanel(
     device_state=midi_device_state,
     key_played_state=midi_key_played,
     text_fn=t,
+    storage=storage,
 )
 
 

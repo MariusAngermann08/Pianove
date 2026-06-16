@@ -34,7 +34,7 @@ ctx.ui = ui
 from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_set, set_volume as _sound_vol
 _sound_init()
 _sound_set(bool(storage.get("midi_sound", False)))
-_sound_vol(float(storage.get("midi_volume", 0.7)))
+_sound_vol(float(storage.get("midi_volume", 1.0)))
 
 
 def _on_resize(w: int, h: int):

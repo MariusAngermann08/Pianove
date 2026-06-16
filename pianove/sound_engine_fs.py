@@ -38,6 +38,7 @@ _sfid:    int = -1
 _enabled: bool = False
 _ready:   bool = False      # True once soundfont is loaded and audio is live
 _lock     = threading.Lock()
+_pending_gain: float = 100.0  # applied on load if set_volume was called early
 
 
 # ── Internal ──────────────────────────────────────────────────────────────────
@@ -52,7 +53,7 @@ _LINUX_DRIVERS = ["pulseaudio", "alsa", "jack", "oss"]
 def _load():
     global _fs, _sfid, _ready
     try:
-        fs = fluidsynth.Synth(gain=0.6)
+        fs = fluidsynth.Synth(gain=_pending_gain)
         candidates = _PLATFORM_DRIVERS.get(sys.platform, _LINUX_DRIVERS)
         for driver in candidates:
             fs.start(driver=driver)
@@ -110,8 +111,10 @@ def stop(midi_note: int):
 
 
 def set_volume(normalized: float):
-    """Set output gain. normalized is 0.0–1.0, mapped to FluidSynth gain 0.0–2.0."""
-    gain = max(0.0, min(2.0, float(normalized) * 2.0))
+    """Set output gain. normalized is 0.0–1.0, mapped to FluidSynth gain 0.0–100.0."""
+    global _pending_gain
+    gain = max(0.0, min(100.0, float(normalized) * 100.0))
+    _pending_gain = gain
     with _lock:
         if _fs is not None:
             _fs.setting("synth.gain", gain)

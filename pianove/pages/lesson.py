@@ -4,7 +4,6 @@ from pylay.widgets.pygame_canvas import PygameCanvas
 from pylay.core.physics import Spring
 from pylute.score import Score
 from pylute.note import Note as _PluteNote
-from pianove.midi.panel import WHITE_NOTES, BLACK_NOTES, BLACK_INDICES
 import pianove.context as ctx
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
@@ -429,11 +428,14 @@ class _LessonPiano:
         top      = rect.top + max(3, int(rect.height * 0.02))
         key_h    = max(40, rect.bottom - status_h - top - 4)
         avail_w  = max(60, rect.width - margin_x * 2)
-        white_w  = avail_w / len(WHITE_NOTES)
-        black_w  = white_w / 2
-        black_h  = key_h * (200 / 300)
+        white_notes   = self._panel._white_notes
+        black_notes   = self._panel._black_notes
+        black_indices = self._panel._black_indices
+        white_w  = avail_w / max(1, len(white_notes))
+        black_w  = white_w * 0.58
+        black_h  = key_h * 0.62
 
-        def _active(n):  return self._panel._note_active(n, active)
+        def _active(n):  return n in active
         def _exp(n):     return expected is not None and n == expected
 
         def _wc(note):
@@ -450,21 +452,20 @@ class _LessonPiano:
 
         white_keys = [
             (pygame.Rect(int(rect.left + margin_x + i * white_w), int(top),
-                         int(white_w), int(key_h)), _wc(note))
-            for i, note in enumerate(WHITE_NOTES)
+                         max(2, int(white_w) - 1), int(key_h)), _wc(note))
+            for i, note in enumerate(white_notes)
         ]
         black_keys = [
             (pygame.Rect(int(rect.left + margin_x + idx * white_w + white_w - black_w / 2),
-                         int(top), int(black_w), int(black_h)), _bc(note))
-            for idx, note in zip(BLACK_INDICES, BLACK_NOTES)
+                         int(top), max(2, int(black_w)), int(black_h)), _bc(note))
+            for idx, note in zip(black_indices, black_notes)
         ]
 
         for kr, col in white_keys:
             pygame.draw.rect(surface, col, kr)
-            pygame.draw.rect(surface, (0, 0, 0), kr, 2)
+            pygame.draw.rect(surface, (80, 80, 80), kr, 1)
         for kr, col in black_keys:
-            pygame.draw.rect(surface, col, kr, border_radius=10)
-            pygame.draw.rect(surface, (0, 0, 0), kr, 2, border_radius=10)
+            pygame.draw.rect(surface, col, kr, border_radius=4)
 
         connected = self._panel.midi_in is not None
         label_txt = (t("midi_connected", name=self._panel.midi_in.name)
