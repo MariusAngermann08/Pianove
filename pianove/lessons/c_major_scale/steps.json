@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🎵",
+    "title": "The C Major Scale",
+    "body": "A scale is a set of notes arranged in order of pitch. C major uses every white key from C to C — no sharps, no flats. It's the foundation of Western music."
+  },
+  {
+    "type": "notation_demo",
+    "title": "8 Notes, One Octave",
+    "caption": "C D E F G A B C — eight notes rising then returning. The last C is an octave higher than the first: same note, double the frequency.",
+    "bars": [
+      ["C4", "D4", "E4", "F4"],
+      ["G4", "A4", "B4", "C5"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

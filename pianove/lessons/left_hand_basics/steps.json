@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🤚",
+    "title": "Left Hand Basics",
+    "body": "The left hand plays in the bass clef — lower notes that support the melody. The bass clef looks different from the treble clef but works the same way: higher on the staff = higher pitch."
+  },
+  {
+    "type": "notation_demo",
+    "title": "The Bass Clef",
+    "caption": "The curly symbol is the bass clef. Middle C (C4) sits just above the staff here. Practice locating C3, E3, G3 and C4 — these are your anchor points.",
+    "clef": "bass",
+    "bars": [
+      ["C3", "E3", "G3", "C4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

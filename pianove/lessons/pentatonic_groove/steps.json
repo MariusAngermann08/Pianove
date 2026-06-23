@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🥁",
+    "title": "Pentatonic Groove",
+    "body": "The pentatonic scale (5 notes: C D E G A) is used in blues, rock, folk, and jazz worldwide. Every note works over almost any chord — which makes improvising feel magical."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Pentatonic Patterns",
+    "caption": "The opening jumps C→E→G→A — not stepwise but in leaps. Leaps create energy; steps create smoothness. This groove mixes both to build momentum.",
+    "bars": [
+      ["C4", "D4", "E4", "G4"],
+      ["A4", "G4", "E4", "D4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

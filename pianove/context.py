@@ -10,6 +10,7 @@ ui: "App | None" = None
 current_lesson_id:    str       = "welcome"
 current_course_id:    str | None = None
 current_course_index: int        = 0
+lesson_step_idx:      int        = 0   # which step in steps.json (text/demo/exercise)
 lesson_current_idx:   int        = 0
 lesson_section_idx:   int        = 0
 lesson_keyboard_vis:  bool       = True

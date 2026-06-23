@@ -1,5 +1,17 @@
 [
   {
+    "type": "text",
+    "emoji": "🎹",
+    "title": "Welcome to Pianove",
+    "body": "You're about to play your first notes on a real piano. No experience needed — follow the highlighted keys and press them on your keyboard."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Reading the Staff",
+    "caption": "Each oval is a note. Higher on the staff means a higher pitch. These are quarter notes — one beat each. The letters C D E F are your first four notes.",
+    "bars": [["C4", "D4", "E4", "F4"]]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

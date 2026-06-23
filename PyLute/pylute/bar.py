@@ -5,17 +5,25 @@ from .pitch import parse_pitch as _parse_pitch
 
 DEBUG = "[OpenScore-Debug]"
 
-BEAM_H   = 4   # beam rectangle height in px
-BEAM_GAP = 3   # gap between primary / secondary beams
+BEAM_H   = 4
+BEAM_GAP = 3
 
-def _flag_glyphs():
-    return {
-        ("eighth",    "up"):   chr(0xE240),
-        ("eighth",    "down"): chr(0xE241),
-        ("sixteenth", "up"):   chr(0xE242),
-        ("sixteenth", "down"): chr(0xE243),
-    }
-FLAG_GLYPHS = _flag_glyphs()
+
+def _event_duration(event):
+    from .tuplet import Tuplet
+    if isinstance(event, Tuplet):
+        return event.total_duration()
+    return get_value(event.type)
+
+
+FLAG_GLYPHS = {
+    ("eighth",        "up"):   chr(0xE240),
+    ("eighth",        "down"): chr(0xE241),
+    ("sixteenth",     "up"):   chr(0xE242),
+    ("sixteenth",     "down"): chr(0xE243),
+    ("thirty_second", "up"):   chr(0xE244),
+    ("thirty_second", "down"): chr(0xE245),
+}
 
 
 class Bar:
@@ -36,14 +44,14 @@ class Bar:
             print(f"{DEBUG} <Bar> object needs :staff: to update its time signature")
 
     def spaceAvailable(self):
-        used = sum(get_value(e.type) for e in self.events)
+        used = sum(_event_duration(e) for e in self.events)
         return (self.time[0] / self.time[1]) - used
 
-    # ---------------------------------------------------- accidental pre-space
-
     def _acc_pre(self, event):
-        """Pixels to advance before event.offset to clear its accidental glyph."""
         from .note import Note, ACCIDENTAL_GLYPHS
+        from .chord import Chord
+        if isinstance(event, Chord):
+            event = event.notes[0]
         if not isinstance(event, Note) or not event.staff:
             return 0
         name, written_acc, _ = _parse_pitch(event.pitch)
@@ -63,8 +71,6 @@ class Bar:
         font  = get_font()
         space = event.staff.space
         return font.get_rect(glyph).width + int(space * 0.35)
-
-    # ------------------------------------------------------------ layout
 
     def calculateMetrics(self, bar_start_x=None, barspace=None, frontal_offset=None):
         if bar_start_x is not None:
@@ -86,10 +92,8 @@ class Bar:
         if count == 0:
             return
 
-        # Pre-margins for accidentals: reserve measured glyph width + small gap
         pres      = [self._acc_pre(e) for e in self.events]
         total_acc = sum(pres)
-        # Shrink the beat-width proportionally so total bar width stays fixed
         adj_usable = max(usable_space - total_acc, usable_space * 0.45)
 
         if count == 1:
@@ -98,33 +102,38 @@ class Bar:
                                      + (adj_usable - pre) / 2)
             return
 
-        total_duration = sum(get_value(e.type) for e in self.events)
+        total_duration = sum(_event_duration(e) for e in self.events)
         beat_width = adj_usable / total_duration
         x = self.bar_start_x + barindent
         for pre, event in zip(pres, self.events):
             x += pre
             event.offset = x
-            x += get_value(event.type) * beat_width
-
-    # --------------------------------------------------------------- beaming
+            dur = _event_duration(event)
+            from .tuplet import Tuplet
+            if isinstance(event, Tuplet) and event.notes:
+                # spread tuplet notes evenly within their allocated space
+                note_w = (dur * beat_width) / max(len(event.notes), 1)
+                for i, n in enumerate(event.notes):
+                    n.offset = x + i * note_w
+            x += dur * beat_width
 
     def _find_beam_groups(self):
-        """Group consecutive flagged notes within the same beat.
-
-        Beat boundary = 1/time[1] whole-note fraction (one quarter in 4/4).
-        Single-note groups get a flag glyph; multi-note groups share a beam.
-        """
         from .note import Note
-        beat_dur = 1.0 / self.time[1]   # e.g. 0.25 for 4/4
+        from .chord import Chord
+        BEAMABLE = ("eighth", "sixteenth", "thirty_second")
+        beat_dur = 1.0 / self.time[1]  # e.g. 0.25 in 4/4
         groups, current = [], []
-        pos          = 0.0
-        group_beat   = -1
+        pos        = 0.0
+        group_beat = -1
 
         for event in self.events:
             dur  = get_value(event.type)
             beat = int(pos / beat_dur + 1e-9)
-
-            if isinstance(event, Note) and event._base_type in ("eighth", "sixteenth"):
+            is_beamable = (
+                (isinstance(event, Note)  and event._base_type in BEAMABLE) or
+                (isinstance(event, Chord) and event._base_type in BEAMABLE)
+            )
+            if is_beamable:
                 if current and beat != group_beat:
                     groups.append(current)
                     current = []
@@ -153,9 +162,8 @@ class Bar:
 
         for group in groups:
             stem_dir  = group[0]._stem_dir()
-            stem_sign = -1 if stem_dir == "up" else 1   # direction away from noteheads
+            stem_sign = -1 if stem_dir == "up" else 1  # which way the stem points
 
-            # ── isolated note: draw stem + flag glyph ────────────────────────
             if len(group) == 1:
                 note = group[0]
                 sx   = note._stem_x()
@@ -172,17 +180,14 @@ class Bar:
                     font.render_to(surface, (sx, fy), flag, "Black")
                 continue
 
-            # ── multi-note group: sloped beam ─────────────────────────────────
             x1 = group[0]._stem_x()
             x2 = group[-1]._stem_x()
             dx = max(x2 - x1, 1)
 
-            # Natural beam edge for each endpoint (outer note stem tip)
             y_start = group[0]._y_center()  + stem_sign * space * _ST
             y_end   = group[-1]._y_center() + stem_sign * space * _ST
 
-            # Clamp slope: max 2 staff spaces across the full group width.
-            # Also snap near-horizontal slopes to flat.
+            # clamp slope, snap near-flat to flat
             dy     = y_end - y_start
             max_dy = space * 2.0
             dy     = max(min(dy, max_dy), -max_dy)
@@ -190,7 +195,7 @@ class Bar:
                 dy = 0.0
             y_end = y_start + dy
 
-            # Push the beam away from noteheads so every stem is at least _ST long.
+            # push beam so all stems stay at minimum length
             shift = 0.0
             for note in group:
                 nx = note._stem_x()
@@ -206,12 +211,9 @@ class Bar:
                     if by < need:
                         shift = max(shift, need - by)
 
-            # stem_sign is -1 for "up" → subtract shift (beam moves up)
-            #             +1 for "down" → add shift (beam moves down)
             y_start += stem_sign * shift
             y_end   += stem_sign * shift
 
-            # Draw stems
             for note in group:
                 nx = note._stem_x()
                 t  = (nx - x1) / dx
@@ -222,8 +224,9 @@ class Bar:
                 else:
                     pg.draw.line(surface, (0, 0, 0), (nx, yc), (nx, by), 2)
 
-            # Draw beam(s) as filled polygons — 1 beam for eighths, 2 for sixteenths.
-            n_beams = 2 if any(n._base_type == "sixteenth" for n in group) else 1
+            n_beams = (3 if any(n._base_type == "thirty_second" for n in group)
+                       else 2 if any(n._base_type == "sixteenth" for n in group)
+                       else 1)
             for i in range(n_beams):
                 gap = i * (BEAM_H + BEAM_GAP)
                 if stem_dir == "up":
@@ -239,7 +242,62 @@ class Bar:
                 pg.draw.polygon(surface, (0, 0, 0),
                                 [(x1, t1), (x2, t2), (x2, b2), (x1, b1)])
 
-    # ------------------------------------------------------------------- draw
+    def _draw_expressions(self):
+        from .note import Note
+        from .chord import Chord
+        from .tuplet import Tuplet
+
+        def _notes_in(event):
+            if isinstance(event, (Chord, Tuplet)):
+                return event.notes
+            if isinstance(event, Note):
+                return [event]
+            return []
+
+        for event in self.events:
+            for note in _notes_in(event):
+                if not hasattr(note, "expressions"):
+                    continue
+                for expr in note.expressions:
+                    expr.staff  = self.staff
+                    expr.offset = note.offset
+                    if hasattr(expr, "note_y"):
+                        expr.note_y = note._y_center()
+                    expr.draw()
+
+    def _draw_ties(self):
+        from .note import Note, NOTEHEAD_BLACK
+        from .chord import Chord
+        surface = self.staff.surface
+        space   = self.staff.space
+        font    = get_font()
+        hr      = font.get_rect(NOTEHEAD_BLACK)
+        nw      = hr.width
+
+        for event in self.events:
+            notes_to_check = event.notes if isinstance(event, Chord) else [event]
+            for note in notes_to_check:
+                if not isinstance(note, Note):
+                    continue
+                target = note.tied_to
+                if target is None:
+                    continue
+                x1 = int(note.offset + nw / 2)
+                x2 = int(target.offset + nw / 2)
+                from .pitch import pitch_to_step
+                clef  = getattr(self.staff, "clef_type", "treble")
+                step  = pitch_to_step(note.pitch, clef)
+                yc    = self.staff.position[1] + 4 * space - step * (space / 2)
+                # curves below for stem-up, above for stem-down
+                stem_dir = note._stem_dir()
+                cy_off   = int(space * 0.6)
+                ctrl_y   = int(yc) + cy_off if stem_dir == "up" else int(yc) - cy_off
+                mid_x    = (x1 + x2) // 2
+                # fake bezier with two lines through control point
+                th = max(1, int(space * 0.12))
+                for dy in range(th):
+                    pg.draw.line(surface, (0, 0, 0), (x1, int(yc) + dy), (mid_x, ctrl_y + dy), 1)
+                    pg.draw.line(surface, (0, 0, 0), (mid_x, ctrl_y + dy), (x2, int(yc) + dy), 1)
 
     def draw(self):
         if not self.staff:
@@ -251,10 +309,22 @@ class Bar:
             if hasattr(event, "beamed"):
                 event.beamed = False
         for group in groups:
-            for note in group:
-                note.beamed = True
+            for ev in group:
+                ev.beamed = True
 
         for event in self.events:
+            from .chord import Chord
+            from .tuplet import Tuplet
+            if isinstance(event, Chord):
+                event.staff = self.staff
+                for n in event.notes:
+                    n.staff = self.staff
+            elif isinstance(event, Tuplet):
+                event.staff = self.staff
+                for n in event.notes:
+                    n.staff = self.staff
             event.draw()
 
         self._draw_beams(groups)
+        self._draw_ties()
+        self._draw_expressions()

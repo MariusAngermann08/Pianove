@@ -5,27 +5,29 @@ from .pitch import pitch_to_step, parse_pitch
 DEBUG = "[OpenScore-Debug]"
 
 ACCIDENTAL_GLYPHS = {
-    "#": "",
-    "b": "",
-    "n": "",
+    "#": chr(0xE262),
+    "b": chr(0xE260),
+    "n": chr(0xE261),
 }
 
 GLYPHS = {
-    ("whole",     "up"):   "",
-    ("whole",     "down"): "",
-    ("half",      "up"):   "",
-    ("half",      "down"): "",
-    ("quarter",   "up"):   "",
-    ("quarter",   "down"): "",
-    ("eighth",    "up"):   "",
-    ("eighth",    "down"): "",
-    ("sixteenth", "up"):   "",
-    ("sixteenth", "down"): "",
+    ("whole",         "up"):   chr(0xE1D2),
+    ("whole",         "down"): chr(0xE1D2),
+    ("half",          "up"):   chr(0xE1D3),
+    ("half",          "down"): chr(0xE1D4),
+    ("quarter",       "up"):   chr(0xE1D5),
+    ("quarter",       "down"): chr(0xE1D6),
+    ("eighth",        "up"):   chr(0xE1D7),
+    ("eighth",        "down"): chr(0xE1D8),
+    ("sixteenth",     "up"):   chr(0xE1D9),
+    ("sixteenth",     "down"): chr(0xE1DA),
+    ("thirty_second", "up"):   chr(0xE1DB),
+    ("thirty_second", "down"): chr(0xE1DC),
 }
 
-WHOLE          = ""
-NOTEHEAD_BLACK = ""
-AUG_DOT        = ""
+WHOLE          = chr(0xE1D2)
+NOTEHEAD_BLACK = chr(0xE0A4)
+AUG_DOT        = chr(0xE1E7)
 STEM_SPACES    = 3.5
 
 
@@ -36,9 +38,10 @@ class Note:
         self.staff  = staff
         self.offset = 0
         self.beamed = False
-        self.color  = None   # override draw color; None = black
-
-    # ---------------------------------------------------------------- helpers
+        self.color  = None  # None = black
+        self.tied_to   = None
+        self.tied_from = False
+        self.expressions: list = []
 
     @property
     def _base_type(self):
@@ -48,11 +51,11 @@ class Note:
     def _is_dotted(self):
         return self.type.startswith("dotted_")
 
-    # ---------------------------------------------------------------- geometry
-
-    def _stem_dir(self):
+    def _stem_dir(self, voice=1):
         if self._base_type == "whole":
             return "up"
+        if voice == 2:
+            return "down"
         clef = getattr(self.staff, "clef_type", "treble")
         return "up" if pitch_to_step(self.pitch, clef) < 4 else "down"
 
@@ -72,8 +75,6 @@ class Note:
         y = self._y_center()
         d = self.staff.space * STEM_SPACES
         return y - d if self._stem_dir() == "up" else y + d
-
-    # --------------------------------------------------------------- internals
 
     def _draw_ledger_lines(self, y_center, head_rect, color=(0, 0, 0)):
         clef     = getattr(self.staff, "clef_type", "treble")
@@ -99,30 +100,29 @@ class Note:
         if written_acc == key_acc:
             return ""
         if not written_acc and key_acc:
-            return "n"
+            return "n"  # natural cancels the key signature
         return written_acc
 
-    def _draw_accidental(self, font, y_center, acc, color=(0, 0, 0)):
+    def _draw_accidental(self, font, y_center, acc, color=(0, 0, 0), x_offset=0):
         if acc not in ACCIDENTAL_GLYPHS:
             return
         acc_char = ACCIDENTAL_GLYPHS[acc]
         acc_rect = font.get_rect(acc_char)
         font.render_to(self.staff.surface,
-                       (int(self.offset) - acc_rect.width, int(y_center - acc_rect.height / 2)),
+                       (int(self.offset) - acc_rect.width + x_offset,
+                        int(y_center - acc_rect.height / 2)),
                        acc_char, color)
 
     def _draw_dot(self, font, y_center):
         clef = getattr(self.staff, "clef_type", "treble")
         step = pitch_to_step(self.pitch, clef)
-        # On a line (even step) -> dot goes to the space above
+        # dot moves up a half-step if notehead sits on a line
         dot_yc = y_center - self.staff.space / 2 if step % 2 == 0 else y_center
         hr  = font.get_rect(NOTEHEAD_BLACK)
         dr  = font.get_rect(AUG_DOT)
         dot_x = int(self.offset + hr.x + hr.width + 3)
         dot_y = int(dot_yc - dr.height / 2)
         font.render_to(self.staff.surface, (dot_x, dot_y), AUG_DOT, "Black")
-
-    # ------------------------------------------------------------------- draw
 
     def draw(self):
         if not self.staff:
@@ -145,7 +145,7 @@ class Note:
             font.render_to(self.staff.surface, (int(self.offset), pos_y), NOTEHEAD_BLACK, color)
         else:
             stem_dir = self._stem_dir()
-            glyph    = GLYPHS[(self._base_type, stem_dir)]
+            glyph    = GLYPHS.get((self._base_type, stem_dir), GLYPHS.get((self._base_type, "up"), NOTEHEAD_BLACK))
             glyph_h  = font.get_rect(glyph).height
 
             if stem_dir == "up":

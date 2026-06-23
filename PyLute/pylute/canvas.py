@@ -1,26 +1,11 @@
-"""
-pylute.canvas — OpenGUI integration layer.
-
-ScoreCanvas
-    Draw target for ScrollableCanvas.
-
-ScorePager
-    Paged view using OpenGUI's PageRouter.  Each UI page = one A4 page of content.
-    Page slots are ScrollableCanvas widgets so each page is independently scrollable
-    when its content exceeds the viewport height.
-    Pass a shared ScoreCanvas so the same loaded score drives both scroll and paged views.
-"""
-
 import math
 import os
 import pygame
 from .score import _MT as _SCORE_MT
 
 
-# ─────────────────────────────────────────────────────────── ScoreCanvas ────
-
 class ScoreCanvas:
-    """Bridges an pylute.Score to OpenGUI's ScrollableCanvas target API."""
+    """Bridges a pylute.Score to OpenGUI's ScrollableCanvas target API."""
 
     def __init__(self):
         self.score = None
@@ -84,27 +69,19 @@ class ScoreCanvas:
             y += 22
 
 
-# ──────────────────────────────────────────────────────── paged internals ────
-
 class _ScoreSlice:
-    """
-    ScrollableCanvas target for one A4 page in the PageRouter.
-    Blits its A4-page slice of the shared offscreen.
-    """
+    """One A4 page in the pager — blits its slice of the shared offscreen."""
 
     def __init__(self, pager: "ScorePager", page_idx: int):
         self.pager    = pager
         self.page_idx = page_idx
-        self.dirty    = False   # ScrollableCanvas checks this
+        self.dirty    = False
 
     def content_height(self, canvas_w: int) -> int:
-        """Height of this page's content.  Computes page bounds eagerly so the
-        ScrollableCanvas offscreen is always sized correctly on the first call."""
         score = self.pager.score_canvas.score
         if score is None:
             return 200
         total_h = score.total_content_height(canvas_w)
-        # Ensure bounds are up to date for this canvas width before sizing the offscreen
         if (not self.pager._page_bounds
                 or self.pager._offscreen_w != canvas_w
                 or self.pager.score_canvas.dirty):
@@ -113,10 +90,9 @@ class _ScoreSlice:
         if self.page_idx < len(bounds):
             y_start, y_end = bounds[self.page_idx]
             return max(1, y_end - y_start)
-        return 200   # page index out of range — empty slot
+        return 200
 
     def draw(self, surface: pygame.Surface, rect: pygame.Rect):
-        """Called by ScrollableCanvas._rebuild; draws into the full offscreen."""
         canvas_w = rect.width
 
         if self.pager.score_canvas.score is None:
@@ -142,25 +118,10 @@ class _ScoreSlice:
                          pygame.Rect(0, y_start, canvas_w, slice_h))
 
 
-# ─────────────────────────────────────────────────────────── ScorePager ────
-
 class ScorePager:
     """
-    Paged score view built on OpenGUI's PageRouter.
-
-    Each UI page = one A4 page of content.  Page slots are ScrollableCanvas
-    widgets so content that exceeds the viewport is scrollable.
-    Page breaks snap to system boundaries so no staff is cut in half.
-
-    Quick start
-    -----------
-    canvas = ScoreCanvas()
-    pager  = ScorePager(canvas)
-    app.root.add_child(pager.build_view(y_offset=108))
-    prev_btn.on_click = pager.go_prev
-    next_btn.on_click = pager.go_next
-    pager.on_page_change = lambda p, n: ...
-    canvas.load("piece.xml")
+    Paged score view for OpenGUI's PageRouter.
+    Each page snaps to system boundaries so no staff ever gets cut in half.
     """
 
     MAX_PAGES = 50
@@ -176,8 +137,6 @@ class ScorePager:
         self._offscreen   = None
         self._offscreen_w = 0
         self._offscreen_h = 0
-
-    # ── proxy ────────────────────────────────────────────────────────────────
 
     @property
     def score(self):
@@ -203,8 +162,6 @@ class ScorePager:
             self._reset()
         return ok
 
-    # ── internal ─────────────────────────────────────────────────────────────
-
     def _reset(self):
         self._offscreen   = None
         self._page_idx    = 0
@@ -220,10 +177,6 @@ class ScorePager:
             self.on_page_change(self._page_idx, self._n_pages)
 
     def _compute_page_bounds(self, canvas_w: int, total_h: int) -> list:
-        """
-        Group systems into A4-page-height buckets, snapping at system boundaries.
-        Returns list of (y_start, y_end) per page.
-        """
         score  = self.score_canvas.score
         a4_h   = max(200, int(canvas_w * 297 / 210))
 
@@ -232,16 +185,11 @@ class ScorePager:
 
         sys_tops = score.system_y_tops()
         space    = score._space()
-        # Bottom margin: safety for stems/ledger lines below the last staff line.
-        # Top margin: safety for notes/ledger lines above the top staff line.
-        # sys_tops[j] is the exact Y of the topmost staff line, so any note above
-        # the top line (G5, A5, … in treble) renders at Y < sys_tops[j] and would
-        # be clipped if the page boundary sits exactly there.  Using _SCORE_MT
-        # (= 4) matches the top margin page 1 already has via sys_tops[0] = mt.
-        # The two margins sum to sysg (6 spaces) so the cut always lands in the
-        # dead zone of the inter-system gap and no content is ever clipped.
+
+        # page cut lands in the inter-system gap so no content gets clipped.
+        # bot_margin + top_margin = sysg (6 spaces) which is exactly that gap.
         bot_margin = space * 2
-        top_margin = space * _SCORE_MT        # == space * 4
+        top_margin = space * _SCORE_MT
         sys_h      = score.system_height() + bot_margin
 
         if not sys_tops:
@@ -257,11 +205,8 @@ class ScorePager:
             while j < n and (sys_tops[j] + sys_h - page_top) <= a4_h:
                 j += 1
             if j == i:
-                j = i + 1   # force-include at least one system per page
+                j = i + 1  # at least one system per page
 
-            # Cut top_margin above the first staff line of the next system so
-            # pages 2+ have the same breathing room above their first system as
-            # page 1 does (page 1 gets it "for free" via meta_h + mt in sys_tops[0]).
             page_bot = (sys_tops[j] - top_margin) if j < n else total_h
             pages.append((page_top, page_bot))
             page_top = page_bot
@@ -273,7 +218,6 @@ class ScorePager:
         return pages if pages else [(0, total_h)]
 
     def _get_offscreen(self, canvas_w: int) -> "pygame.Surface | None":
-        """Build (or return cached) full-score offscreen surface."""
         score = self.score_canvas.score
         if score is None:
             return None
@@ -304,7 +248,6 @@ class ScorePager:
             score.draw()
             self.score_canvas.dirty = False
 
-            # Recompute page layout after every rebuild
             new_bounds = self._compute_page_bounds(canvas_w, total_h)
             n = len(new_bounds)
             if new_bounds != self._page_bounds or n != self._n_pages:
@@ -318,8 +261,6 @@ class ScorePager:
                 self._fire()
 
         return self._offscreen
-
-    # ── navigation ───────────────────────────────────────────────────────────
 
     def go_prev(self):
         if self._page_idx > 0:
@@ -335,17 +276,8 @@ class ScorePager:
                 self._router.navigate(str(self._page_idx))
             self._fire()
 
-    # ── build ─────────────────────────────────────────────────────────────────
-
     def build_view(self, y_offset: int = 80, app=None):
-        """
-        Return a PageRouter widget ready to add to app.root.
-
-        Pass app to fix the router height so it never overflows the viewport:
-        height=1.0 (full parent) + y=y_offset would extend y_offset pixels past
-        the window bottom.  When app is supplied, the router is sized to
-        app.height - y_offset and kept correct across window resizes.
-        """
+        """Return a PageRouter ready to add to app.root."""
         from pylay.layouts.router import PageRouter
         from pylay.widgets.scrollable_canvas import ScrollableCanvas
 

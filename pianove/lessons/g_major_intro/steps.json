@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "♯",
+    "title": "G Major — One Sharp",
+    "body": "G major is like C major with one change: the 7th note F becomes F#. A sharp (♯) raises any note by one semitone — one key to the right on the piano."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Spot the F#",
+    "caption": "Notice F# in the scale (bar 2). Every F in G major is sharp — the key signature at the start of a piece tells you this automatically so you don't need individual ♯ symbols on every note.",
+    "bars": [
+      ["G4", "A4", "B4", "C5"],
+      ["D5", "E5", "F#5", "G5"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

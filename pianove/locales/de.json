@@ -176,5 +176,9 @@
   "stats_pr_week": "Übungen diese Woche",
 
   "ach_sight_reader": "Blattleser",
-  "ach_sharp_eye": "Scharfes Auge"
+  "ach_sharp_eye": "Scharfes Auge",
+
+  "step_continue": "Weiter →",
+  "step_got_it": "Verstanden →",
+  "step_of": "{n} von {total}"
 }

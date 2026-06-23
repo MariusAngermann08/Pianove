@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🏁",
+    "title": "Final Melody",
+    "body": "This is your capstone: a full G major melody spanning the complete range you've practised. It uses leaps, stepwise runs, and a satisfying return to the home chord G-B-D-G. Take it slow — every note counts."
+  },
+  {
+    "type": "notation_demo",
+    "title": "The Full Arc",
+    "caption": "The melody opens with a broken G chord leaping up to G5 — a full octave and a half. It then spirals down in waves. The journey away from home and back is the shape of almost every great melody.",
+    "bars": [
+      ["G4", "B4", "D5", "G5"],
+      ["F#5", "E5", "D5", "B4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

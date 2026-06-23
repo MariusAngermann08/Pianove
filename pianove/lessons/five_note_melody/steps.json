@@ -1,5 +1,17 @@
 [
   {
+    "type": "text",
+    "emoji": "🎶",
+    "title": "Five-Note Melodies",
+    "body": "With just five notes — C D E G A — you can play hundreds of melodies. These are the notes of the C pentatonic scale: no half-steps, no tension, all sound good together."
+  },
+  {
+    "type": "notation_demo",
+    "title": "The Five Notes",
+    "caption": "C D E G A — notice there's no F or B. This gap between E and G (a skip) and between A and the next C gives pentatonic music its open, flowing feel.",
+    "bars": [["C4", "D4", "E4", "G4"]]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

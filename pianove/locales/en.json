@@ -176,5 +176,9 @@
   "stats_pr_week": "Practice this week",
 
   "ach_sight_reader": "Sight Reader",
-  "ach_sharp_eye": "Sharp Eye"
+  "ach_sharp_eye": "Sharp Eye",
+
+  "step_continue": "Continue →",
+  "step_got_it": "Got it →",
+  "step_of": "{n} of {total}"
 }

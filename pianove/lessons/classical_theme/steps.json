@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🎻",
+    "title": "Classical Theme",
+    "body": "Classical themes often mix stepwise motion with dramatic leaps. This one is in G major and spans two octaves — from D4 up to G5. Pay attention to the large jump in bar 3: a sixth."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Ascending and Descending",
+    "caption": "The first two bars climb stepwise: G A B C D B A G. Then bar 3 leaps up to E5 and descends by steps. This alternation between steps and leaps is the classical melodic vocabulary.",
+    "bars": [
+      ["G4", "A4", "B4", "C5"],
+      ["D5", "B4", "A4", "G4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

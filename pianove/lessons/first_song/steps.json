@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🌟",
+    "title": "Your First Real Song",
+    "body": "This is \"Mary Had a Little Lamb\" — one of the oldest piano teaching pieces. Simple, but it contains everything: stepwise motion, a repeated note, and a satisfying return to the tonic C."
+  },
+  {
+    "type": "notation_demo",
+    "title": "The Opening Phrase",
+    "caption": "E D C D — the melody descends from E to C, then bounces back to D. This is a pickup phrase: it creates gentle tension that the next bar resolves. Listen for the \"Mary had a...\" rhythm.",
+    "bars": [
+      ["E4", "D4", "C4", "D4"],
+      ["E4", "E4", "E4", "D4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

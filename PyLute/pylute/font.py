@@ -1,7 +1,7 @@
 import pygame as pg
 import pathlib
 
-FONT_PATH = str(pathlib.Path(__file__).parent.parent / "assets" / "Bravura.otf")
+FONT_PATH = str(pathlib.Path(__file__).parent / "assets" / "Bravura.otf")
 FONT_SIZE  = 70   # mutable — updated by set_font_size()
 _font      = None
 

@@ -4,6 +4,7 @@ from pylay.widgets.pygame_canvas import PygameCanvas
 from pylay.core.physics import Spring
 from pylute.score import Score
 from pylute.note import Note as _PluteNote
+from pylute.rest import Rest as _PluteRest
 import pianove.context as ctx
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
@@ -69,7 +70,14 @@ def _pitch_to_midi(pitch_str: str) -> int:
 
 
 def _bars_from_lesson(lesson: dict) -> list[list[str]]:
-    for step in lesson.get("steps", []):
+    steps = lesson.get("steps", [])
+    # Try the current step first; fall back to first exercise found
+    candidates = []
+    if ctx.lesson_step_idx < len(steps):
+        candidates = [steps[ctx.lesson_step_idx]] + steps
+    else:
+        candidates = steps
+    for step in candidates:
         if step.get("type") == "exercise":
             return step.get("bars", [])
     return [["C4", "D4", "E4", "F4"]]
@@ -93,6 +101,7 @@ def _next_in_course() -> tuple[str, int] | None:
 
 
 def _nav_back():
+    ctx.lesson_step_idx    = 0
     ctx.lesson_current_idx = 0
     ctx.lesson_section_idx = 0
     ctx.lesson_completed   = False
@@ -108,6 +117,7 @@ def _nav_back():
 
 
 def _do_restart():
+    ctx.lesson_step_idx    = 0
     ctx.lesson_current_idx = 0
     ctx.lesson_section_idx = 0
     ctx.lesson_completed   = False
@@ -127,7 +137,9 @@ class _StaffView(PygameCanvas):
 
     def __init__(self, bars: list[list[str]], phase: str,
                  initial_idx: int = 0, on_advance=None,
-                 bpm: int = _BPM, clef: str = "treble", **kwargs):
+                 bpm: int = _BPM, clef: str = "treble",
+                 bass_bars: list[list[str]] | None = None,
+                 time: tuple = (4, 4), **kwargs):
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
         self._bpm  = bpm
@@ -137,7 +149,7 @@ class _StaffView(PygameCanvas):
         # PyLute renders proper rest symbols; no MIDI is expected during them.
         if phase == "performance":
             beat_dur             = 60.0 / self._bpm
-            self._prep_duration  = _PREP_BARS * 4 * beat_dur
+            self._prep_duration  = _PREP_BARS * time[0] * beat_dur
             self._prep_elapsed   = 0.0
             self._in_prep        = True
             n_prep = _PREP_BARS
@@ -147,31 +159,80 @@ class _StaffView(PygameCanvas):
             self._in_prep        = False
             n_prep = 0
 
+        n_staves   = 2 if bass_bars is not None else 1
+        clef_types = ["treble", "bass"] if bass_bars is not None else [clef]
+
         n_bars = n_prep + len(bars)
         self._n_bars = n_bars
         self._score  = Score(
-            surface=None, staffs=1, bars=n_bars,
-            clef_types=[clef], key="C", time=(4, 4),
+            surface=None, staffs=n_staves, bars=n_bars,
+            clef_types=clef_types, key="C", time=time,
             bars_per_system=n_bars,
         )
-        for _ in range(n_prep):
-            self._score.addRest(rtype="whole", staff_index=0)
-        for bar_pitches in bars:
-            for pitch in bar_pitches:
-                self._score.addNote(ntype="quarter", pitch=pitch, staff_index=0)
 
-        # _note_list contains only Note objects — rests are skipped so current_idx
-        # and expected_midi() never reference a rest event.
-        self._note_list = [
-            ev
-            for bar in self._score.staffs[0].bars
-            for ev in bar.events
-            if isinstance(ev, _PluteNote)
-        ]
+        # Populate all bars directly so notes never overflow between bars.
+        st0 = self._score.staffs[0]
+        st1 = self._score.staffs[1] if n_staves > 1 else None
+        beats = time[0]
 
-        self.current_idx: int = min(initial_idx, len(self._note_list))
+        def _ntype_for(n: int) -> str:
+            if n <= beats:
+                return "quarter"
+            elif n <= beats * 2:
+                return "eighth"
+            return "sixteenth"
+
+        for prep_i in range(n_prep):
+            st0.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st0))
+            if st1:
+                st1.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st1))
+
+        for rel_i, bar_pitches in enumerate(bars):
+            bar_obj = st0.bars[n_prep + rel_i]
+            if not bar_pitches:
+                bar_obj.events.append(_PluteRest(rtype="whole", staff=st0))
+            else:
+                ntype = _ntype_for(len(bar_pitches))
+                for pitch in bar_pitches:
+                    bar_obj.events.append(_PluteNote(ntype=ntype, pitch=pitch, staff=st0))
+
+        if st1 is not None and bass_bars is not None:
+            for rel_i, bar_pitches in enumerate(bass_bars):
+                bar_obj = st1.bars[n_prep + rel_i]
+                if not bar_pitches:
+                    bar_obj.events.append(_PluteRest(rtype="whole", staff=st1))
+                else:
+                    ntype = _ntype_for(len(bar_pitches))
+                    for pitch in bar_pitches:
+                        bar_obj.events.append(_PluteNote(ntype=ntype, pitch=pitch, staff=st1))
+
+        # _step_list: each step is a list of simultaneous notes (one per stave at
+        # the same beat position). Single-staff mode → one note per step.
+        # Grand-staff mode → treble note i paired with bass note i per bar;
+        # whichever stave runs out first, remaining notes become solo steps.
+        self._step_list: list[list[_PluteNote]] = []
+        if n_staves > 1:
+            for bar_i in range(len(self._score.staffs[0].bars)):
+                rh = [ev for ev in self._score.staffs[0].bars[bar_i].events if isinstance(ev, _PluteNote)]
+                lh = [ev for ev in self._score.staffs[1].bars[bar_i].events if isinstance(ev, _PluteNote)]
+                for beat_i in range(max(len(rh), len(lh))):
+                    step: list[_PluteNote] = []
+                    if beat_i < len(rh):
+                        step.append(rh[beat_i])
+                    if beat_i < len(lh):
+                        step.append(lh[beat_i])
+                    if step:
+                        self._step_list.append(step)
+        else:
+            for bar_i in range(len(self._score.staffs[0].bars)):
+                for ev in self._score.staffs[0].bars[bar_i].events:
+                    if isinstance(ev, _PluteNote):
+                        self._step_list.append([ev])
+
+        self.current_idx: int = min(initial_idx, len(self._step_list))
         for i in range(self.current_idx):
-            self._note_list[i].color = _GREEN
+            for note in self._step_list[i]:
+                note.color = _GREEN
 
         self._phase      = phase
         self._on_advance = on_advance
@@ -188,28 +249,32 @@ class _StaffView(PygameCanvas):
 
     @property
     def total_notes(self) -> int:
-        return len(self._note_list)
+        return len(self._step_list)
+
+    def expected_midis(self) -> frozenset[int]:
+        if self._in_prep or self.current_idx >= len(self._step_list):
+            return frozenset()
+        return frozenset(_pitch_to_midi(n.pitch) for n in self._step_list[self.current_idx])
 
     def expected_midi(self) -> int | None:
-        if self._in_prep:
-            return None
-        if self.current_idx >= len(self._note_list):
-            return None
-        return _pitch_to_midi(self._note_list[self.current_idx].pitch)
+        m = self.expected_midis()
+        return next(iter(m)) if m else None
 
     # ── Practice ──────────────────────────────────────────────────────────────
 
     def advance(self):
-        if self.current_idx >= len(self._note_list):
+        if self.current_idx >= len(self._step_list):
             return
-        self._note_list[self.current_idx].color = _GREEN
+        for note in self._step_list[self.current_idx]:
+            note.color = _GREEN
         self._dirty = True
         self.current_idx += 1
         self._update_spring_targets()
 
     def mark_wrong(self):
-        if self.current_idx < len(self._note_list):
-            self._note_list[self.current_idx].color = _RED
+        if self.current_idx < len(self._step_list):
+            for note in self._step_list[self.current_idx]:
+                note.color = _RED
             self._dirty = True
 
     # ── Performance ───────────────────────────────────────────────────────────
@@ -219,17 +284,19 @@ class _StaffView(PygameCanvas):
         return self._hits
 
     def mark_hit(self):
-        if self.current_idx < len(self._note_list):
+        if self.current_idx < len(self._step_list):
             self._perf_hit = True
             self._hits += 1
-            self._note_list[self.current_idx].color = _GREEN
+            for note in self._step_list[self.current_idx]:
+                note.color = _GREEN
             self._dirty = True
 
     # ── Shared ────────────────────────────────────────────────────────────────
 
     def restart(self):
-        for note in self._note_list:
-            note.color = None
+        for step in self._step_list:
+            for note in step:
+                note.color = None
         self._dirty      = True
         self.current_idx = 0
         self._perf_timer = 0.0
@@ -263,13 +330,28 @@ class _StaffView(PygameCanvas):
         self._score.surface = self._offscreen
         for staff in self._score.staffs:
             staff.surface = self._offscreen
+        if self._score.brace:
+            self._score.brace.surface = self._offscreen
         self._score.draw()
-        self._note_xs = [
-            ev.offset
-            for bar in self._score.staffs[0].bars
-            for ev in bar.events
-            if isinstance(ev, _PluteNote)
-        ]
+        n_st = len(self._score.staffs)
+        if n_st > 1:
+            # One x per step: use the treble note x (or bass if treble absent at that beat)
+            self._note_xs = []
+            for bar_i in range(len(self._score.staffs[0].bars)):
+                rh = [ev for ev in self._score.staffs[0].bars[bar_i].events if isinstance(ev, _PluteNote)]
+                lh = [ev for ev in self._score.staffs[1].bars[bar_i].events if isinstance(ev, _PluteNote)]
+                for beat_i in range(max(len(rh), len(lh))):
+                    if beat_i < len(rh):
+                        self._note_xs.append(rh[beat_i].offset)
+                    else:
+                        self._note_xs.append(lh[beat_i].offset)
+        else:
+            self._note_xs = [
+                ev.offset
+                for bar_i in range(len(self._score.staffs[0].bars))
+                for ev in self._score.staffs[0].bars[bar_i].events
+                if isinstance(ev, _PluteNote)
+            ]
         if self._note_xs:
             snap_x = self._note_xs[min(self.current_idx, len(self._note_xs) - 1)]
             self._ph.snap_to(snap_x)
@@ -309,7 +391,7 @@ class _StaffView(PygameCanvas):
                 self._perf_timer = 0.0
             return
 
-        if self._phase == "performance" and self.current_idx < len(self._note_list):
+        if self._phase == "performance" and self.current_idx < len(self._step_list):
             self._perf_timer += dt
             note_dur = 60.0 / self._bpm
 
@@ -331,8 +413,9 @@ class _StaffView(PygameCanvas):
 
             if self._perf_timer >= note_dur:
                 self._perf_timer -= note_dur
-                if not self._perf_hit and self.current_idx < len(self._note_list):
-                    self._note_list[self.current_idx].color = _ORANGE
+                if not self._perf_hit and self.current_idx < len(self._step_list):
+                    for note in self._step_list[self.current_idx]:
+                        note.color = _ORANGE
                     self._dirty = True
                 self.current_idx += 1
                 self._perf_hit = False
@@ -360,10 +443,12 @@ class _StaffView(PygameCanvas):
             ph_top = rect.top + y_offset + 4
             ph_bot = rect.top + y_offset + off_h - 4
         else:
-            # Content taller than canvas: keep staff lines centred
-            space        = self._score.staffs[0].space if self._score.staffs else 20
-            staff_top_y  = space * 4
-            staff_bot_y  = staff_top_y + space * 4
+            # Content taller than canvas: centre the whole system
+            space      = self._score.staffs[0].space if self._score.staffs else 20
+            n_st       = len(self._score.staffs)
+            sys_h      = (n_st - 1) * space * 9 + space * 4  # _SG=9, staff_span=4
+            staff_top_y  = int(space * 4)                     # _MT=4
+            staff_bot_y  = staff_top_y + int(sys_h)
             staff_center = (staff_top_y + staff_bot_y) // 2
             y_src  = max(0, min(off_h - vh, staff_center - vh // 2))
             blit_h = min(vh, off_h - y_src)
@@ -392,6 +477,7 @@ class _LessonPiano:
         self._advance = advance_fn
         self._wrong   = wrong_fn
         self._prev    = frozenset()
+        self._pressed_this_step: set[int] = set()
 
     def update(self, dt: float, rect: pygame.Rect):
         self._panel.update(dt, rect)
@@ -403,25 +489,35 @@ class _LessonPiano:
 
     def reset_midi_state(self):
         self._prev = frozenset()
+        self._pressed_this_step.clear()
 
     def handle_event(self, event: pygame.event.Event, rect: pygame.Rect) -> bool:
         return False
 
     def _handle_note(self, note_num: int):
-        expected = self._sv.expected_midi()
-        if expected is None:
+        expected = self._sv.expected_midis()
+        if not expected:
             return
-        if note_num == expected:
-            if self._sv._phase == "practice":
-                self._advance()
-            else:
-                self._sv.mark_hit()
+        if note_num in expected:
+            self._pressed_this_step.add(note_num)
+            if self._pressed_this_step >= expected:
+                # All notes in this step have been pressed — advance
+                self._pressed_this_step.clear()
+                if self._sv._phase == "practice":
+                    self._advance()
+                else:
+                    self._sv.mark_hit()
         elif self._sv._phase == "practice":
+            self._pressed_this_step.clear()
             self._wrong()
 
     def draw(self, surface: pygame.Surface, rect: pygame.Rect):
-        expected = self._sv.expected_midi()
+        expected = self._sv.expected_midis()   # frozenset[int]
         active   = self._panel.active_notes
+
+        # Expand keyboard range to include all expected notes
+        for m in expected:
+            self._panel._expand_for_note(m)
 
         margin_x = max(8, int(rect.width * 0.02))
         status_h = max(16, int(rect.height * 0.14))
@@ -435,8 +531,8 @@ class _LessonPiano:
         black_w  = white_w * 0.58
         black_h  = key_h * 0.62
 
-        def _active(n):  return n in active
-        def _exp(n):     return expected is not None and n == expected
+        def _active(n): return n in active
+        def _exp(n):    return n in expected
 
         def _wc(note):
             if _active(note): return (190, 60, 60)
@@ -502,6 +598,9 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
         ctx.lesson_phase   = "practice"
         ctx.router.navigate("home", "left")
 
+    win_h  = ctx.ui.height if ctx.ui else 768
+    body_h = max(100, win_h - 52 - 1)  # nav + divider
+
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
     main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
     root.add_child(main)
@@ -519,7 +618,7 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
     main.add_child(FloatLayout(width=1.0, height=1,
                                background_color=pygame.Color(120, 120, 128, 60)))
 
-    body = VStack(spacing=16, padding=40, width=1.0, height=1.0)
+    body = VStack(spacing=16, padding=40, width=1.0, height=body_h)
 
     body.add_child(EmojiIcon("🎯", size=64, color=acc_color,
                              anchor="center", x=0, y=0))
@@ -553,7 +652,7 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
                              background_color=iOSTheme.fill, text_color=iOSTheme.label,
                              border_radius=12))
     btn_row.add_child(Button(text=t("practice_new_session"), on_click=_new_session,
-                             anchor="right", x=16, y=0, width=0.42, height=44, font_size=14,
+                             anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
                              background_color=_PURPLE,
                              text_color=pygame.Color(255, 255, 255),
                              border_radius=12))
@@ -562,9 +661,149 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
     return root
 
 
+# ── Step-type builders ───────────────────────────────────────────────────────
+
+def _step_nav(lesson_title: str) -> FloatLayout:
+    """Shared nav bar for text/demo steps with back + title."""
+    nav = FloatLayout(width=1.0, height=52,
+                      background_color=iOSTheme.secondary_background)
+    nav.add_child(Button(text=t("back"), on_click=_nav_back,
+                         anchor="left", x=12, y=0,
+                         width=72, height=34, font_size=14,
+                         background_color=iOSTheme.fill,
+                         text_color=iOSTheme.label, border_radius=8))
+    nav.add_child(Label(text=lesson_title, font_size=16, bold=True,
+                        color=iOSTheme.label, anchor="center", x=0, y=0))
+    return nav
+
+
+def _build_text_step(step: dict, lesson_title: str,
+                     step_idx: int, total_steps: int) -> FloatLayout:
+    def _advance():
+        ctx.lesson_step_idx    = step_idx + 1
+        ctx.lesson_current_idx = 0
+        ctx.lesson_section_idx = 0
+        ctx.lesson_phase       = "practice"
+        ctx.router.refresh()
+
+    win_h   = ctx.ui.height if ctx.ui else 768
+    body_h  = max(100, win_h - 52 - 1 - 72)  # nav + divider + btn_row
+
+    root = FloatLayout(width=1.0, height=1.0,
+                       background_color=iOSTheme.background)
+    main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
+    root.add_child(main)
+
+    main.add_child(_step_nav(lesson_title))
+    main.add_child(FloatLayout(width=1.0, height=1,
+                               background_color=pygame.Color(120, 120, 128, 60)))
+
+    body = VStack(spacing=18, padding=40, width=1.0, height=body_h)
+
+    if total_steps > 1:
+        body.add_child(Label(
+            text=t("step_of", n=step_idx + 1, total=total_steps),
+            font_size=12, color=iOSTheme.secondary_label,
+        ))
+
+    emoji = step.get("emoji", "")
+    if emoji:
+        body.add_child(EmojiIcon(emoji, size=64))
+
+    title = step.get("title", "")
+    if title:
+        body.add_child(Label(text=title, font_size=24, bold=True,
+                             color=iOSTheme.label, wrap_width=520))
+
+    body_text = step.get("body", "")
+    if body_text:
+        body.add_child(Label(text=body_text, font_size=16,
+                             color=iOSTheme.secondary_label, wrap_width=520))
+
+    main.add_child(body)
+
+    btn_row = FloatLayout(width=1.0, height=72)
+    btn_row.add_child(Button(
+        text=t("step_continue"), on_click=_advance,
+        anchor="right", x=-24, y=0, width=180, height=44, font_size=15,
+        background_color=_GREEN,
+        text_color=pygame.Color(255, 255, 255), border_radius=12,
+    ))
+    main.add_child(btn_row)
+    return root
+
+
+def _build_notation_demo_step(step: dict, lesson_title: str,
+                               step_idx: int, total_steps: int) -> FloatLayout:
+    def _advance():
+        ctx.lesson_step_idx    = step_idx + 1
+        ctx.lesson_current_idx = 0
+        ctx.lesson_section_idx = 0
+        ctx.lesson_phase       = "practice"
+        ctx.router.refresh()
+
+    win_h   = ctx.ui.height if ctx.ui else 768
+    staff_h = max(160, min(280, win_h // 3))
+    body_h  = max(100, win_h - 52 - 1 - 72)  # nav + divider + btn_row
+
+    root = FloatLayout(width=1.0, height=1.0,
+                       background_color=iOSTheme.background)
+    main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
+    root.add_child(main)
+
+    main.add_child(_step_nav(lesson_title))
+    main.add_child(FloatLayout(width=1.0, height=1,
+                               background_color=pygame.Color(120, 120, 128, 60)))
+
+    body = VStack(spacing=16, padding=24, width=1.0, height=body_h)
+
+    if total_steps > 1:
+        body.add_child(Label(
+            text=t("step_of", n=step_idx + 1, total=total_steps),
+            font_size=12, color=iOSTheme.secondary_label,
+        ))
+
+    title = step.get("title", "")
+    if title:
+        body.add_child(Label(text=title, font_size=18, bold=True,
+                             color=iOSTheme.label))
+
+    caption = step.get("caption", "")
+    if caption:
+        body.add_child(Label(text=caption, font_size=14,
+                             color=iOSTheme.secondary_label, wrap_width=600))
+
+    # Read-only staff — no MIDI piano, playhead at rest
+    bars  = step.get("bars", [["C4", "E4", "G4", "C5"]])
+    clef  = step.get("clef", "treble")
+    bass  = step.get("bass_bars", None)
+    staff = _StaffView(
+        bars=bars, phase="practice",
+        initial_idx=0, on_advance=None,
+        bpm=_BPM, clef=clef, bass_bars=bass,
+        width=1.0, height=staff_h,
+    )
+    body.add_child(staff)
+
+    main.add_child(body)
+
+    btn_row = FloatLayout(width=1.0, height=72)
+    btn_row.add_child(Button(
+        text=t("step_got_it"), on_click=_advance,
+        anchor="right", x=-24, y=0, width=180, height=44, font_size=15,
+        background_color=_BLUE,
+        text_color=pygame.Color(255, 255, 255), border_radius=12,
+    ))
+    main.add_child(btn_row)
+    return root
+
+
 # ── Completion view ───────────────────────────────────────────────────────────
 
 def _build_completion(lesson_title: str) -> FloatLayout:
+    win_h  = ctx.ui.height if ctx.ui else 768
+    body_h = max(100, win_h - 52 - 1)  # nav + divider
+
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
     main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
     root.add_child(main)
@@ -582,7 +821,7 @@ def _build_completion(lesson_title: str) -> FloatLayout:
     main.add_child(FloatLayout(width=1.0, height=1,
                                background_color=pygame.Color(120, 120, 128, 60)))
 
-    body = VStack(spacing=20, padding=40, width=1.0, height=1.0)
+    body = VStack(spacing=20, padding=40, width=1.0, height=body_h)
     body.add_child(EmojiIcon("🏆", size=72, color=_ORANGE, anchor="center", x=0, y=0))
     body.add_child(Label(text=t("lesson_well_done"), font_size=30, bold=True,
                          color=iOSTheme.label, anchor="center", x=0, y=0))
@@ -600,13 +839,14 @@ def _build_completion(lesson_title: str) -> FloatLayout:
         def _go_next():
             ctx.current_lesson_id    = next_id
             ctx.current_course_index = next_idx
+            ctx.lesson_step_idx      = 0
             ctx.lesson_current_idx   = 0
             ctx.lesson_section_idx   = 0
             ctx.lesson_completed     = False
             ctx.lesson_phase         = "practice"
             ctx.router.refresh()
         btn_row.add_child(Button(text=t("lesson_next"), on_click=_go_next,
-                                 anchor="right", x=16, y=0, width=0.42, height=44, font_size=14,
+                                 anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
                                  background_color=_GREEN,
                                  text_color=pygame.Color(255, 255, 255),
                                  border_radius=12))
@@ -628,13 +868,20 @@ def build():
     # Practice (go) mode: skip all lesson loading, force performance phase
     is_practice = ctx.practice_mode
     bpm         = ctx.practice_bpm if is_practice else _BPM
-    clef        = ctx.practice_clef if is_practice else "treble"
+
+    if is_practice:
+        clef = ctx.practice_clef
+    elif ctx.current_song_id:
+        clef = "bass" if ctx.current_song_hand == "left" else "treble"
+    else:
+        clef = "treble"
 
     if is_practice:
         phase        = "performance"
         ctx.lesson_phase = "performance"
         lesson_title = t("practice_title")
         lesson       = {"title": lesson_title, "steps": []}
+        song_time    = (4, 4)
     else:
         phase  = ctx.lesson_phase
         lesson = load_lesson(lesson_id)
@@ -644,17 +891,63 @@ def build():
             from pianove.song_store import get_song
             _song = get_song(ctx.current_song_id)
             lesson_title = _song["title"] if _song else ctx.current_song_id
+            song_time    = tuple(_song["time"]) if _song and "time" in _song else (4, 4)
         else:
             lesson_title = lesson.get("title", lesson_id)
+            song_time    = (4, 4)
 
-    all_bars     = _bars_from_song_or_lesson(lesson)
-    sections     = _split_sections(all_bars)
-    n_sections   = len(sections)
+    # ── Step routing ──────────────────────────────────────────────────────────
+    # Non-exercise steps (text, notation_demo) are handled before the full
+    # exercise layout is built.  Songs and practice-go mode bypass step routing.
+    if not is_practice and not ctx.current_song_id:
+        steps       = lesson.get("steps", [])
+        step_idx    = max(0, min(ctx.lesson_step_idx, len(steps)))
+        total_steps = len(steps)
+        if step_idx < total_steps:
+            current_step = steps[step_idx]
+            stype = current_step.get("type", "exercise")
+            if stype == "text":
+                return _build_text_step(current_step, lesson_title,
+                                        step_idx, total_steps)
+            if stype == "notation_demo":
+                return _build_notation_demo_step(current_step, lesson_title,
+                                                  step_idx, total_steps)
+    else:
+        step_idx    = ctx.lesson_step_idx
+        steps       = lesson.get("steps", [])
+        total_steps = len(steps)
 
-    section_idx = min(section_idx, n_sections - 1)
+    all_bars = _bars_from_song_or_lesson(lesson)
+    if not all_bars:
+        all_bars = [["C4", "E4", "G4", "C5"]]
 
+    sections   = _split_sections(all_bars)
+    n_sections = len(sections)
+    section_idx = max(0, min(section_idx, n_sections - 1))
     active_bars = sections[section_idx] if phase == "practice" else all_bars
-    n_notes     = sum(len(b) for b in active_bars)
+
+    # For "both hands" song mode, split into treble/bass for grand-staff display
+    _both_lh_bars = None
+    if ctx.current_song_id and ctx.current_song_hand == "both":
+        from pianove.song_store import get_song_bars_split
+        rh_all, lh_all = get_song_bars_split(ctx.current_song_id)
+        if rh_all:
+            if phase == "practice":
+                start         = section_idx * _SECTION_SZ
+                end           = start + _SECTION_SZ
+                active_bars   = rh_all[start:end] or [["C4"]]
+                _both_lh_bars = lh_all[start:end] if lh_all else []
+            else:
+                active_bars   = rh_all
+                _both_lh_bars = lh_all
+    if _both_lh_bars is not None:
+        # Count steps: each step is one beat position across both staves
+        n_notes = sum(
+            max(len(rb), len(lb))
+            for rb, lb in zip(active_bars, _both_lh_bars)
+        )
+    else:
+        n_notes = sum(len(b) for b in active_bars)
 
     # Completion screen
     if ctx.lesson_completed and initial_idx >= n_notes:
@@ -684,6 +977,7 @@ def build():
             _slide_ref[0].reveal(val)
 
     def _on_restart():
+        ctx.lesson_step_idx    = 0
         ctx.lesson_current_idx = 0
         ctx.lesson_section_idx = 0
         ctx.lesson_completed   = False
@@ -729,11 +1023,25 @@ def build():
             )
             ctx.practice_last_hits  = hits
             ctx.practice_last_total = total
-        elif not ctx.current_song_id:
-            mark_complete(lesson_id)
-            record_session(lesson_id)
-        ctx.lesson_completed = True
-        ctx.router.refresh()
+            ctx.lesson_completed = True
+            ctx.router.refresh()
+            return
+
+        # For lessons: advance to the next step if one exists, otherwise finish
+        next_step = step_idx + 1
+        if not ctx.current_song_id and next_step < total_steps:
+            ctx.lesson_step_idx    = next_step
+            ctx.lesson_current_idx = 0
+            ctx.lesson_section_idx = 0
+            ctx.lesson_phase       = "practice"
+            ctx.lesson_completed   = False
+            ctx.router.refresh()
+        else:
+            if not ctx.current_song_id:
+                mark_complete(lesson_id)
+                record_session(lesson_id)
+            ctx.lesson_completed = True
+            ctx.router.refresh()
 
     counter_state = State(
         f"{initial_idx + 1} / {n_notes}" if initial_idx < n_notes else ""
@@ -820,7 +1128,7 @@ def build():
     staff_view = _StaffView(
         bars=active_bars, phase=phase,
         initial_idx=initial_idx, on_advance=_do_note_advance,
-        bpm=bpm, clef=clef,
+        bpm=bpm, clef=clef, bass_bars=_both_lh_bars, time=song_time,
         width=1.0, height=staff_h,
     )
     _sv[0] = staff_view

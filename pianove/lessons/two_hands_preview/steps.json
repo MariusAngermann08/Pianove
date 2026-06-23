@@ -1,5 +1,18 @@
 [
   {
+    "type": "text",
+    "emoji": "🙌",
+    "title": "Playing With Both Hands",
+    "body": "The hardest part of piano isn't learning the notes — it's making both hands work independently. Start slow. The left hand holds the harmony while the right hand carries the melody."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Grand Staff",
+    "caption": "When both hands are written together, it's called a grand staff. The top staff (treble clef) is the right hand; the bottom (bass clef) is the left. The brace on the left ties them together.",
+    "bars": [["C4", "E4", "G4", "C5"]],
+    "bass_bars": [["C3", "G3", "E3", "C3"]]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

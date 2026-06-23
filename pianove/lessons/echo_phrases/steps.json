@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🔁",
+    "title": "Echo Phrases",
+    "body": "An echo phrase is when a musical idea is repeated — often at a different pitch or dynamic. It's one of the oldest tricks in music: play something, then answer it. Call and response."
+  },
+  {
+    "type": "notation_demo",
+    "title": "The Phrase and Its Echo",
+    "caption": "Bar 1 rises: E F G A. Bar 2 falls back: A G F E. The descent is the echo — same notes, reversed direction. This mirror shape appears everywhere in classical and folk music.",
+    "bars": [
+      ["E4", "F4", "G4", "A4"],
+      ["A4", "G4", "F4", "E4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

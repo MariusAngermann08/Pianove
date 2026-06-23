@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🎼",
+    "title": "All the Natural Notes",
+    "body": "The white keys of the piano are called natural notes: A B C D E F G. They repeat in octaves. Once you know where all seven live on the staff, you can read any melody."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Two Full Octaves",
+    "caption": "C to C covers one octave (8 notes). Here we travel two full octaves across both staves — watch how the notes climb steadily from C4 all the way up to D5.",
+    "bars": [
+      ["C4", "D4", "E4", "F4"],
+      ["G4", "A4", "B4", "C5"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

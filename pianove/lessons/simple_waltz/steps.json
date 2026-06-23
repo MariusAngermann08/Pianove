@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "💃",
+    "title": "The Waltz Feel",
+    "body": "A waltz is in 3/4 time — three beats per bar, with an emphasis on beat 1. Count: ONE two three ONE two three. The melody should breathe and flow; don't rush the phrasing."
+  },
+  {
+    "type": "notation_demo",
+    "title": "Waltz Opening",
+    "caption": "The melody starts on E, moves to G and A — a stepwise rise. Bar 2 descends back to C. This rise-and-fall shape is the heartbeat of waltz phrasing.",
+    "bars": [
+      ["E4", "G4", "A4", "G4"],
+      ["F4", "E4", "D4", "C4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

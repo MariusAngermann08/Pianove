@@ -1,5 +1,20 @@
 [
   {
+    "type": "text",
+    "emoji": "🧩",
+    "title": "Building with Motifs",
+    "body": "A motif is the smallest musical idea — usually 3 or 4 notes. Great composers (Beethoven, Bach, Mozart) built entire movements from a single motif. Here you'll play the same shape starting on different notes."
+  },
+  {
+    "type": "notation_demo",
+    "title": "The Core Motif",
+    "caption": "Root, third, fifth, third — this is the motif. It outlines a chord. Watch how bar 2 shifts the same shape up to D-F-A: same intervals, new root, new colour.",
+    "bars": [
+      ["C4", "E4", "G4", "E4"],
+      ["D4", "F4", "A4", "F4"]
+    ]
+  },
+  {
     "type": "exercise",
     "time": [4, 4],
     "bars": [

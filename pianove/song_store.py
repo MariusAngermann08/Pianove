@@ -61,6 +61,8 @@ def _tag(el):
 
 
 def _find(el, tag):
+    if el is None:
+        return None
     for child in el:
         if _tag(child) == tag:
             return child
@@ -68,6 +70,8 @@ def _find(el, tag):
 
 
 def _findall(el, tag):
+    if el is None:
+        return []
     return [c for c in el if _tag(c) == tag]
 
 
@@ -320,6 +324,14 @@ def get_song(song_id: str) -> dict | None:
     return next((s for s in _load_index() if s["id"] == song_id), None)
 
 
+def get_song_bars_split(song_id: str) -> tuple[list[list[str]], list[list[str]]]:
+    """Return (bars_rh, bars_lh) separately — used for grand-staff display."""
+    song = get_song(song_id)
+    if song is None:
+        return [], []
+    return song.get("bars_rh", []), song.get("bars_lh", [])
+
+
 def get_song_bars(song_id: str, hand: str = "right") -> list[list[str]]:
     """
     Return bars as list[list[str]] for the lesson engine.
@@ -335,7 +347,7 @@ def get_song_bars(song_id: str, hand: str = "right") -> list[list[str]]:
     bars_lh = song.get("bars_lh", [])
 
     if hand == "left":
-        return [bar for bar in bars_lh if bar]
+        return bars_lh  # preserve bar alignment; empty bars = whole rests
 
     if hand == "both":
         combined = []
@@ -343,9 +355,8 @@ def get_song_bars(song_id: str, hand: str = "right") -> list[list[str]]:
             rh = bars_rh[i] if i < len(bars_rh) else []
             lh = bars_lh[i] if i < len(bars_lh) else []
             merged = rh + lh
-            if merged:
-                combined.append(merged)
+            combined.append(merged)
         return combined if combined else bars_rh
 
-    # default: right hand
-    return [bar for bar in bars_rh if bar]
+    # default: right hand — preserve bar alignment
+    return bars_rh
