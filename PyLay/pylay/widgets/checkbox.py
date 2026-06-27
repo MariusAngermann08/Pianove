@@ -5,11 +5,6 @@ from pylay.core.state import State
 from typing import Optional, Union, Any, Callable
 
 class Checkbox(UIElement):
-    """
-    An iOS-style check selector box.
-    Fades and scales its checkmark dynamically using spring physics.
-    Supports State binding out-of-the-box.
-    """
     def __init__(self,
                  value: Union[bool, State] = False,
                  on_change: Optional[Callable[[bool], None]] = None,

@@ -1,13 +1,3 @@
-"""
-Song store — import MusicXML files, persist metadata + extracted bars,
-serve bars back to the lesson engine.
-
-Storage layout:
-  ~/.pianove/songs/
-    index.json          ← list of song metadata dicts
-    files/<id>.xml      ← copied MusicXML source
-"""
-
 import os
 import json
 import shutil
@@ -31,7 +21,6 @@ _TYPE_BEATS = {
 }
 
 
-# ────────────────────────────────────────────── helpers
 
 def _ensure_dirs():
     os.makedirs(_FILES_DIR, exist_ok=True)
@@ -53,7 +42,6 @@ def _save_index(index: list[dict]):
         json.dump(index, f, indent=2, ensure_ascii=False)
 
 
-# ────────────────────────────────────────────── XML parsing
 
 def _tag(el):
     import re
@@ -99,15 +87,6 @@ def _pitch_to_midi(pitch: str) -> int:
 
 
 def _parse_musicxml(filepath: str) -> dict:
-    """
-    Parse MusicXML and return:
-      {
-        title, composer,
-        key, time,
-        bars_rh: list[list[str]],   # treble staff pitch strings per bar
-        bars_lh: list[list[str]],   # bass staff pitch strings per bar
-      }
-    """
     import zipfile, re
 
     ext = os.path.splitext(filepath)[1].lower()
@@ -247,7 +226,6 @@ def _parse_musicxml(filepath: str) -> dict:
     }
 
 
-# ────────────────────────────────────────────── difficulty
 
 def _compute_difficulty(bars_rh: list[list[str]], bars_lh: list[list[str]]) -> str:
     all_notes = [p for bar in bars_rh + bars_lh for p in bar]
@@ -264,19 +242,12 @@ def _compute_difficulty(bars_rh: list[list[str]], bars_lh: list[list[str]]) -> s
     return "advanced"
 
 
-# ────────────────────────────────────────────── public API
 
 def list_songs() -> list[dict]:
-    """Return list of song metadata dicts (id, title, composer, difficulty, n_bars)."""
     return _load_index()
 
 
 def import_song(filepath: str) -> dict:
-    """
-    Parse a MusicXML file, copy it into the store, and append to the index.
-    Returns the new song metadata dict.
-    Raises ValueError on parse errors.
-    """
     _ensure_dirs()
     parsed = _parse_musicxml(filepath)
 
@@ -308,7 +279,6 @@ def import_song(filepath: str) -> dict:
 
 
 def delete_song(song_id: str):
-    """Remove a song from the index and delete its file."""
     index = _load_index()
     entry = next((s for s in index if s["id"] == song_id), None)
     if entry and os.path.exists(entry.get("filepath", "")):
@@ -320,12 +290,10 @@ def delete_song(song_id: str):
 
 
 def get_song(song_id: str) -> dict | None:
-    """Return a single song entry or None."""
     return next((s for s in _load_index() if s["id"] == song_id), None)
 
 
 def get_song_bars_split(song_id: str) -> tuple[list[list[str]], list[list[str]]]:
-    """Return (bars_rh, bars_lh) separately — used for grand-staff display."""
     song = get_song(song_id)
     if song is None:
         return [], []
@@ -333,12 +301,6 @@ def get_song_bars_split(song_id: str) -> tuple[list[list[str]], list[list[str]]]
 
 
 def get_song_bars(song_id: str, hand: str = "right") -> list[list[str]]:
-    """
-    Return bars as list[list[str]] for the lesson engine.
-      hand="right" → treble staff only
-      hand="left"  → bass staff only
-      hand="both"  → treble + bass notes concatenated per bar
-    """
     song = get_song(song_id)
     if song is None:
         return [["C4", "D4", "E4", "F4"]]

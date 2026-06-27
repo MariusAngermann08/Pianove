@@ -8,11 +8,6 @@ from pylay.core import font_loader
 from typing import List, Dict, Union, Any, Optional, Callable
 
 class BottomNavigationBar(FloatLayout):
-    """
-    An iOS-style Bottom Navigation Bar tab selector.
-    Tapping tabs triggers a spring-based scale bounce on the active item,
-    translating and tinting it dynamically with zero per-frame allocations.
-    """
     def __init__(self,
                  active_tab_state: State,
                  items: List[Dict[str, Any]],

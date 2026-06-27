@@ -1,25 +1,3 @@
-"""
-Emoji rendering for PyLay.
-
-Renders emoji glyphs via NotoColorEmoji + Pillow as shaped, tintable
-pygame Surfaces. Because colour-emoji fonts are not renderable through
-pygame.font / pygame.freetype directly, we lean on Pillow's FreeType
-backend which supports the embedded bitmap tables in NotoColorEmoji.
-
-The glyph is extracted as a pure alpha mask (shape only) and then
-coloured to any RGB value at cache time — so emoji naturally follow the
-app's theme and can be used like any other coloured icon.
-
-Public API
-----------
-emoji_surface(char, size, color) -> pygame.Surface | None
-    Returns a size×size SRCALPHA surface tinted to `color`, or None when
-    Pillow / the font is unavailable.
-
-is_available() -> bool
-    Fast check: True when emoji rendering is ready to use.
-"""
-
 from __future__ import annotations
 
 import os
@@ -27,9 +5,6 @@ from typing import Optional, Tuple
 
 import pygame
 
-# ---------------------------------------------------------------------------
-# Internal state
-# ---------------------------------------------------------------------------
 _ready: Optional[bool]        = None   # None = not yet initialised
 _font_obj                     = None   # PIL ImageFont (loaded once)
 _cache: dict[tuple, pygame.Surface] = {}
@@ -73,12 +48,10 @@ def _init() -> bool:
 
 
 def is_available() -> bool:
-    """Return True when Pillow and NotoColorEmoji are both usable."""
     return _init()
 
 
 def clear_cache() -> None:
-    """Discard all cached surfaces (call after a theme change)."""
     _cache.clear()
 
 
@@ -87,13 +60,6 @@ def emoji_surface(
     size: int,
     color: pygame.Color | Tuple[int, int, int] = (255, 255, 255),
 ) -> Optional[pygame.Surface]:
-    """
-    Render `char` as a pygame SRCALPHA surface of `size` × `size` pixels
-    tinted to `color`.
-
-    Returns None silently when Pillow or the font is unavailable — callers
-    should fall back to a plain Unicode character or a drawn shape.
-    """
     if not _init():
         return None
 

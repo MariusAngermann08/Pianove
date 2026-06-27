@@ -107,7 +107,6 @@ def build():
     scroll = VStack(spacing=14, padding=16, width=1.0, height=1.0)
     root.add_child(scroll)
 
-    # ── Greeting ──────────────────────────────────────────────────────────────
     greeting_row = FloatLayout(width=1.0, height=40)
     greeting_row.add_child(Label(
         text=t(_greeting_key(), name=name),
@@ -127,7 +126,6 @@ def build():
     ))
     scroll.add_child(greeting_row)
 
-    # ── Continue card ─────────────────────────────────────────────────────────
     scroll.add_child(section_header(t("continue_label"), U))
 
     if next_lesson and next_course:
@@ -174,7 +172,6 @@ def build():
         ))
         scroll.add_child(done_card)
 
-    # ── Daily goal ────────────────────────────────────────────────────────────
     scroll.add_child(section_header(t("daily_goal"), U))
     goal_progress = min(today_count, 1.0)
     goal     = Card(width=1.0, height=72)
@@ -192,7 +189,6 @@ def build():
     goal.add_child(goal_row)
     scroll.add_child(goal)
 
-    # ── Stats ─────────────────────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_lessons_section"), U))
     stats_row = FloatLayout(width=1.0, height=scaled_px(104))
     for card in [
@@ -203,7 +199,6 @@ def build():
         stats_row.add_child(card)
     scroll.add_child(stats_row)
 
-    # ── Weekly chart ──────────────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_week"), U))
     scroll.add_child(LineChart(
         data=week_data,
@@ -213,7 +208,6 @@ def build():
         width=1.0, height=scaled_px(160),
     ))
 
-    # ── Sight-reading stats ───────────────────────────────────────────────────
     if pr_total > 0:
         scroll.add_child(section_header(t("stats_practice_section"), U))
         pr_row = FloatLayout(width=1.0, height=scaled_px(104))
@@ -231,7 +225,6 @@ def build():
                 width=1.0, height=scaled_px(140),
             ))
 
-    # ── Achievements ──────────────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_achievements"), U))
 
     badges_row1 = FloatLayout(width=1.0, height=scaled_px(64))

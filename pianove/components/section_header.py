@@ -2,7 +2,6 @@ from pylay import Label, iOSTheme
 
 
 def section_header(text: str, U: dict) -> Label:
-    """Large section header for main content areas (home, stats)."""
     return Label(
         text=text,
         font_size=U["subtitle_size"],
@@ -14,7 +13,6 @@ def section_header(text: str, U: dict) -> Label:
 
 
 def section_subheader(text: str) -> Label:
-    """Small muted section header for grouped settings-style lists."""
     return Label(
         text=text,
         font_size=13,

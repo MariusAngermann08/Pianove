@@ -1,13 +1,4 @@
-"""
-Material Icons codepoint registry.
-
-Usage:
-    from pylay.core.icons import ICONS
-    codepoint = ICONS["home"]          # → ""
-    codepoint = ICONS.get("missing")   # → None
-"""
-
-import os as _os
+﻿import os as _os
 
 _CODEPOINTS_FILE = _os.path.join(
     _os.path.dirname(__file__),
@@ -36,5 +27,4 @@ ICONS: dict[str, str] = _load()
 
 
 def get(name: str, fallback: str = "?") -> str:
-    """Return the glyph character for *name*, or *fallback* if unknown."""
     return ICONS.get(name, fallback)

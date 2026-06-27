@@ -1,15 +1,10 @@
-"""MIDI piano panel with first-time calibration flow, cascade animation,
-and proportional key sizing that stays clean at any range width."""
-
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import math
 import pygame
 import mido
 from pylay.core.theme import iOSTheme
 from pylay.core.scale import scaled_font_size
-
-# ── Constants ─────────────────────────────────────────────────────────────────
 
 _WHITE_PC = frozenset({0, 2, 4, 5, 7, 9, 11})   # C D E F G A B
 
@@ -48,9 +43,6 @@ _KNOWN_RANGES: dict[str, tuple[int, int]] = {
     "25": (48, 72),
 }
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _name_to_range(name: str) -> tuple[int, int] | None:
     low = name.lower()
     for frag, rng in _KNOWN_RANGES.items():
@@ -58,9 +50,7 @@ def _name_to_range(name: str) -> tuple[int, int] | None:
             return rng
     return None
 
-
 def _build_note_lists(low: int, high: int) -> tuple[list[int], list[int], list[int]]:
-    """white_notes, black_notes, black_indices (index of white key to the left)."""
     white = [n for n in range(low, high + 1) if n % 12 in _WHITE_PC]
     black = [n for n in range(low, high + 1) if n % 12 not in _WHITE_PC]
     white_set = set(white)
@@ -72,16 +62,11 @@ def _build_note_lists(low: int, high: int) -> tuple[list[int], list[int], list[i
         indices.append(white.index(lw) if lw >= low and lw in white_set else 0)
     return white, black, indices
 
-
 def _snap_low(note: int) -> int:
-    """Snap note downward to the C that starts its MIDI octave group."""
     return (note // 12) * 12
 
-
 def _snap_high(note: int) -> int:
-    """Snap note upward to the next C (or keep if already a C)."""
     return note if note % 12 == 0 else (note // 12 + 1) * 12
-
 
 def get_physical_inputs() -> list[str]:
     try:
@@ -90,17 +75,7 @@ def get_physical_inputs() -> list[str]:
         print(f"Error listing MIDI devices: {e}")
         return []
 
-
-# ── Panel ─────────────────────────────────────────────────────────────────────
-
 class MidiPanel:
-    """Native pygame content for PygameCanvas (draw / update / handle_event).
-
-    First connection without a saved range triggers a two-step calibration:
-      1. Press lowest key  →  2. Press highest key  →  cascade animation  →  play.
-    Range is persisted to Storage so subsequent connections skip calibration.
-    """
-
     def __init__(self, device_state=None, key_played_state=None,
                  text_fn=None, storage=None):
         self.midi_in = None
@@ -129,8 +104,6 @@ class MidiPanel:
         # Load persisted range
         self._saved_range: tuple[int, int] | None = self._load_range()
 
-    # ── Storage ───────────────────────────────────────────────────────────────
-
     def _load_range(self) -> tuple[int, int] | None:
         if not self._storage:
             return None
@@ -147,7 +120,6 @@ class MidiPanel:
             self._storage.set(_SK_HIGH, high)
 
     def reset_calibration(self):
-        """Clear saved range; next device connect will trigger calibration again."""
         self._saved_range = None
         if self._storage:
             self._storage.remove(_SK_LOW)
@@ -155,8 +127,6 @@ class MidiPanel:
         if self.midi_in is not None:
             self._cal_low = None
             self._state   = _S_CAL_LOW
-
-    # ── Range management ──────────────────────────────────────────────────────
 
     def _rebuild_keys(self):
         self._white_notes, self._black_notes, self._black_indices = _build_note_lists(
@@ -180,8 +150,6 @@ class MidiPanel:
         if lo != self._display_low or hi != self._display_high:
             self._set_range(lo, hi)
 
-    # ── Public API ────────────────────────────────────────────────────────────
-
     def close(self):
         if self.midi_in:
             try:
@@ -193,8 +161,6 @@ class MidiPanel:
         self._cal_low = None
         self._state   = _S_IDLE
         self._reset_range()
-
-    # ── Polling ───────────────────────────────────────────────────────────────
 
     def _poll_devices(self):
         now = pygame.time.get_ticks() / 1000.0
@@ -271,8 +237,6 @@ class MidiPanel:
             from pianove.sound_engine_fs import play as _play
             _play(note, velocity)
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
-
     def _set_device_name(self, name: str):
         if self.device_state is not None:
             self.device_state.value = name
@@ -292,14 +256,7 @@ class MidiPanel:
             self._font_cache[size] = pygame.font.SysFont(None, size)
         return self._font_cache[size]
 
-    # ── Layout ────────────────────────────────────────────────────────────────
-
     def _layout(self, rect: pygame.Rect):
-        """Return (margin_x, top, key_h, white_w, black_w, black_h, status_h).
-
-        key_h is capped at KEY_ASPECT × white_w so keys never look stretched
-        on wide ranges; remaining vertical space centres the keyboard.
-        """
         n_white  = max(1, len(self._white_notes))
         margin_x = max(4, int(rect.width * 0.01))
         status_h = max(22, int(rect.height * 0.12))
@@ -316,8 +273,6 @@ class MidiPanel:
         # Vertically centre the keys inside the available area
         top = rect.top + pad + int((avail_h - key_h) / 2)
         return margin_x, top, key_h, white_w, black_w, black_h, status_h
-
-    # ── UIElement protocol ────────────────────────────────────────────────────
 
     def update(self, dt: float, rect: pygame.Rect):
         self._poll_devices()
@@ -342,8 +297,6 @@ class MidiPanel:
             self._draw_keys(surface, rect, min(1.0, self._anim_t / _ANIM_DUR))
         else:
             self._draw_keys(surface, rect, 1.0)
-
-    # ── Draw helpers ──────────────────────────────────────────────────────────
 
     def _blit_center(self, surface, rect, text, color, base_size, dy=0):
         font = self._get_font(base_size)
@@ -397,7 +350,6 @@ class MidiPanel:
         left_x = rect.left  + margin
         right_x= rect.right - margin
 
-        # ── Range bar ────────────────────────────────────────────────────────
         # Background track
         pygame.draw.line(surface, (60, 60, 60), (left_x, bar_y), (right_x, bar_y), 2)
 
@@ -467,7 +419,6 @@ class MidiPanel:
         for kr, col in black_draws:
             pygame.draw.rect(surface, col, kr, border_radius=4)
 
-        # ── Status label ──────────────────────────────────────────────────────
         connected  = self.midi_in is not None
         label_text = (
             self._txt("midi_connected", name=self.midi_in.name)

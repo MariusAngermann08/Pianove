@@ -7,18 +7,6 @@ from typing import Optional, Union
 
 
 class ListItem(FloatLayout):
-    """
-    Standard list row with leading / title / subtitle / trailing slots.
-
-    leading  — optional widget pinned to the left (icon, emoji label, etc.)
-    trailing — optional widget pinned to the right (Switch, Label, Button, …)
-    on_click — wraps the whole row in an invisible tap target
-
-    Defaults to iOSTheme.secondary_background + border_radius=10, matching
-    the settings/info-row style. Pass background_color=pygame.Color(0,0,0,0)
-    for transparent rows (e.g. rows inside a Card).
-    """
-
     def __init__(
         self,
         title: str,

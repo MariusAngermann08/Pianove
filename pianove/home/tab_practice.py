@@ -13,8 +13,6 @@ import pianove.context as ctx
 
 _BLUE = ColorPalette.BLUE
 
-# ── Persistent config ─────────────────────────────────────────────────────────
-
 _CFG_KEY = "practice_config"
 
 _CLEF_OPTIONS       = ["treble", "bass"]
@@ -48,8 +46,6 @@ def _reload():
         ctx.inner_router.reload_current_page()
 
 
-# ── Sub-builders ──────────────────────────────────────────────────────────────
-
 def _section_label(text: str):
     return Label(
         text=text, font_size=12, bold=True,
@@ -58,7 +54,6 @@ def _section_label(text: str):
 
 
 def _key_pill_row(cfg: dict) -> FloatLayout:
-    """4 short key pills — pill buttons are the right control for this."""
     row = FloatLayout(width=1.0, height=36)
     n   = len(_KEY_OPTIONS)
     gap = 0.012
@@ -85,7 +80,6 @@ def _key_pill_row(cfg: dict) -> FloatLayout:
 
 
 def _inline_row(label_text: str, widget, row_h: int = 44) -> FloatLayout:
-    """Label on left, widget pinned to the right — for Stepper rows."""
     row = FloatLayout(width=1.0, height=row_h)
     row.add_child(Label(
         text=label_text, font_size=14, bold=True,
@@ -95,8 +89,6 @@ def _inline_row(label_text: str, widget, row_h: int = 44) -> FloatLayout:
     row.add_child(widget)
     return row
 
-
-# ── Recent session card ───────────────────────────────────────────────────────
 
 def _session_row(s: dict) -> FloatLayout:
     pct       = int(s.get("accuracy", 0) * 100)
@@ -135,8 +127,6 @@ def _session_row(s: dict) -> FloatLayout:
     return row
 
 
-# ── Tab builder ───────────────────────────────────────────────────────────────
-
 def build():
     U   = ui_dims()
     cfg = _load_cfg()
@@ -152,7 +142,6 @@ def build():
     scroll = VStack(spacing=14, padding=16, width=1.0, height=1.0)
     root.add_child(scroll)
 
-    # ── Header ────────────────────────────────────────────────────────────────
     header_row = FloatLayout(width=1.0, height=40)
     header_row.add_child(Label(
         text=t("practice_tab_title"),
@@ -173,7 +162,6 @@ def build():
         wrap_width=700, height=18,
     ))
 
-    # ── Config card ───────────────────────────────────────────────────────────
     # Heights: title=20, section_label=16, control=36, inline_row=44
     # Rows: 2×(16+6+36) + (16+6+36) + 2×44 + button=44
     # Spacing between children: 8px × 8 gaps
@@ -269,7 +257,6 @@ def build():
     ))
     scroll.add_child(config_card)
 
-    # ── Recent sessions ───────────────────────────────────────────────────────
     if recent:
         scroll.add_child(Label(
             text=t("practice_recent"),

@@ -175,6 +175,41 @@ ctrl = SegmentedControl(
 )</code></pre>
     </section>
 
+    <!-- Stepper -->
+    <section class="doc-section" id="stepper">
+      <h2>Stepper</h2>
+      <pre><code class="language-python">Stepper(
+    options: list[Any],
+    value: Any = None,              # initial value; defaults to options[0]
+    fmt_fn: Callable[[Any], str] | None = None,  # how to display the value
+    on_change: Callable[[Any], None] | None = None,
+    label_suffix: str = "",         # appended to the displayed value
+    active_color: pygame.Color | None = None,
+    width=160, height=36,
+)</code></pre>
+      <p>Minus / value / plus control for stepping through a list of options. Renders two circular buttons with spring-animated press feedback. The displayed text is <code>fmt_fn(value) + label_suffix</code>.</p>
+      <pre><code class="language-python">bpm = Stepper(
+    options=list(range(40, 241, 5)),
+    value=120,
+    label_suffix=" BPM",
+    on_change=lambda v: set_bpm(v),
+    anchor="top_left", x=0, y=0, width=180, height=36,
+)
+
+# Custom formatter
+difficulty = Stepper(
+    options=["easy", "medium", "hard"],
+    value="medium",
+    fmt_fn=lambda v: v.capitalize(),
+    on_change=lambda v: set_difficulty(v),
+    anchor="top_left", x=0, y=0, width=200, height=36,
+)</code></pre>
+      <div class="method-block">
+        <div class="method-sig">value → Any</div>
+        <p class="method-desc">Read-only property returning the currently selected option.</p>
+      </div>
+    </section>
+
     <div class="doc-nav-footer">
       <a href="layouts.html" class="doc-nav-link doc-nav-link--prev">
         <div class="doc-nav-dir">Previous</div>

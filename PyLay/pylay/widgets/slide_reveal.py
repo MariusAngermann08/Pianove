@@ -5,26 +5,6 @@ from typing import Optional, Union
 
 
 class SlideReveal(UIElement):
-    """
-    Wraps a single child and animates a slide-reveal from the bottom edge.
-
-    The widget always occupies ``max_height`` pixels in layout so that its
-    parent (e.g. a FloatLayout with anchor="bottom_left") always reserves the
-    full slot.  Reveal/hide is purely visual: the render is clipped to the
-    bottom ``spring.value`` pixels of the reserved slot, creating a smooth
-    slide-up / slide-down animation driven by spring physics.
-
-    Usage::
-
-        panel = SlideReveal(child=my_canvas, max_height=130, visible=True,
-                            anchor="bottom_left", x=0, y=0, width=1.0)
-        panel.reveal(False)   # slides down (hides)
-        panel.reveal(True)    # slides up (shows)
-
-    The child is always updated (and its MIDI / input handlers run) regardless
-    of the current reveal height.
-    """
-
     def __init__(self,
                  child: Optional[UIElement] = None,
                  max_height: int = 200,
@@ -48,21 +28,12 @@ class SlideReveal(UIElement):
         if child is not None:
             self.add_child(child)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def reveal(self, visible: bool) -> None:
-        """Animate the panel open (visible=True) or closed (visible=False)."""
         self._spring.target = float(self._max_h if visible else 0)
 
     @property
     def reveal_height(self) -> int:
         return round(self._spring.value)
-
-    # ------------------------------------------------------------------
-    # UIElement overrides
-    # ------------------------------------------------------------------
 
     def update(self, dt: float) -> None:
         self._spring.update(dt)

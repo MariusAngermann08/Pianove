@@ -19,7 +19,6 @@ def _to_pygame_color(color: Color) -> pygame.Color:
 
 
 def _load_raw(path: str) -> Optional[pygame.Surface]:
-    """Load and cache the raw surface for path, or None on failure."""
     abs_path = os.path.abspath(path)
     if abs_path in _SURF_CACHE:
         return _SURF_CACHE[abs_path]
@@ -41,7 +40,6 @@ def _load_raw(path: str) -> Optional[pygame.Surface]:
 
 def _make_icon_surf(path: str, size: int, color: pygame.Color,
                     tint: bool) -> pygame.Surface:
-    """Return a size×size surface, tinted if requested, placeholder on failure."""
     raw = _load_raw(path)
     if raw is None:
         return _make_placeholder(size, color)
@@ -58,7 +56,6 @@ def _make_icon_surf(path: str, size: int, color: pygame.Color,
 
 
 def _make_placeholder(size: int, color: pygame.Color) -> pygame.Surface:
-    """Broken-image placeholder: rounded rect outline with a diagonal cross."""
     surf = pygame.Surface((size, size), pygame.SRCALPHA)
     rad  = max(2, size // 6)
     sw   = max(1, size // 10)
@@ -70,17 +67,6 @@ def _make_placeholder(size: int, color: pygame.Color) -> pygame.Surface:
 
 
 class ImageIcon(UIElement):
-    """
-    Displays a PNG/JPG image file as a scaled icon.
-
-    Parameters
-    ----------
-    path  : path to the image file
-    size  : widget size in pixels (square)
-    color : tint colour applied when tint=True; None → iOSTheme.label
-    tint  : multiply-blend the image with `color` (white icons → any colour)
-    """
-
     def __init__(
         self,
         path: str,
@@ -128,17 +114,8 @@ class ImageIcon(UIElement):
         cy = self.rect.centery - self._surf.get_height() // 2
         surface.blit(self._surf, (cx, cy))
 
-    # ------------------------------------------------------------------
-    # SideNav / icon_fn compatibility
-    # ------------------------------------------------------------------
-
     @staticmethod
     def as_icon_fn(path: str, base_size: int = 16) -> Callable:
-        """
-        Return a callable ``fn(surf, cx, cy, scale, color)`` compatible with
-        SideNav's ``icon_fn`` slot.  Surface is built lazily and cached per
-        (size, color).  Falls back to placeholder if the file is missing.
-        """
         _cache: dict = {}
 
         def icon_fn(surf: pygame.Surface, cx: int, cy: int,

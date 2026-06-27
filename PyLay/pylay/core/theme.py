@@ -92,24 +92,6 @@ class Theme:
 
 
 class PianoveTheme(Theme):
-    """
-    Branded theme for the Pianove application.
-
-    Matches the docs site palette — gold/amber accent, pure near-black
-    backgrounds in dark mode, warm off-white surfaces in light mode.
-
-    Dark                          Light
-    ──────────────────────────    ──────────────────────────
-    bg           #0f0f0f          #ffffff
-    bg-alt       #181818          #f4f4f4
-    surface      #222222          #ebebeb
-    border       #2e2e2e          #d0d0d0
-    text         #efefef          #111111
-    text-sec     #c0c0c0          #3d3d3d
-    muted        #6e6e6e          #777777
-    accent       #d4a017          #b07d0a
-    """
-
     def update_theme(self):
         if self.dark:
             self.background.update(15, 15, 15)             # #0f0f0f

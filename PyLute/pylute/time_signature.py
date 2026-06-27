@@ -26,6 +26,8 @@ class TimeSignature:
             print(f"{DEBUG} <TimeSignature> object needs :staff: to be drawn")
             return
 
+
+        # get link to bravura font
         font  = get_font()
         time  = self.staff.score.time
         total = self.width

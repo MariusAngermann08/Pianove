@@ -14,7 +14,6 @@ def build():
     U    = ui_dims()
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
-    # ── Top bar ───────────────────────────────────────────────────────────
     top_h   = 56
     top_bar = FloatLayout(
         anchor="top_left", x=0, y=0, width=1.0, height=top_h,
@@ -38,7 +37,6 @@ def build():
     ))
     root.add_child(top_bar)
 
-    # ── Content ───────────────────────────────────────────────────────────
     content_y = top_h + 16
     content   = VStack(
         spacing=16, padding=20,

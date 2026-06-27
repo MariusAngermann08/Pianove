@@ -1,5 +1,3 @@
-"""Window-relative UI scale for proportional fonts and metrics."""
-
 REF_WIDTH = 1024
 REF_HEIGHT = 768
 UI_SCALE = 1.0

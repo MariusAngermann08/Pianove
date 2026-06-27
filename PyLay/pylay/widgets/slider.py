@@ -5,10 +5,6 @@ from pylay.core.theme import iOSTheme, ColorPalette
 from typing import Callable, Optional, Union, Any
 
 class Slider(UIElement):
-    """
-    An iOS-style slider control. Hover/drag feedback via spring-animated track
-    thickness and knob radius. Zero per-frame surface allocations.
-    """
     def __init__(self,
                  value: Union[float, State] = 0.5,
                  min_val: float = 0.0,

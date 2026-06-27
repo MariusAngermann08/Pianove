@@ -1,4 +1,3 @@
-"""Programmatic note generation for sight-reading practice sessions."""
 import random
 
 _SCALES: dict[str, list[str]] = {
@@ -27,7 +26,6 @@ _BEGINNER_DEGREES = 5
 
 
 def build_pool(clef: str, difficulty: str, key: str) -> list[str]:
-    """Return the list of pitch strings available for the given config."""
     scale = _SCALES.get(key, _SCALES["C"])
     degrees = scale[:_BEGINNER_DEGREES] if difficulty == "beginner" else scale
     octaves = _OCTAVES.get(clef, _OCTAVES["treble"]).get(difficulty, [4])
@@ -35,10 +33,6 @@ def build_pool(clef: str, difficulty: str, key: str) -> list[str]:
 
 
 def generate_bars(clef: str, difficulty: str, key: str, n_notes: int) -> list[list[str]]:
-    """
-    Generate random bars of quarter notes for a sight-reading session.
-    Returns a list of bars; each bar contains 4 pitch strings.
-    """
     pool = build_pool(clef, difficulty, key)
     # Round up to a full bar
     n = ((n_notes + 3) // 4) * 4

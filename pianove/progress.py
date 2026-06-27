@@ -22,7 +22,6 @@ def lessons_completed_count() -> int:
 
 
 def record_session(lesson_id: str):
-    """Append today's date to lesson_dates (used for streak + weekly chart)."""
     dates = storage.get("lesson_dates", [])
     dates.append(date.today().isoformat())
     storage.set("lesson_dates", dates)
@@ -46,7 +45,6 @@ def streak() -> int:
 
 
 def weekly_lessons() -> list[float]:
-    """Lessons completed per day for the current Mon–Sun week."""
     dates_raw = storage.get("lesson_dates", [])
     today     = date.today()
     monday    = today - timedelta(days=today.weekday())
@@ -54,7 +52,6 @@ def weekly_lessons() -> list[float]:
 
 
 def record_practice_session(accuracy: float, note_count: int, bpm: int):
-    """Append a sight-reading session result to persistent storage."""
     sessions = storage.get("practice_sessions", [])
     sessions.append({
         "date":     date.today().isoformat(),
@@ -74,7 +71,6 @@ def practice_sessions_total() -> int:
 
 
 def practice_accuracy_avg(last_n: int = 10) -> float:
-    """Average accuracy over the most recent `last_n` practice sessions."""
     sessions = practice_sessions()
     if not sessions:
         return 0.0
@@ -83,7 +79,6 @@ def practice_accuracy_avg(last_n: int = 10) -> float:
 
 
 def weekly_practice_sessions() -> list[float]:
-    """Practice session count per day for the current Mon–Sun week."""
     sessions = practice_sessions()
     today  = date.today()
     monday = today - timedelta(days=today.weekday())

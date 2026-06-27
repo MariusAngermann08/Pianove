@@ -3,11 +3,6 @@ from pylay.core import _dirty
 
 
 class State:
-    """
-    A reactive state wrapper.
-    Allows declarative bindings to widgets so that UI elements automatically
-    update their contents or values whenever the state variable changes.
-    """
     def __init__(self, initial_value: Any):
         self._value = initial_value
         self._listeners: List[Callable[[Any], None]] = []
@@ -28,11 +23,9 @@ class State:
                     pass  # Safely handle orphaned bindings
                     
     def set(self, new_val: Any):
-        """Update value (alias for assignment, matches demo/snippet style)."""
         self.value = new_val
 
     def bind(self, callback: Callable[[Any], None]):
-        """Bind a callback to be executed immediately and on every value change."""
         self._listeners.append(callback)
         try:
             callback(self._value)

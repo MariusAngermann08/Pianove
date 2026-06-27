@@ -53,7 +53,7 @@
   <main class="docs-content">
     <div class="docs-page-header">
       <h1>Advanced Widgets</h1>
-      <p class="page-subtitle">Custom rendering, file dialogs, navigation bars, animated panels, and more.</p>
+      <p class="page-subtitle">Custom rendering, file dialogs, navigation bars, animated panels, icons, and more.</p>
     </div>
 
     <!-- PygameCanvas -->
@@ -206,6 +206,73 @@ selector = OptionSelector(
     anchor="top_left", x=0, y=0,
 )</code></pre>
       <p>Renders a single emoji using NotoColorEmoji via Pillow. Falls back gracefully (nothing rendered) if Pillow is not installed.</p>
+
+      <!-- Icon -->
+      <h2 id="icon">Icon</h2>
+      <pre><code class="language-python">Icon(
+    name: str,              # Material Design icon name, e.g. "music_note"
+    size: int = 24,
+    color: pygame.Color | tuple | None = None,  # defaults to iOSTheme.label
+    anchor="top_left", x=0, y=0,
+)</code></pre>
+      <p>Renders a Material Design icon glyph from the bundled <code>MaterialIcons-Regular.ttf</code> font. Icon names use underscores (e.g. <code>"arrow_back"</code>, <code>"check_circle"</code>, <code>"volume_up"</code>). Unknown names emit a <code>UserWarning</code> at runtime. Rendered surfaces are cached by name, size, and colour.</p>
+      <pre><code class="language-python">from pylay import Icon
+
+Icon("music_note", size=24, anchor="left", x=12, y=0)
+Icon("settings",   size=20, anchor="right", x=-12, y=0)
+Icon("arrow_back", size=28, color=pygame.Color(255, 80, 80),
+     anchor="top_left", x=8, y=8)</code></pre>
+      <div class="method-block">
+        <div class="method-sig">Icon.as_icon_fn(name: str, base_size: int = 16) → Callable</div>
+        <p class="method-desc">Returns a low-level icon painter <code>fn(surface, cx, cy, scale, color)</code> compatible with <code>BottomNavigationBar</code> and <code>Badge</code> <code>icon_fn</code> parameters.</p>
+      </div>
+      <pre><code class="language-python">from pylay import Icon, BottomNavigationBar, State
+
+tab = State(0)
+nav = BottomNavigationBar(
+    active_tab_state=tab,
+    items=[
+        {"title": "Home",     "icon_fn": Icon.as_icon_fn("home")},
+        {"title": "Songs",    "icon_fn": Icon.as_icon_fn("library_music")},
+        {"title": "Settings", "icon_fn": Icon.as_icon_fn("settings")},
+    ],
+    on_change=lambda i: tab.set(i),
+    anchor="bottom_left", x=0, y=0, width=1.0,
+)</code></pre>
+      <p>Browse available icon names at <a href="https://fonts.google.com/icons" target="_blank" rel="noopener">fonts.google.com/icons</a> — use the name shown with spaces replaced by underscores.</p>
+
+      <!-- ImageIcon -->
+      <h2 id="imageicon">ImageIcon</h2>
+      <pre><code class="language-python">ImageIcon(
+    path: str,              # path to PNG/JPG/etc.
+    size: int = 32,
+    color: pygame.Color | tuple | None = None,  # tint color (if tint=True)
+    tint: bool = True,      # multiply image RGB by color; False = render original
+    anchor="top_left", x=0, y=0,
+)</code></pre>
+      <p>Loads an image from disk, scales it to <code>size × size</code>, and optionally tints it to the given colour using <code>BLEND_RGBA_MULT</code>. The raw surface is cached by absolute path so the file is only loaded once.</p>
+      <pre><code class="language-python">from pylay import ImageIcon
+
+# Tinted to theme colour (default)
+ImageIcon("assets/img/logo.png", size=40,
+          anchor="center", x=0, y=0)
+
+# Original colours preserved
+ImageIcon("assets/img/album_art.png", size=64, tint=False,
+          anchor="top_left", x=0, y=0)</code></pre>
+      <div class="method-block">
+        <div class="method-sig">ImageIcon.as_icon_fn(path: str, base_size: int = 16) → Callable</div>
+        <p class="method-desc">Returns the same low-level <code>fn(surface, cx, cy, scale, color)</code> painter as <code>Icon.as_icon_fn</code>, for use as a <code>BottomNavigationBar</code> icon.</p>
+      </div>
+
+      <!-- icon_registry -->
+      <h2 id="icon_registry">icon_registry</h2>
+      <pre><code class="language-python">import pylay as pl
+
+# Check available icon names
+pl.icon_registry.ICONS          # dict[str, str] — name → glyph character
+pl.icon_registry.get("settings")  # → glyph str, or "?" for unknown names</code></pre>
+      <p>The <code>icon_registry</code> module exposes the full Material Design codepoints table that <code>Icon</code> draws from. Use <code>ICONS.keys()</code> to enumerate all available names, or <code>get(name)</code> to safely look up a glyph with a fallback.</p>
     </section>
 
     <div class="doc-nav-footer">

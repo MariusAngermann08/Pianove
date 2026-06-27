@@ -10,8 +10,6 @@ _WHITE = pygame.Color(255, 255, 255)
 
 
 class _InlineIcon(UIElement):
-    """Renders an icon_fn callable (SideNav-style) as a fixed-size child widget."""
-
     def __init__(self, icon_fn: Callable, size: int, color: pygame.Color, **kwargs):
         super().__init__(width=size, height=size, **kwargs)
         self._icon_fn = icon_fn
@@ -22,17 +20,6 @@ class _InlineIcon(UIElement):
 
 
 class Badge(FloatLayout):
-    """
-    A pill-shaped label. Three modes:
-
-    - icon_fn + text: Material Icon pinned left, label beside it
-    - icon + text:    emoji pinned left, label beside it
-    - text only:      label centered inside the pill
-
-    width=None auto-estimates from text length. Pass an explicit int to fix it.
-    border_radius defaults to height // 2 for a perfect pill shape.
-    """
-
     def __init__(
         self,
         text: str,

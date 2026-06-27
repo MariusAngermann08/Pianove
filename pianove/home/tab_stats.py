@@ -87,7 +87,6 @@ def build():
 
     from pylay.core.scale import scaled_px
 
-    # ── Lesson stat cards ──────────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_lessons_section"), U))
     stats_row = FloatLayout(width=1.0, height=scaled_px(104))
     cards = [
@@ -99,7 +98,6 @@ def build():
         stats_row.add_child(card)
     scroll.add_child(stats_row)
 
-    # ── Weekly lessons chart ───────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_week"), U))
     scroll.add_child(LineChart(
         data=week_data,
@@ -109,7 +107,6 @@ def build():
         width=1.0, height=scaled_px(160),
     ))
 
-    # ── Sight-reading section ──────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_practice_section"), U))
 
     pr_row = FloatLayout(width=1.0, height=scaled_px(104))
@@ -131,10 +128,8 @@ def build():
             width=1.0, height=scaled_px(140),
         ))
 
-    # ── Achievements ──────────────────────────────────────────────────────────
     scroll.add_child(section_header(t("stats_achievements"), U))
 
-    # Row 1: classic achievements
     badges_row1 = FloatLayout(width=1.0, height=scaled_px(64))
     row1 = [
         ("school",                t("ach_first_lesson"), GREEN,             0.0,   ach_first),
@@ -146,7 +141,6 @@ def build():
         badges_row1.add_child(_achievement(icon, label, color, x_frac, earned))
     scroll.add_child(badges_row1)
 
-    # Row 2: sight-reading achievements
     badges_row2 = FloatLayout(width=1.0, height=scaled_px(64))
     row2 = [
         ("auto_stories",        t("ach_sight_reader"), PURPLE, 0.0,   ach_reader),

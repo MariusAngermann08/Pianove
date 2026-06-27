@@ -10,7 +10,6 @@ from pylay.widgets.icon import Icon
 from pianove.i18n import t
 from pianove.components import ORANGE, GREEN, RED, section_header
 
-# ── Persistent selected course ─────────────────────────────────────────────────
 _active_course: dict | None = None
 
 _COURSE_ICONS = {
@@ -38,8 +37,6 @@ def _open_course(course: dict):
     ctx.inner_router.navigate("course_detail")
 
 
-# ── Course card (used on the courses list page) ────────────────────────────────
-
 def _course_card(course: dict) -> Card:
     lessons    = course["lessons"]
     n_total    = len(lessons)
@@ -52,7 +49,6 @@ def _course_card(course: dict) -> Card:
 
     card = Card(width=1.0, height=160, spacing=8, padding=16)
 
-    # ── Header: icon + title + difficulty badge ───────────────────────────────
     header = FloatLayout(width=1.0, height=28)
     header.add_child(Icon(
         icon_name, size=24,
@@ -72,14 +68,12 @@ def _course_card(course: dict) -> Card:
     ))
     card.add_child(header)
 
-    # ── Description ───────────────────────────────────────────────────────────
     card.add_child(Label(
         text=course["description"],
         font_size=12, color=iOSTheme.secondary_label,
         width=1.0, height=18,
     ))
 
-    # ── Progress ──────────────────────────────────────────────────────────────
     prog_row = FloatLayout(width=1.0, height=22)
     prog_row.add_child(ProgressBar(
         progress=progress,
@@ -94,7 +88,6 @@ def _course_card(course: dict) -> Card:
     ))
     card.add_child(prog_row)
 
-    # ── Open button ───────────────────────────────────────────────────────────
     footer = FloatLayout(width=1.0, height=36)
     btn_text  = t("continue") if 0 < n_done < n_total else (
         t("lesson_start") if n_done == 0 else t("lesson_replay")
@@ -112,8 +105,6 @@ def _course_card(course: dict) -> Card:
 
     return card
 
-
-# ── Lesson row (used on the course detail page) ────────────────────────────────
 
 def _lesson_row(index: int, lesson_id: str, course_id: str,
                 done: bool, is_next: bool, all_lessons: dict) -> FloatLayout:
@@ -170,10 +161,7 @@ def _lesson_row(index: int, lesson_id: str, course_id: str,
     return row
 
 
-# ── Pages ──────────────────────────────────────────────────────────────────────
-
 def build():
-    """Courses list — the main lessons tab view."""
     courses    = list_courses()
     standalone = standalone_lessons()
     all_lsn    = {l["id"]: l for l in list_lessons()}
@@ -229,7 +217,6 @@ def build():
 
 
 def build_detail():
-    """Lesson list for the currently selected course."""
     course = _active_course
     if course is None:
         return build()
@@ -242,7 +229,6 @@ def build_detail():
 
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
-    # ── Header ────────────────────────────────────────────────────────────────
     hdr = FloatLayout(
         anchor="top_left", x=0, y=0,
         width=1.0, height=_HEADER_H,
@@ -264,7 +250,6 @@ def build_detail():
     ))
     root.add_child(hdr)
 
-    # ── Scrollable lesson list ─────────────────────────────────────────────────
     scroll = VStack(
         spacing=0, padding=16,
         anchor="top_left", x=0, y=_HEADER_H,

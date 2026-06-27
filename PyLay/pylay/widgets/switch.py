@@ -5,10 +5,6 @@ from pylay.core.theme import iOSTheme, ColorPalette
 from typing import Callable, Optional, Union, Any
 
 class Switch(UIElement):
-    """
-    An iOS-style Toggle Switch.
-    Renders directly on the destination surface — zero per-frame allocations.
-    """
     def __init__(self,
                  value: Union[bool, State] = False,
                  on_change: Optional[Callable[[bool], None]] = None,

@@ -52,7 +52,7 @@
   <main class="docs-content">
     <div class="docs-page-header">
       <h1>Staff, Bar, Note, Rest</h1>
-      <p class="page-subtitle">The core hierarchy beneath Score. These objects are created automatically — this reference covers their public properties and the methods you may call directly.</p>
+      <p class="page-subtitle">The core hierarchy beneath Score. These objects are created automatically by <code>load_musicxml()</code> and can also be constructed programmatically.</p>
     </div>
 
     <!-- Staff -->
@@ -175,6 +175,95 @@ note.color = None</code></pre>
 # Created automatically when staffs > 1
 # Accessed via: score.brace</code></pre>
       <p>The brace renders the vertical curly bracket connecting two staves (standard for piano notation). Call <code>score.brace.reset()</code> if you update the staff layout manually.</p>
+    </section>
+
+    <!-- Chord -->
+    <section class="doc-section" id="chord">
+      <h2>Chord</h2>
+      <pre><code class="language-python">Chord(
+    notes: list[Note],   # two or more Note objects at the same rhythmic position
+    staff=None,
+)</code></pre>
+      <p>Groups two or more <code>Note</code> objects that sound simultaneously. Notes are automatically sorted by pitch (highest first) and adjacent semitones are offset horizontally to prevent notehead overlap. A single stem is shared across all notes, with stem direction determined by the median pitch.</p>
+      <p>In practice <code>Chord</code> objects are created automatically by <code>load_musicxml()</code>. For programmatic use, add a <code>Chord</code> to a bar the same way as a single note:</p>
+      <pre><code class="language-python">from pylute import Note, Chord, Score
+
+score = Score(surface=screen, staffs=1, bars=4, key="C", time=(4, 4))
+bar = score.staffs[0].bars[0]
+
+chord = Chord([Note("quarter", "C4"), Note("quarter", "E4"), Note("quarter", "G4")])
+bar.notes.append(chord)
+score.draw()</code></pre>
+      <p>The <code>color</code> attribute on a <code>Chord</code> overrides the colour of all its noteheads. Individual notes retain their own <code>color</code> when <code>Chord.color</code> is <code>None</code>.</p>
+    </section>
+
+    <!-- Tuplet -->
+    <section class="doc-section" id="tuplet">
+      <h2>Tuplet</h2>
+      <pre><code class="language-python">Tuplet(
+    notes: list[Note],
+    actual: int = 3,    # how many notes are played…
+    normal: int = 2,    # …in the time of this many
+    staff=None,
+)</code></pre>
+      <p>Wraps a group of notes that are to be played in irregular time — most commonly a triplet (<code>actual=3, normal=2</code>: 3 notes in the time of 2). A bracket with the tuplet number is drawn above or below the group. As with <code>Chord</code>, tuplets are built automatically from MusicXML; direct construction looks like this:</p>
+      <pre><code class="language-python">from pylute import Note, Tuplet, Score
+
+score = Score(surface=screen, staffs=1, bars=2, key="C", time=(4, 4))
+bar = score.staffs[0].bars[0]
+
+# Triplet: 3 eighth notes in the time of 2
+triplet = Tuplet(
+    notes=[Note("eighth", "C4"), Note("eighth", "E4"), Note("eighth", "G4")],
+    actual=3,
+    normal=2,
+)
+bar.notes.append(triplet)</code></pre>
+      <div class="method-block">
+        <div class="method-sig">total_duration() → float</div>
+        <p class="method-desc">Returns the actual beat duration of the tuplet group. For a standard triplet of eighth notes this is <code>1.0</code> (one quarter-note beat).</p>
+      </div>
+    </section>
+
+    <!-- Dynamic -->
+    <section class="doc-section" id="dynamic">
+      <h2>Dynamic</h2>
+      <pre><code class="language-python">Dynamic(
+    mark: str,           # "pp", "p", "mp", "mf", "f", "ff", "fff", "ffff",
+                         # "ppp", "pppp", "sf", "sfz", "sfp", "rfz", "fz", "fp"
+    staff=None,
+    above: bool = False, # True = render above the staff, False = below (default)
+)</code></pre>
+      <p>Renders a SMuFL dynamic glyph from the bundled music font. Dynamics are attached to a bar's <code>notes</code> list alongside notes and rests; the bar renderer positions them at the correct x offset before calling <code>draw()</code>.</p>
+      <pre><code class="language-python">from pylute import Note, Dynamic, Score
+
+score = Score(surface=screen, staffs=1, bars=4, key="C", time=(4, 4))
+bar = score.staffs[0].bars[0]
+
+bar.notes.append(Note("quarter", "C4"))
+bar.notes.append(Dynamic("mf"))       # appears under the first note
+bar.notes.append(Note("quarter", "E4"))</code></pre>
+    </section>
+
+    <!-- Articulation -->
+    <section class="doc-section" id="articulation">
+      <h2>Articulation</h2>
+      <pre><code class="language-python">Articulation(
+    mark: str,           # "staccato", "accent", "tenuto", "marcato",
+                         # "fermata", "staccatissimo", "stress", "unstress"
+    staff=None,
+    above: bool = True,  # True = above notehead (default), False = below
+)</code></pre>
+      <p>Renders an articulation glyph above or below a notehead. Like <code>Dynamic</code>, articulations live in a bar's <code>notes</code> list and are positioned automatically. <code>Articulation</code> and <code>Dynamic</code> objects found in MusicXML are attached to their notes automatically by <code>load_musicxml()</code>.</p>
+      <pre><code class="language-python">from pylute import Note, Articulation, Score
+
+score = Score(surface=screen, staffs=1, bars=4, key="C", time=(4, 4))
+bar = score.staffs[0].bars[0]
+
+bar.notes.append(Note("quarter", "C4"))
+bar.notes.append(Articulation("staccato"))   # dot above the C4
+bar.notes.append(Note("quarter", "E4"))
+bar.notes.append(Articulation("accent"))     # accent on E4</code></pre>
     </section>
 
     <div class="doc-nav-footer">

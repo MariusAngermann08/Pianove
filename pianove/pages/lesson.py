@@ -34,7 +34,6 @@ class _WrongTracker:
         self._history: list[int] = []   # 0=correct, 1=wrong
 
     def record(self, correct: bool) -> bool:
-        """Record a note event. Returns True if regression should trigger."""
         self._history.append(0 if correct else 1)
         if len(self._history) > _WRONG_WINDOW:
             self._history.pop(0)
@@ -49,7 +48,6 @@ class _WrongTracker:
 
 
 def _bars_from_song_or_lesson(lesson: dict) -> list[list[str]]:
-    """Return bars for the current context — practice, song, or lesson mode."""
     if ctx.practice_mode and ctx.practice_bars is not None:
         return ctx.practice_bars
     if ctx.current_song_id:
@@ -125,16 +123,7 @@ def _do_restart():
     ctx.router.refresh()
 
 
-# ── Staff view ────────────────────────────────────────────────────────────────
-
 class _StaffView(PygameCanvas):
-    """
-    Scrolling staff strip.
-    Practice phase: playhead springs to each note on correct press.
-    Performance phase: playhead moves continuously at BPM via lerp each frame.
-    Content is vertically centred when it fits within the canvas height.
-    """
-
     def __init__(self, bars: list[list[str]], phase: str,
                  initial_idx: int = 0, on_advance=None,
                  bpm: int = _BPM, clef: str = "treble",
@@ -260,8 +249,6 @@ class _StaffView(PygameCanvas):
         m = self.expected_midis()
         return next(iter(m)) if m else None
 
-    # ── Practice ──────────────────────────────────────────────────────────────
-
     def advance(self):
         if self.current_idx >= len(self._step_list):
             return
@@ -277,8 +264,6 @@ class _StaffView(PygameCanvas):
                 note.color = _RED
             self._dirty = True
 
-    # ── Performance ───────────────────────────────────────────────────────────
-
     @property
     def hits(self) -> int:
         return self._hits
@@ -290,8 +275,6 @@ class _StaffView(PygameCanvas):
             for note in self._step_list[self.current_idx]:
                 note.color = _GREEN
             self._dirty = True
-
-    # ── Shared ────────────────────────────────────────────────────────────────
 
     def restart(self):
         for step in self._step_list:
@@ -307,8 +290,6 @@ class _StaffView(PygameCanvas):
         self._ph.snap_to(0.0)
         self._scroll.snap_to(0.0)
         self._scroll.target = 0.0
-
-    # ── Internal ──────────────────────────────────────────────────────────────
 
     def _update_spring_targets(self):
         idx = self.current_idx
@@ -463,13 +444,7 @@ class _StaffView(PygameCanvas):
                              (ph_sx, ph_top), (ph_sx, ph_bot), 2)
 
 
-# ── Lesson piano widget ───────────────────────────────────────────────────────
-
 class _LessonPiano:
-    """
-    Draws the keyboard and processes MIDI input.
-    Always instantiated so MIDI is active even when the keyboard is hidden.
-    """
     def __init__(self, staff_view: _StaffView, advance_fn, wrong_fn):
         from pianove.state import midi_panel
         self._panel   = midi_panel
@@ -573,8 +548,6 @@ class _LessonPiano:
                           rect.bottom - status_h + (status_h - ls.get_height()) // 2))
 
 
-# ── Practice completion view ──────────────────────────────────────────────────
-
 def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
     accuracy = hits / total if total > 0 else 0.0
     pct      = int(accuracy * 100)
@@ -661,10 +634,7 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
     return root
 
 
-# ── Step-type builders ───────────────────────────────────────────────────────
-
 def _step_nav(lesson_title: str) -> FloatLayout:
-    """Shared nav bar for text/demo steps with back + title."""
     nav = FloatLayout(width=1.0, height=52,
                       background_color=iOSTheme.secondary_background)
     nav.add_child(Button(text=t("back"), on_click=_nav_back,
@@ -798,8 +768,6 @@ def _build_notation_demo_step(step: dict, lesson_title: str,
     return root
 
 
-# ── Completion view ───────────────────────────────────────────────────────────
-
 def _build_completion(lesson_title: str) -> FloatLayout:
     win_h  = ctx.ui.height if ctx.ui else 768
     body_h = max(100, win_h - 52 - 1)  # nav + divider
@@ -855,8 +823,6 @@ def _build_completion(lesson_title: str) -> FloatLayout:
     return root
 
 
-# ── Page builder ──────────────────────────────────────────────────────────────
-
 def build():
     from pianove.lesson_loader import load_lesson
 
@@ -896,7 +862,6 @@ def build():
             lesson_title = lesson.get("title", lesson_id)
             song_time    = (4, 4)
 
-    # ── Step routing ──────────────────────────────────────────────────────────
     # Non-exercise steps (text, notation_demo) are handled before the full
     # exercise layout is built.  Songs and practice-go mode bypass step routing.
     if not is_practice and not ctx.current_song_id:
@@ -957,13 +922,11 @@ def build():
             )
         return _build_completion(lesson_title)
 
-    # ── Layout dimensions ─────────────────────────────────────────────────────
     win_h   = ctx.ui.height if ctx.ui else 768
     NAV_H   = 52 + 1 + 44 + 1    # nav + sep + controls + sep = 98 px
     # Staff always fills the entire remaining space; piano is a SlideReveal overlay.
     staff_h = max(180, win_h - NAV_H)
 
-    # ── Forward refs ──────────────────────────────────────────────────────────
     _sv        = [None]   # _StaffView
     _slide_ref = [None]   # SlideReveal
 
@@ -997,7 +960,6 @@ def build():
         ctx.router.refresh()
 
     def _step_back_section():
-        """Regress one practice section (or restart section 0)."""
         prev = max(0, section_idx - 1)
         ctx.lesson_section_idx = prev
         ctx.lesson_current_idx = 0
@@ -1005,7 +967,6 @@ def build():
         ctx.router.refresh()
 
     def _restart_section():
-        """Restart current section (used in performance regression)."""
         ctx.lesson_section_idx = section_idx
         ctx.lesson_current_idx = 0
         ctx.lesson_phase       = "practice"
@@ -1081,7 +1042,6 @@ def build():
     else:
         phase_label = t("lesson_practice")
 
-    # ── Build tree ────────────────────────────────────────────────────────────
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
     main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
     root.add_child(main)

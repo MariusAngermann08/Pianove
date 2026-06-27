@@ -8,12 +8,6 @@ from pylay.widgets.label import Label
 from typing import Optional, Union, Any, List
 
 class SidebarDrawer(FloatLayout):
-    """
-    A slide-out side menu navigation drawer.
-    Slides in from the left edge using smooth spring translation and
-    fades in a touch-intercepting backdrop overlay to focus interaction.
-    Unloads event handling when closed to optimize performance.
-    """
     def __init__(self,
                  open_state: State,
                  width: Union[int, float] = 280,

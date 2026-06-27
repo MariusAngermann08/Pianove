@@ -7,18 +7,6 @@ from typing import Any, Callable, List, Optional, Union
 
 
 class Stepper(UIElement):
-    """
-    iOS-style value stepper.  Cycles through a fixed list of options.
-
-    Layout:   [−]   current_value   [+]
-
-    options   — ordered list of values to step through
-    value     — initial value (must be in options; falls back to options[0])
-    fmt_fn    — optional callable(value) -> str for display; defaults to str()
-    on_change — called with the new value whenever it changes
-    label_suffix — static string appended after the value (e.g. " BPM")
-    """
-
     def __init__(
         self,
         options: List[Any],
@@ -52,13 +40,9 @@ class Stepper(UIElement):
         self._font: Optional[pygame.font.Font] = None
         self._font_px: int = 0
 
-    # ── properties ────────────────────────────────────────────────────────────
-
     @property
     def value(self) -> Any:
         return self._options[self._idx]
-
-    # ── cache invalidation ────────────────────────────────────────────────────
 
     def _on_scale_changed(self):
         self._font = None
@@ -68,16 +52,12 @@ class Stepper(UIElement):
         self._font = None
         self._font_px = 0
 
-    # ── fonts ─────────────────────────────────────────────────────────────────
-
     def _get_font(self) -> pygame.font.Font:
         px = scaled_font_size(14)
         if self._font is None or self._font_px != px:
             self._font = font_loader.load_font(14, bold=True)
             self._font_px = px
         return self._font
-
-    # ── geometry ──────────────────────────────────────────────────────────────
 
     def _btn_size(self) -> int:
         return min(self.rect.height, scaled_px(32))
@@ -92,8 +72,6 @@ class Stepper(UIElement):
         cy = self.rect.centery
         return pygame.Rect(self.rect.right - sz, cy - sz // 2, sz, sz)
 
-    # ── animation ─────────────────────────────────────────────────────────────
-
     def update(self, dt: float):
         self.animate_to("_press_minus",
                         1.0 if self._pressing_minus else 0.0,
@@ -102,8 +80,6 @@ class Stepper(UIElement):
                         1.0 if self._pressing_plus else 0.0,
                         response=0.15, damping_fraction=0.75)
         super().update(dt)
-
-    # ── events ────────────────────────────────────────────────────────────────
 
     def on_event(self, event: pygame.event.Event) -> bool:
         if not self.enabled or not self.visible:
@@ -130,8 +106,6 @@ class Stepper(UIElement):
         if self._on_change:
             self._on_change(self.value)
 
-    # ── render ────────────────────────────────────────────────────────────────
-
     def render(self, surface: pygame.Surface):
         if self.rect.width < 60 or self.rect.height < 16:
             return
@@ -146,7 +120,6 @@ class Stepper(UIElement):
         at_min = self._idx == 0
         at_max = self._idx == len(self._options) - 1
 
-        # ── minus button ──────────────────────────────────────────────────────
         m_scale  = 1.0 - self._press_minus * 0.12
         m_r      = int(sz * m_scale // 2)
         m_cx, m_cy = mr.centerx, mr.centery
@@ -158,7 +131,6 @@ class Stepper(UIElement):
                          (m_cx - bar_w // 2, m_cy - bar_h // 2, bar_w, bar_h),
                          border_radius=1)
 
-        # ── plus button ───────────────────────────────────────────────────────
         p_scale  = 1.0 - self._press_plus * 0.12
         p_r      = int(sz * p_scale // 2)
         p_cx, p_cy = pr.centerx, pr.centery
@@ -173,7 +145,6 @@ class Stepper(UIElement):
                          (p_cx - bar_h2 // 2, p_cy - bar_w2 // 2, bar_h2, bar_w2),
                          border_radius=1)
 
-        # ── value label ───────────────────────────────────────────────────────
         txt   = self._fmt_fn(self.value) + self._suffix
         tsurf = font.render(txt, True, iOSTheme.label)
         lx    = mr.right

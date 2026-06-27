@@ -4,14 +4,6 @@ from pylay.core.theme import iOSTheme
 from typing import Optional
 
 class Layout(UIElement):
-    """
-    Base Layout class. Containers designed to hold and arrange other UIElements.
-
-    Features:
-    - clips_to_bounds enabled by default
-    - Automatic spring-physics scrollview when children overflow the container
-    - Scroll state is maintained separately from child rects (no rect mutation)
-    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.clips_to_bounds = True
@@ -23,9 +15,6 @@ class Layout(UIElement):
         self.scroll_active = False
         self.on_scroll     = None    # optional callback(target: float) fired on user scroll
 
-    # ------------------------------------------------------------------
-    # Layout — overflow detection after children are placed
-    # ------------------------------------------------------------------
     def layout(self, parent_rect: Optional[pygame.Rect] = None, skip_self: bool = False,
                _skip_bounds_refresh: bool = False):
         super().layout(parent_rect, skip_self=skip_self)
@@ -33,7 +22,6 @@ class Layout(UIElement):
             self._refresh_scroll_bounds()
 
     def _refresh_scroll_bounds(self):
-        """Detect whether children overflow and update scroll limits."""
         if not self.children:
             self.scroll_active = False
             self.scroll_max = 0.0
@@ -63,18 +51,12 @@ class Layout(UIElement):
             self.scroll_target = 0.0
             self.scroll_offset = 0.0
 
-    # ------------------------------------------------------------------
-    # Update — spring-drive the scroll offset
-    # ------------------------------------------------------------------
     def update(self, dt: float):
         if self.scroll_active:
             self.animate_to("scroll_offset", self.scroll_target,
                             response=0.22, damping_fraction=0.85)
         super().update(dt)
 
-    # ------------------------------------------------------------------
-    # Helpers — recursive rect shift for the entire subtree
-    # ------------------------------------------------------------------
     @staticmethod
     def _shift_tree(nodes, dy: int):
         for c in nodes:
@@ -82,9 +64,6 @@ class Layout(UIElement):
             if c.children:
                 Layout._shift_tree(c.children, dy)
 
-    # ------------------------------------------------------------------
-    # Events — intercept scroll wheel; adjust hit-test y for scrolled children
-    # ------------------------------------------------------------------
     def handle_event(self, event: pygame.event.Event) -> bool:
         if not self.visible or not self.enabled:
             return False
@@ -126,9 +105,6 @@ class Layout(UIElement):
 
         return self.on_event(event)
 
-    # ------------------------------------------------------------------
-    # Draw — clips children; applies scroll via surface offset (no rect mutation)
-    # ------------------------------------------------------------------
     def draw(self, surface: pygame.Surface):
         if not self.visible:
             return

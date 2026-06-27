@@ -13,14 +13,6 @@ _DOT_R  = 5
 
 
 class OptionSelector(UIElement):
-    """
-    Vertical single-choice selector styled as iOS settings rows.
-
-    Each option is a rounded card. The selected row gets a bold label, accent
-    dot on the right, and a spring-animated accent bar on the left.
-    Row dimensions are expected in actual pixels (already scaled by the caller).
-    """
-
     def __init__(
         self,
         options: List[Option],
@@ -57,7 +49,6 @@ class OptionSelector(UIElement):
         self._font_bold: Optional[pygame.font.Font] = None
         self._font_px: int = 0
 
-    # ------------------------------------------------------------------
     def _index_for(self, val: Any) -> int:
         for i, (_, choice) in enumerate(self.options):
             if choice == val:
@@ -84,7 +75,6 @@ class OptionSelector(UIElement):
             self._font = pygame.font.SysFont("Arial", px)
         return self._font
 
-    # ------------------------------------------------------------------
     def update(self, dt: float):
         stride = self.row_height + self.spacing
         self.animate_to("pill_y", float(self._selected_idx * stride),
@@ -109,7 +99,6 @@ class OptionSelector(UIElement):
                 self.on_change(choice)
         return True
 
-    # ------------------------------------------------------------------
     def render(self, surface: pygame.Surface):
         if self.rect.width <= 4:
             return

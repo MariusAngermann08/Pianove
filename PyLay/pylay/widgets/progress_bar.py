@@ -6,11 +6,6 @@ from pylay.core.render_utils import make_aa_rect
 from typing import Optional, Union, Any
 
 class ProgressBar(UIElement):
-    """
-    A physics-driven ProgressBar widget.
-    Animates changes to the progress level smoothly using spring physics.
-    Supports declarative bindings to State objects.
-    """
     def __init__(self,
                  progress: Union[float, State] = 0.0,
                  anchor: str = "top_left",

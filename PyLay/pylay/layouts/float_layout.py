@@ -5,11 +5,6 @@ from pylay.core.render_utils import make_shadow, SHADOW_BLUR
 from typing import Optional, Union, Tuple
 
 class FloatLayout(Layout):
-    """
-    A layout container that positions its children using float percentages or absolute offsets.
-    It can be configured to render as an iOS card/panel with rounded corners and dynamic
-    themed backgrounds.
-    """
     def __init__(self,
                  anchor: str = "top_left",
                  x: Union[int, float] = 0,

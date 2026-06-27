@@ -6,12 +6,6 @@ from pylay.widgets.emoji_icon import EmojiIcon
 
 
 class EmptyState(FloatLayout):
-    """
-    Centred placeholder for empty lists.
-    Shows a large emoji, a bold title, and an optional subtitle.
-    Drop it into any container — it fills width=1.0, height=1.0 by default.
-    """
-
     def __init__(
         self,
         icon: str,

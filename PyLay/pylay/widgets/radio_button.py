@@ -5,11 +5,6 @@ from pylay.core.state import State
 from typing import Optional, Union, Any, Callable
 
 class RadioButton(UIElement):
-    """
-    An iOS-style circular Radio Button selector.
-    Fades and scales its inner check dot dynamically using spring physics.
-    Supports State binding for clean single-choice logic.
-    """
     def __init__(self,
                  group_state: State,
                  choice_value: Any,

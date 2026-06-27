@@ -57,8 +57,47 @@
       <p class="page-subtitle">An overview of all 16 built-in lessons from beginner to intermediate.</p>
     </div>
 
-    <section class="doc-section" id="lessons">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="overview">
+      <h2>Overview</h2>
+      <p>Pianove ships with <strong>16 built-in lessons</strong> spanning beginner to intermediate difficulty. Lessons are accessed from the <strong>Lessons</strong> tab. Each lesson is a self-contained sequence of steps combining explanatory text, sheet music notation rendered by PyLute, and interactive keyboard exercises.</p>
+      <p>Built-in lessons are read-only and versioned with the app. Custom community lessons can be installed separately — see <a href="lesson-format.html">Lesson File Format</a>.</p>
+    </section>
+
+    <section class="doc-section" id="courses">
+      <h2>Courses</h2>
+      <p>Most lessons belong to a <strong>course</strong> — an ordered collection with a shared theme and difficulty level. The Lessons tab shows a list of courses; tapping a course opens its lesson list with individual progress indicators.</p>
+      <p>Each course card shows:</p>
+      <ul>
+        <li>A difficulty badge (Beginner / Intermediate)</li>
+        <li>Overall completion percentage across all lessons in the course</li>
+        <li>An estimated total duration</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="step-types">
+      <h2>Step Types</h2>
+      <p>Each lesson is made up of one or more steps. The step renderer dispatches on the step type:</p>
+      <table class="param-table">
+        <thead><tr><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>text</code></td><td>Explanatory prose. Supports inline bold and italic via simple markup.</td></tr>
+          <tr><td><code>notation</code></td><td>Sheet music rendered live by PyLute from a MusicXML asset bundled with the lesson. Scrollable and responsive.</td></tr>
+          <tr><td><code>exercise</code></td><td>Interactive play-along. The specified notes are shown on the on-screen piano; the user plays them on their MIDI keyboard.</td></tr>
+          <tr><td><code>quiz</code></td><td>Multiple-choice question with immediate correct/incorrect feedback.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="completing">
+      <h2>Completing a Lesson</h2>
+      <p>Steps are presented in order. Navigate forward and backward with the arrow buttons at the bottom of the screen.</p>
+      <p>For <strong>exercise steps</strong>, the correct notes must be played on the MIDI keyboard before advancing. Wrong notes are counted and factored into the lesson accuracy score displayed on the completion screen. You can retry an exercise step as many times as needed.</p>
+      <p>After the final step, a completion screen shows your accuracy for that session. The lesson is marked complete and the date is recorded for streak and weekly chart tracking.</p>
+    </section>
+
+    <section class="doc-section" id="standalone">
+      <h2>Standalone Lessons</h2>
+      <p>Some lessons are not part of any course and appear under <strong>All Lessons</strong> at the bottom of the Lessons tab. These are typically shorter focused exercises — sight-reading drills, scale practice — that do not fit into a course narrative.</p>
     </section>
 
     <div class="doc-nav-footer">

@@ -57,8 +57,47 @@
       <p class="page-subtitle">Connect and configure a MIDI keyboard with Pianove.</p>
     </div>
 
-    <section class="doc-section" id="midi-setup">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="auto-detection">
+      <h2>Auto-Detection</h2>
+      <p>Pianove scans all connected MIDI ports on startup using <code>python-rtmidi</code>. The first available input device is opened automatically. If no device is connected when the app launches, Pianove polls for new devices every few seconds and connects as soon as one is detected — no restart needed.</p>
+      <p>The currently active device is shown in the Settings tab under <strong>MIDI Device</strong>.</p>
+    </section>
+
+    <section class="doc-section" id="manual-selection">
+      <h2>Manual Device Selection</h2>
+      <p>If you have multiple MIDI devices connected, or want to switch to a different one:</p>
+      <ol>
+        <li>Open Pianove and go to the <strong>Settings</strong> tab.</li>
+        <li>Tap <strong>MIDI Device</strong>.</li>
+        <li>A list of all currently connected MIDI inputs is shown. Tap the device you want to use.</li>
+      </ol>
+      <p>The selection takes effect immediately and is saved for future sessions.</p>
+    </section>
+
+    <section class="doc-section" id="calibration">
+      <h2>Key Range Calibration</h2>
+      <p>Pianove needs to know the playable range of your keyboard — specifically the lowest and highest MIDI note numbers — to correctly highlight keys on the on-screen piano during exercises.</p>
+      <p>On first launch with a new device, the MIDI Setup screen guides you through pressing the lowest and then the highest key on your keyboard. The detected range is saved and used from then on.</p>
+      <p><strong>Known keyboards with preset ranges</strong> skip calibration entirely and load stored values automatically:</p>
+      <ul>
+        <li>Arturia MiniLab series</li>
+        <li>Roland MIDI keyboards (common models)</li>
+        <li>Yamaha PSR series</li>
+      </ul>
+      <div class="doc-note">You can re-run calibration at any time from <strong>Settings → MIDI Device → Recalibrate</strong>.</div>
+    </section>
+
+    <section class="doc-section" id="troubleshooting">
+      <h2>Troubleshooting</h2>
+      <table class="param-table">
+        <thead><tr><th>Symptom</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Device not listed</td><td>Connect the keyboard before launching Pianove, or wait a few seconds — the app polls automatically.</td></tr>
+          <tr><td>Notes not registering</td><td>Ensure no other app (DAW, browser MIDI API) holds exclusive access to the device.</td></tr>
+          <tr><td>Import error on startup</td><td>Run <code>pip install python-rtmidi</code> to ensure the package is installed in the active environment.</td></tr>
+          <tr><td>Wrong keys highlighted</td><td>Re-run calibration: Settings → MIDI Device → Recalibrate.</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <div class="doc-nav-footer">

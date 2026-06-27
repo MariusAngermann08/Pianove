@@ -10,19 +10,6 @@ UpdateCallback = Callable[[float, pygame.Rect], None]
 
 
 class PygameCanvas(UIElement):
-    """
-    A layout slot for native pygame drawing inside the OpenGUI tree.
-
-    Use this to embed existing pygame code (games, instruments, custom widgets)
-    without rewriting them as OpenGUI components.
-
-    Integration options (pick one):
-      1. Pass callables: on_draw, on_event, on_update
-      2. Pass a target object with draw(surface, rect), handle_event(event, rect),
-         and optionally update(dt, rect)
-      3. Subclass and override draw_content / handle_content_event / update_content
-    """
-
     def __init__(self,
                  on_draw: Optional[DrawCallback] = None,
                  on_event: Optional[EventCallback] = None,
@@ -57,7 +44,6 @@ class PygameCanvas(UIElement):
         super().update(dt)
 
     def update_content(self, dt: float):
-        """Override for subclass-based custom content."""
         pass
 
     def on_event(self, event: pygame.event.Event) -> bool:
@@ -68,7 +54,6 @@ class PygameCanvas(UIElement):
         return self.handle_content_event(event)
 
     def handle_content_event(self, event: pygame.event.Event) -> bool:
-        """Override for subclass-based custom content."""
         return False
 
     def render(self, surface: pygame.Surface):
@@ -97,5 +82,4 @@ class PygameCanvas(UIElement):
         surface.set_clip(old_clip)
 
     def draw_content(self, surface: pygame.Surface, rect: pygame.Rect):
-        """Override for subclass-based custom content."""
         pass

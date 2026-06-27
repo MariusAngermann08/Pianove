@@ -57,8 +57,42 @@
       <p class="page-subtitle">Configure theme, language, MIDI device, and synthesiser volume.</p>
     </div>
 
-    <section class="doc-section" id="settings">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="profile">
+      <h2>Profile</h2>
+      <p>Set your display name under <strong>Profile</strong>. The name is shown in the greeting on the Home tab. It is stored locally and never transmitted.</p>
+    </section>
+
+    <section class="doc-section" id="midi">
+      <h2>MIDI Device</h2>
+      <p>Displays the currently active MIDI input device and lists all connected devices. Tap a device to switch. See <a href="midi-setup.html">MIDI Setup</a> for full details on detection and calibration.</p>
+    </section>
+
+    <section class="doc-section" id="volume">
+      <h2>Sound Volume</h2>
+      <p>Drag the volume slider to adjust the synthesiser output level. The setting is applied immediately to FluidSynth and saved persistently. Setting to zero mutes audio without disabling the synthesiser.</p>
+    </section>
+
+    <section class="doc-section" id="language">
+      <h2>Language</h2>
+      <p>Switch the app language between <strong>English</strong> and <strong>German</strong>. The change takes effect immediately — no restart required. All UI labels, lesson text, error messages, and settings descriptions update instantly.</p>
+      <p>Lesson content is localised per locale file bundled with each lesson. If a lesson does not have a translation for the active language, it falls back to English.</p>
+    </section>
+
+    <section class="doc-section" id="appearance">
+      <h2>Appearance</h2>
+      <p>Toggle between <strong>light mode</strong> and <strong>dark mode</strong>. Pianove uses the iOS colour palette via PyLay's theming system. The selected theme is saved and restored on the next launch.</p>
+    </section>
+
+    <section class="doc-section" id="creator">
+      <h2>Content Creator Mode</h2>
+      <p>Enabling Content Creator Mode unlocks the <strong>Creator</strong> tab in the home navigation. The Creator tab allows you to browse locally installed custom lessons and package them into <code>.pianove-pkg</code> files for sharing with others.</p>
+      <p>See <a href="lesson-format.html">Lesson File Format</a> for how to create custom lessons and courses.</p>
+    </section>
+
+    <section class="doc-section" id="reset">
+      <h2>Reset</h2>
+      <p>The reset option under Settings clears all progress data: lesson completion dates, streak history, practice session records, and achievement state. A confirmation dialog is shown before any data is deleted.</p>
+      <div class="doc-warning"><strong>This action cannot be undone.</strong> Imported songs are not affected by a reset — only progress statistics are cleared.</div>
     </section>
 
     <div class="doc-nav-footer">

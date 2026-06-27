@@ -53,7 +53,7 @@
   <main class="docs-content">
     <div class="docs-page-header">
       <h1>Display Widgets</h1>
-      <p class="page-subtitle">Non-interactive display elements: Label, ProgressBar, LineChart, CodeViewer.</p>
+      <p class="page-subtitle">Non-interactive display elements: Label, ProgressBar, ProgressRing, LineChart, CodeViewer, Divider, Badge, Avatar, Card, ListItem, EmptyState.</p>
     </div>
 
     <!-- Label -->
@@ -143,6 +143,153 @@ viewer = CodeViewer(
 
 # Update dynamically:
 code.set("def greet(name):\n    print(f'Hello, {name}!')")</code></pre>
+    </section>
+
+    <!-- ProgressRing -->
+    <section class="doc-section" id="ring">
+      <h2>ProgressRing</h2>
+      <pre><code class="language-python">ProgressRing(
+    progress: float,            # 0.0 – 1.0
+    size: int = 48,
+    active_color: pygame.Color | None = None,  # defaults to ColorPalette.BLUE
+    stroke: int = 5,
+)</code></pre>
+      <p>Circular progress indicator with supersampled anti-aliasing. Renders a thin ring arc from the top, sweeping clockwise. Caches the rendered surface — only redraws on value or size change.</p>
+      <pre><code class="language-python">from pylay import ProgressRing, ColorPalette
+
+ring = ProgressRing(
+    progress=0.72,
+    size=64,
+    active_color=ColorPalette.GREEN,
+    stroke=6,
+    anchor="center", x=0, y=0,
+)</code></pre>
+    </section>
+
+    <!-- Divider -->
+    <section class="doc-section" id="divider">
+      <h2>Divider</h2>
+      <pre><code class="language-python">Divider(
+    width: int | float = 1.0,   # fraction of parent or fixed px
+)</code></pre>
+      <p>A 1 px horizontal line in <code>iOSTheme.fill_tertiary</code>. Used to visually separate groups inside a <code>VStack</code> or <code>Card</code>.</p>
+      <pre><code class="language-python">from pylay import VStack, Label, Divider
+
+col = VStack(spacing=0, padding=12, width=1.0, height=200)
+col.add_child(Label("Section A", font_size=14))
+col.add_child(Divider())
+col.add_child(Label("Section B", font_size=14))</code></pre>
+    </section>
+
+    <!-- Badge -->
+    <section class="doc-section" id="badge">
+      <h2>Badge</h2>
+      <pre><code class="language-python">Badge(
+    text: str,
+    color: pygame.Color,
+    icon: str = "",              # emoji character (alternative to icon_fn)
+    icon_fn: Callable | None = None,
+    icon_size: int = 18,
+    font_size: int = 13,
+    height: int = 34,
+    width: int | None = None,   # auto-sized from text length if None
+    text_color: pygame.Color | None = None,   # defaults to white
+    border_radius: int | None = None,         # defaults to height // 2 (pill shape)
+)</code></pre>
+      <p>Coloured pill label — used for difficulty tags, status chips, and count indicators. Width is automatically derived from text length when not specified.</p>
+      <pre><code class="language-python">from pylay import Badge, ColorPalette
+
+Badge("Beginner", ColorPalette.GREEN, anchor="top_left", x=0, y=0)
+Badge("Advanced", ColorPalette.RED,   anchor="top_left", x=0, y=0)
+
+# With emoji icon:
+Badge("🎵  4 Songs", ColorPalette.BLUE, icon="🎵",
+      anchor="top_left", x=0, y=0)</code></pre>
+    </section>
+
+    <!-- Avatar -->
+    <section class="doc-section" id="avatar">
+      <h2>Avatar</h2>
+      <pre><code class="language-python">Avatar(
+    initials: str,              # up to 2 characters displayed; auto-uppercased
+    size: int = 40,
+    color: pygame.Color | None = None,  # circle fill; defaults to ColorPalette.BLUE
+)</code></pre>
+      <p>Circular avatar that renders up to two initials in white on a coloured circle. Font size scales proportionally to <code>size</code>.</p>
+      <pre><code class="language-python">from pylay import Avatar, ColorPalette
+
+Avatar("MA", size=48, color=ColorPalette.PURPLE,
+       anchor="top_left", x=16, y=16)</code></pre>
+    </section>
+
+    <!-- Card -->
+    <section class="doc-section" id="card">
+      <h2>Card</h2>
+      <pre><code class="language-python">Card(
+    spacing: int = 8,
+    padding: int = 14,
+    border_radius: int = 12,
+    # All VStack / UIElement kwargs are accepted (width, height, anchor, x, y, …)
+)</code></pre>
+      <p>A <code>VStack</code> with a rounded <code>iOSTheme.secondary_background</code> fill — the standard container for grouped content. Add children with <code>add_child()</code>.</p>
+      <pre><code class="language-python">from pylay import Card, Label, Divider, Switch, State
+
+notifications = State(True)
+
+card = Card(anchor="top_left", x=16, y=16, width=1.0)
+card.add_child(Label("Notifications", font_size=15))
+card.add_child(Divider())
+card.add_child(Switch(state=notifications, anchor="left", x=0, y=0))</code></pre>
+    </section>
+
+    <!-- ListItem -->
+    <section class="doc-section" id="listitem">
+      <h2>ListItem</h2>
+      <pre><code class="language-python">ListItem(
+    title: str,
+    subtitle: str = "",
+    leading=None,               # UIElement placed on the left edge
+    trailing=None,              # UIElement placed on the right edge
+    on_click: Callable | None = None,
+    height: int = 52,
+    title_size: int = 14,
+    leading_width: int = 36,
+    width: int | float = 1.0,
+    background_color: pygame.Color | None = None,
+    border_radius: int = 10,
+)</code></pre>
+      <p>A standard list row with an optional title, subtitle, leading widget (icon/avatar), and trailing widget (badge/chevron). When <code>on_click</code> is provided, a transparent tap-target button covers the whole row.</p>
+      <pre><code class="language-python">from pylay import ListItem, Icon, Badge, ColorPalette
+
+item = ListItem(
+    title="Bach — Prelude in C",
+    subtitle="Easy · 2 min",
+    leading=Icon("music_note", size=20, anchor="center", x=0, y=0),
+    trailing=Badge("New", ColorPalette.BLUE, height=24, font_size=11),
+    on_click=lambda: open_song("bach_prelude"),
+    anchor="top_left", x=0, y=0,
+)</code></pre>
+    </section>
+
+    <!-- EmptyState -->
+    <section class="doc-section" id="emptystate">
+      <h2>EmptyState</h2>
+      <pre><code class="language-python">EmptyState(
+    icon: str,          # emoji character
+    title: str,
+    subtitle: str = "",
+    icon_size: int = 48,
+    # Defaults to width=1.0, height=1.0 (fills parent)
+)</code></pre>
+      <p>Centred placeholder shown when a list or page has no content. Renders an emoji, a bold title, and an optional subtitle line, all centred in the available space.</p>
+      <pre><code class="language-python">from pylay import EmptyState
+
+placeholder = EmptyState(
+    icon="🎵",
+    title="No songs yet",
+    subtitle="Import a MusicXML file to get started.",
+    anchor="top_left", x=0, y=0, width=1.0, height=1.0,
+)</code></pre>
     </section>
 
     <div class="doc-nav-footer">

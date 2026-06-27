@@ -3,8 +3,6 @@ from pathlib import Path
 
 
 class Storage:
-    """Persistent key-value store backed by a JSON file in ~/.{app_name}/storage.json."""
-
     def __init__(self, app_name: str = "app"):
         self._path = Path.home() / f".{app_name}" / "storage.json"
         self._data: dict = {}

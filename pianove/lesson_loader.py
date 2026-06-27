@@ -75,7 +75,6 @@ def load_lesson(lesson_id: str) -> dict | None:
 
 
 def standalone_lessons() -> list[dict]:
-    """Lessons not referenced by any course."""
     in_courses: set[str] = set()
     for course in list_courses():
         in_courses.update(course["lessons"])

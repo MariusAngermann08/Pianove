@@ -24,7 +24,6 @@ def build():
     scroll = VStack(spacing=10, padding=16, width=1.0, height=1.0,
                     background_color=iOSTheme.background)
 
-    # ── Profile ────────────────────────────────────────────────────────────
     _name = name_state.value.strip()
     _initials = "".join(w[0] for w in _name.split()[:2]) if _name else "?"
     scroll.add_child(_section_header(t("settings_profile")))
@@ -36,7 +35,6 @@ def build():
         leading_width=44,
     ))
 
-    # ── MIDI ───────────────────────────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_midi")))
     scroll.add_child(ListItem(
         title=t("settings_midi"),
@@ -63,7 +61,6 @@ def build():
         ),
     ))
 
-    # ── Language ───────────────────────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_language")))
     langs = available_languages()
     lang_options = [(t(f"lang_{l}") if l in ("en", "de") else l.upper(), l)
@@ -77,14 +74,12 @@ def build():
         font_size=U["option_font"],
     ))
 
-    # ── Appearance ─────────────────────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_appearance")))
     scroll.add_child(ListItem(
         title=t("settings_dark_mode"),
         trailing=Switch(value=dark_mode_state, enabled=True),
     ))
 
-    # ── Content Creator ────────────────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_creator_section")))
     scroll.add_child(ListItem(
         title=t("settings_creator_mode"),
@@ -92,7 +87,6 @@ def build():
         trailing=Switch(value=creator_mode_state, enabled=True),
     ))
 
-    # ── Reset ──────────────────────────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_reset_desc")))
     scroll.add_child(Button(
         text=t("settings_reset"),

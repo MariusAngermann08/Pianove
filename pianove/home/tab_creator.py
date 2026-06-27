@@ -41,7 +41,6 @@ def build():
 
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
-    # ── Header ────────────────────────────────────────────────────────────
     header = FloatLayout(
         anchor="top_left", x=0, y=0,
         width=1.0, height=_HEADER_H,
@@ -55,7 +54,6 @@ def build():
     ))
     root.add_child(header)
 
-    # ── Content list ──────────────────────────────────────────────────────
     scroll = VStack(
         spacing=_CARD_GAP, padding=16,
         anchor="top_left", x=0, y=_HEADER_H,

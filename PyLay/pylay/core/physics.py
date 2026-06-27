@@ -1,17 +1,6 @@
 import math
 
 class Spring:
-    """
-    A 1-dimensional Spring animation solver based on the analytical solutions
-    of the spring-mass-damper system. This solver is 100% stable, handles variable
-    frame rates gracefully, and prevents numerical integration explode issues.
-    
-    Can be parameterized using SwiftUI-style response and damping_fraction:
-      - response (float): the speed of the spring (in seconds).
-      - damping_fraction (float): bounciness (0 = infinite bounce, 1 = no overshoot/bounce).
-    
-    Or using raw physics parameters (mass, stiffness, damping).
-    """
     def __init__(self, 
                  value: float = 0.0, 
                  response: float = 0.35, 
@@ -79,16 +68,11 @@ class Spring:
         self._update_parameters()
         
     def snap_to(self, value: float):
-        """Immediately move the spring to target and stop all velocity."""
         self._value = value
         self._target = value
         self._velocity = 0.0
 
     def update(self, dt: float) -> float:
-        """
-        Advance the spring animation by dt seconds.
-        Uses the exact analytical solution of the second-order differential equation.
-        """
         if dt <= 0.0:
             return self._value
             

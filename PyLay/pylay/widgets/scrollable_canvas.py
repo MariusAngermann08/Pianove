@@ -5,21 +5,6 @@ from typing import Optional
 
 
 class ScrollableCanvas(PygameCanvas):
-    """
-    PygameCanvas with vertical spring-scroll.
-
-    The target must implement:
-      draw(surface, rect)            — render full content onto surface
-      content_height(canvas_w) → int — total pixel height of content
-
-    Works correctly inside PageRouter: uses rect.width (not safe.width) as the
-    canonical offscreen width so the offscreen is stable during horizontal slide
-    transitions.  The x_src offset handles parallax blitting.
-
-    Sets manages_own_scroll=True so parent Layout containers don't mistake this
-    widget's overflow for their own scrollable content.
-    """
-
     SCROLL_STEP = 80
     BAR_W       = 4
     BAR_MIN_H   = 20
@@ -36,8 +21,6 @@ class ScrollableCanvas(PygameCanvas):
         self._offscreen_w: int = 0
         self._offscreen_h: int = 0
         self._canvas_h:    int = 0
-
-    # ---------------------------------------------------------------- helpers
 
     def _get_content_h(self, canvas_w: int) -> int:
         if self.target is not None and hasattr(self.target, "content_height"):
@@ -71,8 +54,6 @@ class ScrollableCanvas(PygameCanvas):
             self.scroll_active = False
             self.scroll_target = 0.0
             self.scroll_offset = 0.0
-
-    # -------------------------------------------------------------- UIElement
 
     def update(self, dt: float):
         if self._canvas_h > 0:

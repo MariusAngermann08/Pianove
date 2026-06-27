@@ -1,8 +1,3 @@
-"""
-Song score viewer page — displays a MusicXML file using PyLute's ScorePager.
-Navigated to from the Songs tab when the user taps "View Score".
-Does NOT share state with the lesson StaffView; completely independent.
-"""
 import threading
 import queue as _queue_mod
 
@@ -41,7 +36,6 @@ def build():
 
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
-    # ── Toolbar (back + title) ────────────────────────────────────────────
     toolbar = FloatLayout(
         anchor="top_left", x=0, y=0,
         width=1.0, height=_TOOLBAR_H,
@@ -64,7 +58,6 @@ def build():
     ))
     root.add_child(toolbar)
 
-    # ── Page navigation bar ───────────────────────────────────────────────
     page_lbl = Label(
         text="—", font_size=13,
         color=iOSTheme.secondary_label,
@@ -106,7 +99,6 @@ def build():
     nav_bar.add_child(next_btn)
     root.add_child(nav_bar)
 
-    # ── Status label ──────────────────────────────────────────────────────
     status_state = State(t("score_loading") if filepath else t("score_no_file"))
     status_lbl = Label(
         text=status_state,
@@ -117,13 +109,11 @@ def build():
     )
     root.add_child(status_lbl)
 
-    # ── Score view (pager) ────────────────────────────────────────────────
     score_h    = max(200, win_h - _CONTENT_Y)
     score_view = pager.build_view(y_offset=_CONTENT_Y)
     score_view.height_spec = score_h
     root.add_child(score_view)
 
-    # ── Async loader ──────────────────────────────────────────────────────
     _q: _queue_mod.SimpleQueue = _queue_mod.SimpleQueue()
 
     class _Loader(UIElement):

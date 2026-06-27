@@ -1,28 +1,3 @@
-"""
-pylay.widgets.file_picker — Non-blocking native file-selection dialog.
-
-FilePicker is a zero-size, headless UIElement that opens the platform's native
-file dialog in a background thread and delivers the result safely to the main
-thread via update().  It must be added to the UI tree so that OpenGUI calls
-update() every frame.
-
-Backend selection (automatic):
-  - Windows / macOS / Linux with Tk: tkinter.filedialog (always available)
-  - Linux fallback: zenity
-
-Example::
-
-    picker = FilePicker(title="Open image",
-                        filters=["Images | *.png *.jpg", "All files | *"])
-    root.add_child(picker)
-
-    def on_file(path):
-        # path is a non-empty str  → file the user selected
-        # path is ""               → user cancelled the dialog
-        if path:
-            load_image(path)
-    picker.pick(on_file)
-"""
 import subprocess
 import sys
 import threading
@@ -34,7 +9,6 @@ from pylay.core.element import UIElement
 
 
 def _parse_filters(filters: List[str]):
-    """Convert "Label | *.ext *.ext2" strings to tkinter filetypes tuples."""
     result = []
     for f in filters:
         if "|" in f:
@@ -46,7 +20,6 @@ def _parse_filters(filters: List[str]):
 
 
 def _pick_tkinter(title: str, filetypes) -> str:
-    """Open a tkinter file dialog (hidden root window) and return the path."""
     import tkinter as tk
     from tkinter import filedialog
 
@@ -60,7 +33,6 @@ def _pick_tkinter(title: str, filetypes) -> str:
 
 
 def _pick_zenity(title: str, filters: List[str]) -> Optional[str]:
-    """Open a zenity dialog; return None if zenity is not available."""
     try:
         cmd = ["zenity", "--file-selection", f"--title={title}"]
         for f in filters:
@@ -72,20 +44,6 @@ def _pick_zenity(title: str, filters: List[str]) -> Optional[str]:
 
 
 class FilePicker(UIElement):
-    """
-    Headless widget for non-blocking native file-selection dialogs.
-
-    Uses tkinter.filedialog on all platforms (Windows, macOS, Linux).
-    Falls back to zenity on Linux if tkinter is unavailable.
-
-    Callback contract
-    -----------------
-    Non-empty str   → the path the user selected.
-    ""              → user dismissed / cancelled the dialog.
-
-    Multiple pick() calls are safe; each queues an independent dialog.
-    """
-
     def __init__(self,
                  title: str = "Select file",
                  filters: Optional[List[str]] = None,
@@ -97,10 +55,7 @@ class FilePicker(UIElement):
         self.filters: List[str] = filters or []
         self._q: queue.SimpleQueue = queue.SimpleQueue()
 
-    # ──────────────────────────────────────────────────── public API
-
     def pick(self, callback: Callable[[str], None]) -> None:
-        """Open the dialog; call callback(path) on the main thread when done."""
         title   = self.title
         filters = self.filters
 
@@ -117,8 +72,6 @@ class FilePicker(UIElement):
             self._q.put((callback, path))
 
         threading.Thread(target=_worker, daemon=True).start()
-
-    # ──────────────────────────────────────────────────── UIElement
 
     def update(self, dt: float) -> None:
         # Drain all pending results (handles rapid successive picks correctly).

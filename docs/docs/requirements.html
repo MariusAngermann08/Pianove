@@ -57,8 +57,59 @@
       <p class="page-subtitle">Python, pygame, OS and hardware requirements for Pianove.</p>
     </div>
 
-    <section class="doc-section" id="requirements">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="python">
+      <h2>Python</h2>
+      <p>Pianove requires <strong>Python 3.10 or newer</strong>. Verify your version:</p>
+      <pre><code class="language-bash">python --version</code></pre>
+      <p>Python 3.11 or 3.12 is recommended for best performance. Python 3.9 and earlier are not supported.</p>
+    </section>
+
+    <section class="doc-section" id="dependencies">
+      <h2>Python Dependencies</h2>
+      <p>All required packages are listed in <code>requirements.txt</code>. Install them with:</p>
+      <pre><code class="language-bash">pip install -r requirements.txt</code></pre>
+      <table class="param-table">
+        <thead><tr><th>Package</th><th>Required</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>pygame-ce &gt;= 2.4</code></td><td>Yes</td><td>Rendering, event loop, font loading</td></tr>
+          <tr><td><code>python-rtmidi</code></td><td>Yes</td><td>MIDI device input</td></tr>
+          <tr><td><code>pyfluidsynth</code></td><td>Yes</td><td>Python binding for the FluidSynth synthesiser</td></tr>
+          <tr><td><code>Pillow</code></td><td>Optional</td><td>Emoji rendering via NotoColorEmoji; omit to disable emoji icons</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="fluidsynth">
+      <h2>FluidSynth (System Library)</h2>
+      <p><code>pyfluidsynth</code> is a Python binding — it wraps the native <code>libfluidsynth</code> library, which must be installed separately as a system package. The bundled soundfont is loaded automatically once FluidSynth is available.</p>
+      <table class="param-table">
+        <thead><tr><th>Platform</th><th>Installation</th></tr></thead>
+        <tbody>
+          <tr><td>Windows</td><td>Download <code>fluidsynth-*.zip</code> from the <a href="https://github.com/FluidSynth/fluidsynth/releases" target="_blank" rel="noopener">FluidSynth GitHub releases</a>, extract the DLL files into the <code>bin/</code> folder next to <code>main.py</code>.</td></tr>
+          <tr><td>macOS</td><td><code>brew install fluid-synth</code></td></tr>
+          <tr><td>Debian / Ubuntu</td><td><code>sudo apt install fluidsynth</code></td></tr>
+          <tr><td>Arch Linux</td><td><code>sudo pacman -S fluidsynth</code></td></tr>
+        </tbody>
+      </table>
+      <div class="doc-note">If FluidSynth is not installed, Pianove still starts and runs normally — audio playback is silently disabled. A notice is shown in the Settings tab.</div>
+    </section>
+
+    <section class="doc-section" id="midi">
+      <h2>MIDI Device (Optional)</h2>
+      <p>Any USB MIDI keyboard is supported. Pianove detects connected devices automatically on startup and reconnects if one is plugged in while the app is running. A MIDI keyboard is not required to use lessons, navigation, or the song viewer — only the interactive exercise steps require one.</p>
+      <p>See <a href="midi-setup.html">MIDI Setup</a> for calibration and device selection details.</p>
+    </section>
+
+    <section class="doc-section" id="platforms">
+      <h2>Supported Platforms</h2>
+      <table class="param-table">
+        <thead><tr><th>Platform</th><th>Minimum Version</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Windows</td><td>Windows 10</td><td>FluidSynth DLL must be placed in <code>bin/</code></td></tr>
+          <tr><td>macOS</td><td>macOS 12 (Monterey)</td><td>Install FluidSynth via Homebrew</td></tr>
+          <tr><td>Linux</td><td>Any modern distro</td><td>Tested on Ubuntu 22.04+, Arch Linux</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <div class="doc-nav-footer">

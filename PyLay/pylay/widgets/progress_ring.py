@@ -8,17 +8,6 @@ _SS = 3  # supersampling factor — render at 3× then smooth-scale down
 
 
 class ProgressRing(UIElement):
-    """
-    Circular progress indicator with anti-aliased edges and round line-caps.
-
-    Renders at 3× resolution on a SRCALPHA surface, then smooth-scales to the
-    target size so edges blend cleanly against any background.
-
-    progress — 0.0 to 1.0
-    size     — diameter in pixels (width == height)
-    stroke   — ring line thickness in pixels
-    """
-
     def __init__(
         self,
         progress: float,
@@ -50,10 +39,8 @@ class ProgressRing(UIElement):
         arc_rect = pygame.Rect(cx - r, cy - r, r * 2, r * 2)
         cap_r    = max(1, ss // 2)
 
-        # ── Track: circle outline — no seam, perfectly clean ─────────────────
         pygame.draw.circle(ring, iOSTheme.fill, (cx, cy), r, ss)
 
-        # ── Active arc + round caps ───────────────────────────────────────────
         if p > 0.005:
             sweep   = math.tau * p
             start_a = math.pi / 2 - sweep

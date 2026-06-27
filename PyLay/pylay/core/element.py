@@ -3,11 +3,6 @@ from typing import List, Optional, Tuple, Union
 from pylay.core.physics import Spring
 
 class UIElement:
-    """
-    Base UI Element for OpenUI.
-    Handles hierarchy, responsive layout solving, event dispatching,
-    and physics-based property animations.
-    """
     def __init__(self,
                  anchor: str = "top_left",
                  x: Union[int, float] = 0,
@@ -44,24 +39,16 @@ class UIElement:
         # Clip children to self.rect during draw
         self.clips_to_bounds = False
 
-    # ------------------------------------------------------------------
-    # Subtree animation counter helpers
-    # ------------------------------------------------------------------
     def _inc_subtree(self, delta: int):
-        """Propagate a subtree animation count change up to the root."""
         node = self
         while node is not None:
             node._subtree_animations += delta
             node = node.parent
 
     def request_layout(self):
-        """Ask the root to do one layout pass at the end of App.frame()."""
         root = self.get_root()
         root._layout_requested = True
 
-    # ------------------------------------------------------------------
-    # Hierarchy
-    # ------------------------------------------------------------------
     def add_child(self, child: 'UIElement'):
         if child.parent:
             child.parent.remove_child(child)
@@ -75,20 +62,13 @@ class UIElement:
             child.parent = None
             self.layout()
 
-    # ------------------------------------------------------------------
-    # Layout
-    # ------------------------------------------------------------------
     def get_root(self) -> 'UIElement':
         curr = self
         while curr.parent is not None:
             curr = curr.parent
         return curr
 
-    # ------------------------------------------------------------------
-    # Layout
-    # ------------------------------------------------------------------
     def layout(self, parent_rect: Optional[pygame.Rect] = None, skip_self: bool = False):
-        """Solve constraints → self.rect, then propagate to children."""
         if not skip_self:
             if parent_rect is not None:
                 p_rect = parent_rect
@@ -133,11 +113,7 @@ class UIElement:
         for child in self.children:
             child.layout(self.rect)
 
-    # ------------------------------------------------------------------
-    # Update / Animation
-    # ------------------------------------------------------------------
     def update(self, dt: float):
-        """Advance spring animations, then update children."""
         if not self.visible:
             if not self._active_animations:
                 return
@@ -185,10 +161,6 @@ class UIElement:
 
     def animate_to(self, property_name: str, target: float,
                    response: float = 0.35, damping_fraction: float = 0.7):
-        """
-        Animate a numeric property to a target using spring physics.
-        Guards against no-op calls. Preserves momentum on retarget.
-        """
         current_val = getattr(self, property_name, None)
         if current_val is None:
             setattr(self, property_name, target)
@@ -210,9 +182,6 @@ class UIElement:
             self._active_animations[property_name] = spring
             self._inc_subtree(1)  # New spring started
 
-    # ------------------------------------------------------------------
-    # Events
-    # ------------------------------------------------------------------
     def handle_event(self, event: pygame.event.Event) -> bool:
         if not self.visible or not self.enabled:
             return False
@@ -228,9 +197,6 @@ class UIElement:
     def on_event(self, event: pygame.event.Event) -> bool:
         return False
 
-    # ------------------------------------------------------------------
-    # Draw
-    # ------------------------------------------------------------------
     def draw(self, surface: pygame.Surface):
         if not self.visible:
             return
@@ -251,21 +217,17 @@ class UIElement:
         pass
 
     def _on_theme_changed(self):
-        """Clear widget-local caches after a global theme switch (override in subclasses)."""
         pass
 
     def invalidate_theme_caches(self):
-        """Propagate theme invalidation through the element tree."""
         self._on_theme_changed()
         for child in self.children:
             child.invalidate_theme_caches()
 
     def _on_scale_changed(self):
-        """Clear font/metric caches after window resize (override in subclasses)."""
         pass
 
     def invalidate_scale_caches(self):
-        """Propagate scale invalidation so widgets rebuild fonts at new UI_SCALE."""
         self._on_scale_changed()
         for child in self.children:
             child.invalidate_scale_caches()

@@ -43,17 +43,6 @@ def _render_glyph(glyph: str, size: int, color: pygame.Color) -> Optional[pygame
 
 
 class Icon(UIElement):
-    """
-    Renders a Material Icon glyph by name.
-
-    Parameters
-    ----------
-    name  : icon name as listed in Material Icons, e.g. "home", "play_arrow"
-            See https://fonts.google.com/icons or pylay.core.icons.ICONS
-    size  : widget size in pixels (square)
-    color : foreground color; None → iOSTheme.label (tracks light/dark mode)
-    """
-
     def __init__(
         self,
         name: str,
@@ -70,8 +59,6 @@ class Icon(UIElement):
         self.color = color
         self._surf: Optional[pygame.Surface] = None
         self._cache_key: Optional[tuple] = None
-
-    # ------------------------------------------------------------------
 
     def _on_theme_changed(self):
         self._surf = None
@@ -111,16 +98,8 @@ class Icon(UIElement):
         cy = self.rect.centery - self._surf.get_height() // 2
         surface.blit(self._surf, (cx, cy))
 
-    # ------------------------------------------------------------------
-    # SideNav icon_fn compatibility
-    # ------------------------------------------------------------------
-
     @staticmethod
     def as_icon_fn(name: str, base_size: int = 16):
-        """
-        Return a callable ``fn(surf, cx, cy, scale, color)`` compatible with
-        SideNav's ``icon_fn`` slot, rendered from the Material Icons font.
-        """
         _cache: dict = {}
 
         def icon_fn(surf: pygame.Surface, cx: int, cy: int,

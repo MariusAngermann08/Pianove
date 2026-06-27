@@ -6,11 +6,6 @@ from pylay.core import font_loader
 from typing import Optional, List, Union
 
 class Label(UIElement):
-    """
-    A premium iOS-styled text Label.
-    Supports single-line text and automatic multiline word wrapping (using wrap_width),
-    recalculating exact layout constraints and anchors dynamically.
-    """
     def __init__(self,
                  text: Union[str, 'State'],
                  font_size: int = 16,

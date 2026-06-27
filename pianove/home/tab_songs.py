@@ -129,7 +129,6 @@ def build():
 
     from pianove.song_store import list_songs, import_song
 
-    # ── detach stale listeners ────────────────────────────────────────────────
     if _prev_filter_listener is not None:
         try:
             _filter_state._listeners.remove(_prev_filter_listener)
@@ -147,7 +146,6 @@ def build():
 
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
-    # ── Fixed header ──────────────────────────────────────────────────────────
     header = FloatLayout(
         anchor="top_left", x=0, y=0,
         width=1.0, height=_HEADER_H,
@@ -165,7 +163,6 @@ def build():
         width=0.80, height=34,
     ))
 
-    # ── FilePicker ────────────────────────────────────────────────────────────
     picker = FilePicker(
         title=t("song_import_title"),
         filters=["MusicXML | *.xml *.musicxml *.mxl", "All files | *"],
@@ -203,7 +200,6 @@ def build():
     root.add_child(header)
     root.add_child(picker)
 
-    # ── Import progress bar ───────────────────────────────────────────────────
     prog_bar = ProgressBar(
         progress=_import_progress,
         anchor="top_left", x=0, y=_HEADER_H,
@@ -218,7 +214,6 @@ def build():
     _importing_state.bind(_on_importing)
     _prev_import_listener = _on_importing
 
-    # ── Import-result watcher (zero-size, runs every frame) ───────────────────
     class _ImportWatcher(UIElement):
         def __init__(self):
             super().__init__(width=0, height=0)
@@ -249,7 +244,6 @@ def build():
 
     root.add_child(_ImportWatcher())
 
-    # ── Scrollable song list ──────────────────────────────────────────────────
     scroll = VStack(
         spacing=_CARD_GAP, padding=12,
         anchor="top_left", x=0, y=_HEADER_H + _PROGRESS_H,

@@ -57,8 +57,115 @@
       <p class="page-subtitle">Reference for writing custom lesson courses for Pianove.</p>
     </div>
 
-    <section class="doc-section" id="lesson-format">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="layout">
+      <h2>Directory Layout</h2>
+      <pre><code class="language-bash">pianove/lessons/          ← built-in lessons, read-only, versioned with the app
+~/.pianove/packages/      ← user-installed packages (lessons &amp; courses)</code></pre>
+      <p>A <code>.pianove-pkg</code> file is a renamed <code>.zip</code> of a lesson or course folder. It can be imported via the in-app package manager or the file picker.</p>
+    </section>
+
+    <section class="doc-section" id="lesson-bundle">
+      <h2>Lesson Bundle</h2>
+      <p>Each lesson lives in its own folder:</p>
+      <pre><code class="language-bash">lessons/welcome/
+  meta.json          ← identity, authorship, difficulty, tags
+  en.json            ← localized strings (title, descriptions, hints)
+  de.json            ← additional locale files follow the same pattern
+  steps.json         ← ordered list of step blocks
+  assets/
+    notation_1.xml   ← MusicXML snippets rendered by PyLute
+    audio_1.ogg      ← optional backing audio</code></pre>
+
+      <h3>meta.json</h3>
+      <pre><code class="language-json">{
+  "id": "welcome",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": ["intro", "basics"],
+  "locales": ["en", "de"],
+  "estimated_minutes": 5
+}</code></pre>
+
+      <h3>steps.json</h3>
+      <p>A step is a typed block. The renderer dispatches on <code>type</code>:</p>
+      <pre><code class="language-json">[
+  {
+    "type": "text",
+    "content_key": "step1_text"
+  },
+  {
+    "type": "notation",
+    "file": "assets/notation_1.xml",
+    "caption_key": "step1_caption"
+  },
+  {
+    "type": "exercise",
+    "notes": ["C4", "E4", "G4"],
+    "caption_key": "step1_exercise"
+  },
+  {
+    "type": "quiz",
+    "question_key": "step1_question",
+    "options_keys": ["opt_a", "opt_b", "opt_c"],
+    "correct": 0
+  }
+]</code></pre>
+      <p><code>content_key</code>, <code>caption_key</code>, etc. are looked up in the locale file for the active language, falling back to <code>en.json</code>.</p>
+
+      <h3>Step Types</h3>
+      <table class="param-table">
+        <thead><tr><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>text</code></td><td>Explanatory prose, supports inline bold/italic via simple markup</td></tr>
+          <tr><td><code>notation</code></td><td>Sheet music rendered by PyLute from a MusicXML asset file</td></tr>
+          <tr><td><code>exercise</code></td><td>Interactive play-along — user must play specified notes on MIDI keyboard</td></tr>
+          <tr><td><code>quiz</code></td><td>Multiple-choice question with immediate feedback</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="course-bundle">
+      <h2>Course Bundle</h2>
+      <p>A course is an ordered collection of lessons:</p>
+      <pre><code class="language-bash">courses/beginner_path/
+  meta.json          ← course identity and lesson order
+  en.json
+  de.json</code></pre>
+      <pre><code class="language-json">{
+  "id": "beginner_path",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "lessons": [
+    "welcome",
+    "c_major_scale",
+    "reading_notes",
+    "first_melody"
+  ]
+}</code></pre>
+      <p>Lessons referenced here can be bundled inside the course zip or declared as dependencies resolved from already-installed packages.</p>
+    </section>
+
+    <section class="doc-section" id="package-manager">
+      <h2>Package Manager</h2>
+      <p>Import source: local file picker (<code>.pianove-pkg</code> zip) — v1. Future versions may support a registry index at a hosted <code>index.json</code>.</p>
+      <h3>Package Resolution Order</h3>
+      <ol>
+        <li>Built-in (<code>pianove/lessons/</code>, <code>pianove/courses/</code>)</li>
+        <li>User-installed (<code>~/.pianove/packages/</code>)</li>
+        <li>User-installed packages shadow built-ins of the same <code>id</code> — allows community patches</li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="design-principles">
+      <h2>Design Principles</h2>
+      <ul>
+        <li><strong>Human-readable</strong> — JSON + MusicXML are plain text, readable, diffable, and Git-friendly</li>
+        <li><strong>Localizable</strong> — every user-facing string lives in locale files, following the same pattern as the rest of the app</li>
+        <li><strong>Forkable</strong> — anyone can copy a lesson folder, edit it, and share the zip or submit a PR</li>
+        <li><strong>Extensible</strong> — new step types can be added without breaking existing lessons; unknown types are skipped with a fallback UI</li>
+      </ul>
     </section>
 
     <div class="doc-nav-footer">

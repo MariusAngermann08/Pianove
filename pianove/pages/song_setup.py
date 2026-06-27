@@ -1,8 +1,3 @@
-"""
-Song setup page — shown after tapping a song in the library.
-The user picks which hand(s) to practice, then starts the lesson.
-"""
-
 import pygame
 from pylay import (
     FloatLayout, VStack, Label, Button, SegmentedControl,

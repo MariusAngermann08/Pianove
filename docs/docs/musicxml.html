@@ -57,8 +57,56 @@
       <p class="page-subtitle">Supported formats, where to find files, and how to import them.</p>
     </div>
 
-    <section class="doc-section" id="musicxml">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="formats">
+      <h2>Supported Formats</h2>
+      <p>Pianove accepts standard MusicXML in three container formats:</p>
+      <ul>
+        <li><code>.xml</code> — uncompressed MusicXML (plain text)</li>
+        <li><code>.musicxml</code> — same as above, alternative extension</li>
+        <li><code>.mxl</code> — compressed MusicXML (ZIP archive)</li>
+      </ul>
+      <p>For multi-instrument scores only the <strong>first part</strong> is loaded. All other instruments are silently ignored.</p>
+    </section>
+
+    <section class="doc-section" id="how-to-import">
+      <h2>How to Import</h2>
+      <ol>
+        <li>Go to the <strong>Songs</strong> tab.</li>
+        <li>Tap <strong>Import</strong> (the button in the header).</li>
+        <li>A native OS file picker opens. Navigate to your MusicXML file and confirm.</li>
+        <li>Pianove parses the file, extracts note data, and stores it in the local song library. The score renders immediately in the song detail view.</li>
+      </ol>
+      <div class="doc-note">Import is non-destructive — the original file is not modified. Pianove stores a copy of the parsed data internally.</div>
+    </section>
+
+    <section class="doc-section" id="library">
+      <h2>Song Library</h2>
+      <p>All imported songs appear in the Songs tab as a scrollable list. Each entry shows the title, composer (from the MusicXML metadata), and difficulty rating.</p>
+      <p>Tap a song to open its detail screen, which shows the full score rendered by PyLute. From there you can start a practice session or delete the song.</p>
+    </section>
+
+    <section class="doc-section" id="limitations">
+      <h2>What Is Not Supported</h2>
+      <p>The following MusicXML features are silently skipped during import. Notes and rests in unsupported constructs are omitted without error.</p>
+      <ul>
+        <li>Multiple voices on a single staff</li>
+        <li>Slurs</li>
+        <li>Repeat barlines, da capo, dal segno</li>
+        <li>Grace notes</li>
+        <li>Lyrics</li>
+        <li>Multi-instrument scores (only first part loaded)</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="practice">
+      <h2>Practice Mode</h2>
+      <p>From the song detail screen, press <strong>Practice</strong> to start a sight-reading session. Before starting you can configure:</p>
+      <ul>
+        <li><strong>Clef</strong> — treble, bass, or both (grand staff)</li>
+        <li><strong>Difficulty</strong> — controls which notes are included in the generated exercise</li>
+        <li><strong>BPM</strong> — playback tempo</li>
+      </ul>
+      <p>The session generates a randomised sequence of notes drawn from the song's pitch pool. Accuracy is recorded and added to your practice statistics.</p>
     </section>
 
     <div class="doc-nav-footer">

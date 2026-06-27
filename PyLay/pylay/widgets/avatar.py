@@ -6,11 +6,6 @@ from typing import Optional
 
 
 class Avatar(UIElement):
-    """
-    A filled circle showing up to two initials in white.
-    Useful for profile rows, user headings, and comment threads.
-    """
-
     def __init__(
         self,
         initials: str,

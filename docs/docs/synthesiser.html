@@ -54,11 +54,29 @@
   <main class="docs-content">
     <div class="docs-page-header">
       <h1>Built-in Synthesiser</h1>
-      <p class="page-subtitle">How the built-in synthesiser works — no soundfont required.</p>
+      <p class="page-subtitle">How the built-in synthesiser works — FluidSynth, with a bundled soundfont.</p>
     </div>
 
-    <section class="doc-section" id="synthesiser">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="overview">
+      <h2>Overview</h2>
+      <p>Pianove uses <strong>FluidSynth</strong> as its audio backend via the <a href="https://pypi.org/project/pyfluidsynth/" target="_blank" rel="noopener">pyFluidSynth</a> Python binding. FluidSynth is a real-time software synthesiser that plays back General MIDI using a SoundFont 2 file (<code>.sf2</code>). The application bundles <strong>GeneralUser GS</strong> so no soundfont needs to be downloaded or configured manually.</p>
+      <div class="doc-note"><strong>FluidSynth must be installed as a system library.</strong> pyFluidSynth is a Python binding — it wraps the native <code>libfluidsynth</code> library, which must be installed separately. See <a href="requirements.html">System Requirements</a> for platform-specific instructions.</div>
+    </section>
+
+    <section class="doc-section" id="soundfont">
+      <h2>Bundled SoundFont</h2>
+      <p>The included soundfont is <strong>GeneralUser GS</strong> by S. Christian Collins — a high-quality, compact General MIDI soundfont. It covers all 128 GM instruments and covers the piano patches Pianove uses for playback. The file ships inside <code>bin/</code> alongside the application and is loaded automatically on startup.</p>
+      <p>Piano playback uses MIDI program 0 (Acoustic Grand Piano). The audio channel, sample rate (44100 Hz), and gain are configured internally and require no user adjustment.</p>
+    </section>
+
+    <section class="doc-section" id="volume">
+      <h2>Volume Control</h2>
+      <p>Volume is adjustable from the <a href="settings.html">Settings</a> tab. The slider maps linearly to FluidSynth's gain parameter (0.0 – 1.0). The setting is saved persistently and restored on the next launch.</p>
+    </section>
+
+    <section class="doc-section" id="fallback">
+      <h2>Fallback Behaviour</h2>
+      <p>If FluidSynth is not available (library not installed or import fails), Pianove starts normally without sound. Exercise steps can still be completed — the app detects note input from the MIDI device regardless of audio output. A warning is displayed in the Settings tab when audio is unavailable.</p>
     </section>
 
     <div class="doc-nav-footer">

@@ -57,8 +57,43 @@
       <p class="page-subtitle">Streaks, accuracy tracking, and weekly statistics.</p>
     </div>
 
-    <section class="doc-section" id="progress">
-      <div class="doc-note"><strong>Documentation in progress.</strong> This page will be completed shortly. In the meantime, see the <a href="quickstart.html">Quick Start</a> for the essentials.</div>
+    <section class="doc-section" id="streak">
+      <h2>Lesson Streak</h2>
+      <p>Pianove counts the number of consecutive calendar days on which you completed at least one lesson. The current streak and all-time best streak are shown on the <strong>Home</strong> tab.</p>
+      <p>A day counts if any lesson reaches its completion screen, regardless of accuracy. Missing a day resets the current streak to zero; the best-streak record is never lowered.</p>
+    </section>
+
+    <section class="doc-section" id="weekly-chart">
+      <h2>Weekly Lessons Chart</h2>
+      <p>A bar chart on the <strong>Home</strong> tab and the <strong>Stats</strong> tab shows how many lessons were completed on each day of the current Monday–Sunday week. The chart resets automatically at the start of each new week.</p>
+    </section>
+
+    <section class="doc-section" id="accuracy">
+      <h2>Accuracy Tracking</h2>
+      <p>Each sight-reading practice session records:</p>
+      <ul>
+        <li><strong>Accuracy</strong> — percentage of notes played correctly on the first attempt</li>
+        <li><strong>Note count</strong> — total notes in the session</li>
+        <li><strong>BPM</strong> — the tempo used</li>
+      </ul>
+      <p>The Stats tab shows the rolling average accuracy over your <strong>last 10 sessions</strong>. Individual session results are stored permanently and never auto-deleted.</p>
+    </section>
+
+    <section class="doc-section" id="weekly-practice">
+      <h2>Weekly Practice Sessions</h2>
+      <p>A second chart on the Stats tab tracks how many sight-reading practice sessions you completed per day this week. This is separate from the lesson chart — practice sessions are counted from the Songs tab, not the Lessons tab.</p>
+    </section>
+
+    <section class="doc-section" id="achievements">
+      <h2>Achievements</h2>
+      <p>Pianove awards milestone badges for reaching cumulative targets. Achievements are shown on the Stats tab and are permanent once earned.</p>
+      <p>Example milestones: total notes played, average accuracy thresholds, streak lengths, number of lessons completed. Each achievement has a name, emoji, and a short description shown on unlock.</p>
+    </section>
+
+    <section class="doc-section" id="storage">
+      <h2>Data Storage</h2>
+      <p>All progress data is stored locally on-device using PyLay's <code>Storage</code> module, which writes a JSON file to your home directory (<code>~/.pianove/data.json</code>). No account, login, or internet connection is ever required. Data is never sent anywhere.</p>
+      <p>To reset all progress, go to <strong>Settings → Reset</strong>. This clears streak history, lesson dates, and practice session records. Imported songs are not affected.</p>
     </section>
 
     <div class="doc-nav-footer">

@@ -5,7 +5,6 @@ from typing import Union
 
 
 class Divider(UIElement):
-    """A thin horizontal rule that adapts to the current theme."""
     def __init__(self, width: Union[int, float] = 1.0, **kwargs):
         super().__init__(width=width, height=1, **kwargs)
 

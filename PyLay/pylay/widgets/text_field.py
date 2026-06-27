@@ -7,11 +7,6 @@ from pylay.core import font_loader, _dirty
 from typing import Optional, Union, Callable, Any
 
 class TextField(UIElement):
-    """
-    An iOS-style interactive Text Input field.
-    Supports focus highlights, cursor animations, placeholder text,
-    and automatic two-way binding to reactive State objects!
-    """
     def __init__(self,
                  text: Union[str, State] = "",
                  placeholder: str = "Enter text...",
@@ -120,7 +115,6 @@ class TextField(UIElement):
         return False
         
     def _update_scroll_x(self):
-        """Keep the cursor visible: scroll right when text overflows the field."""
         font = self._get_font()
         avail_w = self.rect.width - 24
         text_w = font.size(self.text_val)[0]

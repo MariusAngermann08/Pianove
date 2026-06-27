@@ -13,19 +13,6 @@ _BASE_LABEL_OFF = 50
 
 
 class SideNav(FloatLayout):
-    """
-    iOS-style left sidebar navigation panel.
-
-    Items: [{"title": str, "icon_fn": Callable(surf, cx, cy, scale, color)}]
-
-    bottom_action: optional dict {"icon_fn", "label", "on_click"} rendered as
-    a pinned item at the bottom.  footer_fn supplies a subtitle line shown
-    directly beneath it — no separate visual element.
-
-    The spring-animated marker pill covers both regular items and the bottom
-    action, so switching to/from it animates identically.
-    """
-
     def __init__(self,
                  active_tab_state: State,
                  items: List[Dict[str, Any]],
@@ -60,8 +47,6 @@ class SideNav(FloatLayout):
 
         self.active_tab.bind(lambda _: setattr(self, "_bottom_active", False))
 
-    # ── cache invalidation ─────────────────────────────────────────────────
-
     def _on_scale_changed(self):
         self._font = self._title_font = self._sub_font = None
         self._font_px  = 0
@@ -70,8 +55,6 @@ class SideNav(FloatLayout):
     def _on_theme_changed(self):
         self._font = self._title_font = self._sub_font = None
         self._font_px = 0
-
-    # ── fonts ──────────────────────────────────────────────────────────────
 
     def _get_fonts(self):
         px = scaled_font_size(14)
@@ -82,8 +65,6 @@ class SideNav(FloatLayout):
             self._sub_font   = pygame.font.SysFont("Arial", scaled_font_size(11))
             self._font_px = px
         return self._font, self._title_font, self._sub_font
-
-    # ── geometry ───────────────────────────────────────────────────────────
 
     def _item_rect(self, idx: int) -> pygame.Rect:
         header_h = scaled_px(_BASE_HEADER_H)
@@ -114,8 +95,6 @@ class SideNav(FloatLayout):
             return float(r.centery) if r else self._marker_y
         return float(self._item_rect(int(self.active_tab.value)).centery)
 
-    # ── animation ─────────────────────────────────────────────────────────
-
     def update(self, dt: float):
         if self.rect.width:
             target = self._marker_target()
@@ -126,10 +105,7 @@ class SideNav(FloatLayout):
                                 response=0.40, damping_fraction=0.72)
         super().update(dt)
 
-    # ── render ─────────────────────────────────────────────────────────────
-
     def _blend_color(self, dist_px: float, item_h: float) -> pygame.Color:
-        """Interpolate secondary_label → white based on marker proximity."""
         blend = max(0.0, 1.0 - abs(dist_px) / max(item_h, 1))
         if blend < 0.01:
             return iOSTheme.secondary_label
@@ -158,14 +134,12 @@ class SideNav(FloatLayout):
         marker_h = item_h - 8
         marker_w = w - item_pad * 2
 
-        # ── header ────────────────────────────────────────────────────────
         if self._title:
             ts = title_font.render(self._title, True, iOSTheme.label)
             surface.blit(ts, (rx + scaled_px(16), ry + (header_h - ts.get_height()) // 2))
             pygame.draw.line(surface, iOSTheme.fill_tertiary,
                              (rx, ry + header_h - 1), (rx + w, ry + header_h - 1), 1)
 
-        # ── animated marker pill ──────────────────────────────────────────
         if self._marker_y > 0:
             pygame.draw.rect(
                 surface, iOSTheme.accent,
@@ -175,7 +149,6 @@ class SideNav(FloatLayout):
                 border_radius=scaled_px(10),
             )
 
-        # ── regular nav items ──────────────────────────────────────────────
         for i, item in enumerate(self.items):
             ir       = self._item_rect(i)
             text_col = self._blend_color(ir.centery - self._marker_y, item_h)
@@ -198,7 +171,6 @@ class SideNav(FloatLayout):
             ls = font.render(item["title"], True, text_col)
             surface.blit(ls, (ir.left + label_off, cy - ls.get_height() // 2))
 
-        # ── bottom action + subtitle ───────────────────────────────────────
         if self._bottom_action:
             br = self._bottom_item_rect()
             self._bottom_rect = br
@@ -231,11 +203,8 @@ class SideNav(FloatLayout):
                     surface.blit(ss, (br.left + label_off,
                                       br.bottom + scaled_px(4)))
 
-        # ── right border ──────────────────────────────────────────────────
         pygame.draw.line(surface, iOSTheme.fill_tertiary,
                          (rx + w - 1, ry), (rx + w - 1, ry + h), 1)
-
-    # ── events ─────────────────────────────────────────────────────────────
 
     def on_event(self, event: pygame.event.Event) -> bool:
         if not self.enabled or not self.visible:

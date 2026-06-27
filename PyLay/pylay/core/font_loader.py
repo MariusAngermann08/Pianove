@@ -25,13 +25,6 @@ def _inter_available(bold: bool) -> bool:
 
 
 def load_font(size_pt: int, bold: bool = False, override_name: Optional[str] = None) -> pygame.font.Font:
-    """
-    Load a font at the given point size. Resolution order:
-    1. Explicit override_name (preserves backward-compat when widget passes font_name)
-    2. Bundled Inter TTF (installed in pylay/assets/)
-    3. Platform system font fallback list
-    4. pygame default font
-    """
     if not pygame.font.get_init():
         pygame.font.init()
 

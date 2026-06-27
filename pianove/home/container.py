@@ -10,8 +10,6 @@ import pianove.context as ctx
 _active_tab = State(0)
 _NAV_W      = 200   # base sidebar width (pixels at 1× scale)
 
-# ── Material Icons (auto-tinted, light/dark aware) ────────────────────────────
-
 _ICON_FNS = {
     "home":     Icon.as_icon_fn("home",          base_size=20),
     "songs":    Icon.as_icon_fn("library_music", base_size=20),
@@ -20,8 +18,6 @@ _ICON_FNS = {
     "creator":  Icon.as_icon_fn("brush",         base_size=20),
 }
 
-
-# ── Builder ───────────────────────────────────────────────────────────────────
 
 def build():
     nav_w        = max(160, int(_NAV_W * UI_SCALE))
@@ -49,7 +45,6 @@ def build():
 
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
-    # ── Tab content router (right panel) ──────────────────────────────────
     tab_router = PageRouter(
         pages=pages,
         initial_page=tab_keys[active_idx],
@@ -62,7 +57,6 @@ def build():
     ctx.inner_router = tab_router
     root.add_child(tab_router)
 
-    # ── Side navigation (left panel) ──────────────────────────────────────
     nav_items = [
         {"title": t(f"nav_{k}"), "icon_fn": fn}
         for k, fn in zip(tab_keys, icons)

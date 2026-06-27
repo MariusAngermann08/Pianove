@@ -8,14 +8,6 @@ from pylay.core import font_loader
 from typing import List, Dict, Union, Optional, Tuple
 
 class LineChart(UIElement):
-    """
-    A premium vector LineChart widget for OpenUI.
-    Features:
-    - Spring-animated loading animation (line morphs upward on load).
-    - Dynamic horizontal hover tracking with spring inertia.
-    - Glassmorphic metric tooltip that follows the mouse.
-    - Sleek double-pass gradient area filling beneath the path.
-    """
     def __init__(self,
                  data: List[float],
                  labels: Optional[List[str]] = None,

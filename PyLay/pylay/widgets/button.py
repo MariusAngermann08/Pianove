@@ -7,14 +7,6 @@ from pylay.core.render_utils import make_aa_rect, make_shadow, SHADOW_BLUR
 from typing import Callable, Optional, Union, Tuple
 
 class Button(UIElement):
-    """
-    An iOS-inspired Button widget with spring-loaded physical scaling.
-    Render cache: the button background + text is re-drawn only when size,
-    color, or text changes — not every frame.
-
-    Pass icon_fn (a Material Icon callable from Icon.as_icon_fn) to render an
-    icon centered on the button instead of text.
-    """
     def __init__(self,
                  text: str = "",
                  on_click: Optional[Callable[[], None]] = None,
@@ -117,7 +109,6 @@ class Button(UIElement):
         return False
 
     def _get_base_surf(self, w: int, h: int) -> pygame.Surface:
-        """Return cached base surface (AA background + text). Re-renders only on change."""
         bg  = self.background_color if self.background_color is not None else iOSTheme.accent
         fg  = self.text_color       if self.text_color       is not None else pygame.Color(255, 255, 255)
         rad = self.border_radius if self.border_radius >= 0 else h // 2

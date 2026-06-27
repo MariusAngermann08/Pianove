@@ -1,22 +1,8 @@
-"""
-FluidSynth-backed piano sound engine.
-
-Replaces the additive-synthesis engine with real sampled grand piano sound
-via pyFluidSynth + GeneralUser GS soundfont (GM program 0 = Acoustic Grand Piano).
-
-Public API is identical to sound_engine.py:
-    init()              — start loading soundfont in background thread
-    play(note, vel)     — note-on  (MIDI 0-127, velocity 0-127)
-    stop(note)          — note-off
-    set_enabled(bool)   — global on/off (wired to the settings toggle)
-"""
-
 import os
 import sys
 import pathlib
 import threading
 
-# ── Tell pyFluidSynth where our bundled DLL lives ─────────────────────────────
 _BIN_DIR = str(pathlib.Path(__file__).parent.parent / "bin")
 if hasattr(os, "add_dll_directory"):          # Python 3.8+ on Windows
     os.add_dll_directory(_BIN_DIR)
@@ -24,7 +10,6 @@ os.environ["PATH"] = _BIN_DIR + os.pathsep + os.environ.get("PATH", "")
 
 import fluidsynth  # pyfluidsynth
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
 _SF2_PATH = str(
     pathlib.Path(__file__).parent / "assets" / "soundfonts" / "GeneralUser-GS.sf2"
 )
@@ -40,8 +25,6 @@ _ready:   bool = False      # True once soundfont is loaded and audio is live
 _lock     = threading.Lock()
 _pending_gain: float = 100.0  # applied on load if set_volume was called early
 
-
-# ── Internal ──────────────────────────────────────────────────────────────────
 
 _PLATFORM_DRIVERS: "dict[str, list[str]]" = {
     "win32":  ["dsound"],
@@ -78,10 +61,8 @@ def _load():
               file=sys.stderr)
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
 
 def init():
-    """Start loading soundfont in a background thread (non-blocking)."""
     threading.Thread(target=_load, daemon=True).start()
 
 
@@ -94,7 +75,6 @@ def play(midi_note: int, velocity: int = 80):
 
 
 def play_raw(midi_note: int, velocity: int = 80):
-    """Play regardless of the enabled toggle — for boot/intro sounds."""
     if not _ready:
         return
     with _lock:
@@ -111,7 +91,6 @@ def stop(midi_note: int):
 
 
 def set_volume(normalized: float):
-    """Set output gain. normalized is 0.0–1.0, mapped to FluidSynth gain 0.0–100.0."""
     global _pending_gain
     gain = max(0.0, min(100.0, float(normalized) * 100.0))
     _pending_gain = gain

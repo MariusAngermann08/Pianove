@@ -4,16 +4,6 @@ from pylay.core.element import UIElement
 from typing import Dict, Callable, Optional, Union
 
 class PageRouter(FloatLayout):
-    """
-    A high-performance page router.
-    Lazily loads pages using builder functions and fully unloads them
-    once transition exit animations complete to maintain zero memory footprint
-    and 60 FPS performance. Transitions are driven by physics-based springs.
-
-    Two transition styles:
-    - navigate(page, direction)  — parallax slide + fade (directional navigation)
-    - refresh()                  — morphic cross-dissolve + scale-in (content overhaul)
-    """
     def __init__(self,
                  pages: Optional[Dict[str, Callable[[], UIElement]]] = None,
                  pages_registry: Optional[Dict[str, Callable[[], UIElement]]] = None,
@@ -49,18 +39,7 @@ class PageRouter(FloatLayout):
 
         self.navigate(initial_page, animated=False)
 
-    # ------------------------------------------------------------------
-    # Reload — instant or deferred
-    # ------------------------------------------------------------------
     def reload_current_page(self, delay: float = 0.0):
-        """Rebuild the active page.
-
-        delay=0  (default) — instant; use for programmatic resets and window resizes.
-        delay>0  — defers the rebuild by `delay` seconds so in-progress widget
-                   springs (switch thumb, selector pill, etc.) can finish their
-                   animation before the page tree is torn down and rebuilt.
-                   Multiple calls within the window take the largest delay.
-        """
         if delay > 0.0:
             self._deferred_reload = max(self._deferred_reload, delay)
             return
@@ -88,17 +67,7 @@ class PageRouter(FloatLayout):
         self._exit_alpha   = 1.0
         self.get_root().layout()
 
-    # ------------------------------------------------------------------
-    # Morphic refresh — content overhaul (language / theme switch)
-    # ------------------------------------------------------------------
     def refresh(self):
-        """
-        Rebuild the current page with a morphic cross-dissolve + scale-in.
-        Old content fades out in place; new content materialises from 95% → 100%
-        scale while fading in. Spring physics give a gentle snap-to-place feel.
-        Use this for content-wide changes (theme, language) that should not
-        imply directional navigation.
-        """
         if not self.active_page_name:
             self.reload_current_page()
             return
@@ -132,15 +101,7 @@ class PageRouter(FloatLayout):
         self._refresh_mode = True
         self.get_root().layout()
 
-    # ------------------------------------------------------------------
-    # Directional navigate — slide + parallax
-    # ------------------------------------------------------------------
     def navigate(self, page_name: str, direction: str = "auto", animated: bool = True):
-        """
-        Transition to a new page.
-        direction: 'right' (forward), 'left' (backward), or 'auto' (inferred from registry order).
-        animated=False: instant swap, no springs (used for initial load and programmatic resets).
-        """
         if page_name not in self.pages_registry:
             print(f"[PageRouter] Warning: Page '{page_name}' not found in registry.")
             return
@@ -202,9 +163,6 @@ class PageRouter(FloatLayout):
         self._enter_scale  = 1.0
         self._exit_alpha   = 1.0
 
-    # ------------------------------------------------------------------
-    # Update
-    # ------------------------------------------------------------------
     def update(self, dt: float):
         if self._deferred_reload > 0.0:
             self._deferred_reload -= dt
@@ -229,9 +187,6 @@ class PageRouter(FloatLayout):
                     self.remove_child(self.exiting_page)
                     self.exiting_page = None
 
-    # ------------------------------------------------------------------
-    # Draw helpers
-    # ------------------------------------------------------------------
     def _draw_page_with_alpha(self, surface: pygame.Surface, page: UIElement, alpha_factor: float):
         alpha = max(0, min(255, int(255 * alpha_factor)))
         if alpha <= 1:
@@ -250,7 +205,6 @@ class PageRouter(FloatLayout):
 
     def _draw_page_morphic(self, surface: pygame.Surface, page: UIElement,
                            alpha_factor: float, scale: float):
-        """Draw page with alpha fade + centred scale transform (morphic enter)."""
         alpha = max(0, min(255, int(255 * alpha_factor)))
         if alpha <= 1:
             return
@@ -286,9 +240,6 @@ class PageRouter(FloatLayout):
         cx, cy = self.rect.centerx, self.rect.centery
         surface.blit(scaled_surf, (cx - new_w // 2, cy - new_h // 2))
 
-    # ------------------------------------------------------------------
-    # Draw
-    # ------------------------------------------------------------------
     def draw(self, surface: pygame.Surface):
         old_clip = surface.get_clip()
         new_clip = self.rect.clip(old_clip) if old_clip.width > 0 else self.rect

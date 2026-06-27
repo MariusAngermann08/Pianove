@@ -8,10 +8,6 @@ from pylay.core.render_utils import make_aa_rect
 from typing import Callable, Optional, Union, List, Any, Optional, Tuple
 
 class SegmentedControl(UIElement):
-    """
-    An iOS-style Segmented Control (Tab Bar).
-    Smoothly slides a selector highlight pill under the selected item using spring physics.
-    """
     def __init__(self,
                  segments: List[str],
                  selected_index: Union[int, State] = 0,

@@ -7,16 +7,6 @@ _HOLD_SECS = 2.8   # how long to hold at full visibility before fading out
 
 
 class BootPage(FloatLayout):
-    """
-    Full-screen splash. Phases:
-      "in"   — overlay springs 255→0  (logo + tagline fade in)
-      "hold" — fully visible for _HOLD_SECS
-      "out"  — overlay springs 0→255  (fade to black then navigate)
-      "done" — navigated
-    Vignette drawn under children (render override).
-    Tagline drawn between children and overlay (draw override).
-    """
-
     def __init__(self, next_page: str, **kwargs):
         super().__init__(**kwargs)
         self._next          = next_page
@@ -28,8 +18,6 @@ class BootPage(FloatLayout):
         self._vignette: pygame.Surface | None = None
         self._font      = None
         self._font_pt   = 0
-
-    # ── animation ─────────────────────────────────────────────────────────────
 
     def update(self, dt: float):
         if self._phase == "in":
@@ -55,8 +43,6 @@ class BootPage(FloatLayout):
 
         super().update(dt)
 
-    # ── vignette (rendered under children) ────────────────────────────────────
-
     def render(self, surface: pygame.Surface):
         super().render(surface)
         w, h = self.rect.width, self.rect.height
@@ -65,8 +51,6 @@ class BootPage(FloatLayout):
         if self._vignette is None or self._vignette.get_size() != (w, h):
             self._vignette = _make_vignette(w, h)
         surface.blit(self._vignette, self.rect.topleft)
-
-    # ── tagline + fade overlay (drawn over children) ───────────────────────────
 
     def draw(self, surface: pygame.Surface):
         super().draw(surface)   # background + vignette + logo children
@@ -92,8 +76,6 @@ class BootPage(FloatLayout):
             self._ov.fill((bg.r, bg.g, bg.b, alpha))
             surface.blit(self._ov, self.rect.topleft)
 
-    # ── font ──────────────────────────────────────────────────────────────────
-
     def _get_font(self, h: int):
         pt = max(10, h // 38)
         if self._font is None or self._font_pt != pt:
@@ -103,10 +85,7 @@ class BootPage(FloatLayout):
         return self._font
 
 
-# ── vignette helper ───────────────────────────────────────────────────────────
-
 def _make_vignette(w: int, h: int) -> pygame.Surface:
-    """Radial-ish vignette: dark edges, transparent center."""
     surf = pygame.Surface((w, h), pygame.SRCALPHA)
     steps = 50
     for i in range(steps):
@@ -118,8 +97,6 @@ def _make_vignette(w: int, h: int) -> pygame.Surface:
                          (inset_x, inset_y, w - 2 * inset_x, h - 2 * inset_y))
     return surf
 
-
-# ── builder ───────────────────────────────────────────────────────────────────
 
 def build(next_page: str = "home"):
     import pianove.context as ctx

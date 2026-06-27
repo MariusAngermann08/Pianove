@@ -3,12 +3,6 @@ from pylay.layouts.float_layout import FloatLayout
 from typing import Optional
 
 class VStack(FloatLayout):
-    """
-    Vertical stack container.
-    Places visible children sequentially top-to-bottom with spacing.
-    Does NOT call child.layout() recursively from here — that is handled
-    by the normal parent.layout() → child.layout() cascade in UIElement.
-    """
     def __init__(self, spacing: int = 10, padding: int = 15, **kwargs):
         super().__init__(**kwargs)
         self.spacing = spacing

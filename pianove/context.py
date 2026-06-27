@@ -1,4 +1,3 @@
-"""Mutable references to the App and PageRouter, set by main.py after creation."""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 

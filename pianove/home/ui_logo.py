@@ -1,27 +1,9 @@
-"""
-Pianove animated logo widget for the SideNav header.
-
-Piano strip: 4 white keys (C D E F) + 2 black keys (C# D#).
-
-Animations:
-  - Reveal: each key grows from height 0 → full height on first render,
-    staggered left-to-right via different spring responses.
-  - Idle loop: a highlight cycles through the white keys in a melodic
-    sequence. Each key has a spring-animated _hl value (0.0–1.0) that
-    blends its colour smoothly between white and accent.
-  - Wordmark "P" in accent colour, "ianove" in label colour, slides in
-    after the slowest key is mostly revealed (staggered entrance).
-  - Optional note playback: when play_notes=True the corresponding MIDI
-    pitch fires via the FluidSynth engine each time the highlight moves.
-"""
-
 import pygame
 from pylay.core.element import UIElement
 from pylay.core.theme import iOSTheme
 from pylay.core.scale import scaled_px, scaled_font_size
 from pylay.core import font_loader
 
-# ── Key layout ────────────────────────────────────────────────────────────────
 _N_WHITE     = 4
 _BLACK_SLOTS = [0, 1]       # C# between C-D, D# between D-E
 _N_BLACK     = len(_BLACK_SLOTS)
@@ -65,8 +47,6 @@ class PianoveLogoWidget(UIElement):
         self._idle_timer = 0.0
         self._init_springs()
 
-    # ── init ──────────────────────────────────────────────────────────────────
-
     def _init_springs(self):
         for i in range(_N_WHITE):
             setattr(self, f"_wh{i}", 0.0)
@@ -84,8 +64,6 @@ class PianoveLogoWidget(UIElement):
         self._font    = None
         self._font_px = 0
 
-    # ── font ──────────────────────────────────────────────────────────────────
-
     def _get_font(self):
         pt = max(8, int(17 * self._key_scale))
         px = scaled_font_size(pt)
@@ -93,8 +71,6 @@ class PianoveLogoWidget(UIElement):
             self._font   = font_loader.load_font(pt, bold=True)
             self._font_px = px
         return self._font
-
-    # ── geometry ──────────────────────────────────────────────────────────────
 
     def _dims(self):
         s = self._key_scale
@@ -106,8 +82,6 @@ class PianoveLogoWidget(UIElement):
         ox = self.rect.left + scaled_px(int(14 * self._key_scale))
         oy = self.rect.top  + (self.rect.height - wh) // 2
         return ox, oy
-
-    # ── animation ─────────────────────────────────────────────────────────────
 
     def update(self, dt: float):
         ww, wh, bw, bh = self._dims()
@@ -151,12 +125,8 @@ class PianoveLogoWidget(UIElement):
 
         super().update(dt)
 
-    # ── events ────────────────────────────────────────────────────────────────
-
     def on_event(self, event: pygame.event.Event) -> bool:
         return False
-
-    # ── render ────────────────────────────────────────────────────────────────
 
     def render(self, surface: pygame.Surface):
         if self.rect.width < 60:
@@ -172,7 +142,6 @@ class PianoveLogoWidget(UIElement):
         black_col  = pygame.Color(22, 22, 24)
         accent_col = iOSTheme.accent
 
-        # ── white key fills ───────────────────────────────────────────────────
         for i in range(_N_WHITE):
             kh = int(getattr(self, f"_wh{i}"))
             hl = getattr(self, f"_hl{i}")
@@ -196,7 +165,6 @@ class PianoveLogoWidget(UIElement):
                 shine.fill((255, 255, 255, shine_a))
                 surface.blit(shine, (rx + 1, oy + 1))
 
-        # ── dividers + outer border (no bottom line) ──────────────────────────
         tallest = int(getattr(self, f"_wh{_N_WHITE - 1}"))
         if tallest > 0 and not iOSTheme.dark:
             for i in range(1, _N_WHITE):
@@ -207,7 +175,6 @@ class PianoveLogoWidget(UIElement):
             pygame.draw.line(surface, divider, (ox, oy), (ox, oy + tallest), 1)
             pygame.draw.line(surface, divider, (ox + strip_w, oy), (ox + strip_w, oy + tallest), 1)
 
-        # ── black keys ────────────────────────────────────────────────────────
         for j, slot in enumerate(_BLACK_SLOTS):
             bh_cur = int(getattr(self, f"_bh{j}"))
             if bh_cur <= 0:
@@ -221,7 +188,6 @@ class PianoveLogoWidget(UIElement):
                              (bx + bw - 1, oy + 2),
                              (bx + bw - 1, oy + bh_cur - 4), 1)
 
-        # ── wordmark: "P" accent + "ianove" label ────────────────────────────
         font   = self._get_font()
         keys_r = ox + strip_w
         gap    = scaled_px(10)

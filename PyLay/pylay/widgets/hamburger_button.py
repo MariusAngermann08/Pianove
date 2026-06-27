@@ -6,11 +6,6 @@ from pylay.core.state import State
 from typing import Optional, Union, Callable, Any
 
 class HamburgerButton(UIElement):
-    """
-    A premium 3-line hamburger menu button that morphs into a close "X" icon.
-    Driven by second-order spring physics and rendered using direct vectors
-    to guarantee zero frame allocations and ultra-smooth 60 FPS morphing.
-    """
     def __init__(self,
                  open_state: Union[bool, State] = False,
                  on_toggle: Optional[Callable[[bool], None]] = None,

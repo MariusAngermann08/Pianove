@@ -4,14 +4,6 @@ from pylay.core.state import State
 from typing import Union, List, Tuple, Optional
 
 class CodeViewer(Layout):
-    """
-    A premium CodeViewer widget for OpenUI.
-    Includes:
-    - Real-time Lexical Syntax Highlighting for Python (Keywords, Strings, Comments, Numbers).
-    - Left-hand side gutter for line numbering.
-    - Inertia momentum scrolling and a sleek draggable scrollbar.
-    - Rounded glass container box.
-    """
     def __init__(self,
                  code_text: Union[str, State],
                  anchor: str = "top_left",
@@ -66,10 +58,6 @@ class CodeViewer(Layout):
         return self._font, self._font_gutter
 
     def _tokenize_line(self, line: str) -> List[Tuple[str, pygame.Color]]:
-        """
-        Custom high-fidelity lexical parser for Python source code highlighting.
-        Returns a list of (text_segment, color) tuples.
-        """
         tokens = []
         i = 0
         n = len(line)
@@ -143,7 +131,6 @@ class CodeViewer(Layout):
         return tokens
 
     def _refresh_scroll_bounds(self):
-        """Setup Layout boundaries for vertical scroll tracking."""
         total_h = len(self.lines) * self.line_height
         self.scroll_max = max(0.0, float(total_h - (self.rect.height - 24)))
         self.scroll_active = (self.scroll_max > 0.0)
