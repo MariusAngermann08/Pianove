@@ -80,6 +80,36 @@ const spyObserver = new IntersectionObserver(entries => {
 }, { rootMargin: '-40% 0px -55% 0px' });
 sections.forEach(s => spyObserver.observe(s));
 
+/* ─── Screenshot wheel carousel (supports multiple instances) ────────────── */
+function initWheel(wheel, intervalMs) {
+  if (!wheel) return;
+  const slides = Array.from(wheel.querySelectorAll('.ss-slide'));
+  const dots   = Array.from(wheel.querySelectorAll('.ss-dot'));
+  let current  = 0;
+  let timer;
+
+  function goTo(idx) {
+    slides[current].classList.remove('ss-slide--active');
+    dots[current].classList.remove('ss-dot--active');
+    current = (idx + slides.length) % slides.length;
+    slides[current].classList.add('ss-slide--active');
+    dots[current].classList.add('ss-dot--active');
+  }
+
+  function startAuto() {
+    clearInterval(timer);
+    timer = setInterval(() => goTo(current + 1), intervalMs || 3800);
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => { goTo(i); startAuto(); });
+  });
+
+  startAuto();
+}
+
+document.querySelectorAll('.ss-wheel').forEach(w => initWheel(w, 3800));
+
 /* ─── Scroll-reveal ──────────────────────────────────────────────────────── */
 const revealObserver = new IntersectionObserver(entries => {
   entries.forEach(e => {
