@@ -4,11 +4,19 @@ Music notation renderer built on [pygame](https://www.pygame.org/). Renders shee
 
 ## Installation
 
+PyLute is not yet published to PyPI. Clone the [Pianove repository](https://github.com/MariusAngermann08/Pianove) and import directly from the `PyLute/` directory, or add it to your project path:
+
 ```bash
-pip install pylute
+git clone https://github.com/MariusAngermann08/Pianove.git
 ```
 
-Requires **Python ≥ 3.10** and **pygame-ce ≥ 2.4**.
+```python
+import sys
+sys.path.insert(0, "path/to/Pianove/PyLute")
+import pylute
+```
+
+Requires **Python ≥ 3.10** and **pygame-ce ≥ 2.4** (`pip install pygame-ce`).
 
 ## Quick start
 

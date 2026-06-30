@@ -8,11 +8,19 @@ Used inside [Pianove](../README.md) and independently usable in any pygame appli
 
 ## Installation
 
+PyLay is not yet published to PyPI. Clone the [Pianove repository](https://github.com/MariusAngermann08/Pianove) and import directly from the `PyLay/` directory, or add it to your project path:
+
 ```bash
-pip install pylay
+git clone https://github.com/MariusAngermann08/Pianove.git
 ```
 
-Requires **Python ≥ 3.10** and **pygame** (`Pillow` is optional, used for image loading).
+```python
+import sys
+sys.path.insert(0, "path/to/Pianove/PyLay")
+from pylay import *
+```
+
+Requires **Python ≥ 3.10** and **pygame** (`pip install pygame`). `Pillow` is optional, used for image loading.
 
 ## Quick start
 

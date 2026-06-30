@@ -106,6 +106,13 @@ MyApp().run()
 
 See [`PyLay/README.md`](PyLay/README.md) for the full API.
 
+## What's next
+
+- Publish **PyLute** and **PyLay** to PyPI so they can be installed with `pip install`
+- Multiple voices on a single staff in PyLute
+- Slur arcs and repeat barlines in PyLute
+- Test suite (pytest) for both libraries
+
 ## License
 
 GNU General Public License v3.0 — see [LICENSE](LICENSE).
