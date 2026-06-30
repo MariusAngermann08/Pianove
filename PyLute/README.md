@@ -72,4 +72,4 @@ score = pylute.load_musicxml("bach_prelude.xml", surface=screen)
 
 ## License
 
-MIT
+GNU General Public License v3.0 — see [`LICENSE`](../LICENSE).
