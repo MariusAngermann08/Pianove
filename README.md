@@ -67,11 +67,11 @@ Pianove/
 
 ## Documentation
 
-The full documentation site lives in `docs/` and is also hosted online:
+The full documentation site is hosted at **[mariusangermann08.github.io/Pianove](https://mariusangermann08.github.io/Pianove/)**:
 
-- [Pianove docs](docs/docs/quickstart.html) — quick start, MIDI setup, lessons, MusicXML import
-- [PyLute API reference](docs/pylute.html) — notation renderer API
-- [PyLay API reference](docs/pylay.html) — UI framework API
+- [Pianove docs](https://mariusangermann08.github.io/Pianove/docs/quickstart.html) — quick start, MIDI setup, lessons, MusicXML import
+- [PyLute API reference](https://mariusangermann08.github.io/Pianove/pylute.html) — notation renderer API
+- [PyLay API reference](https://mariusangermann08.github.io/Pianove/pylay.html) — UI framework API
 
 ## Libraries
 

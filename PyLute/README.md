@@ -78,6 +78,10 @@ score = pylute.load_musicxml("bach_prelude.xml", surface=screen)
 - Grace notes
 - Lyrics
 
+## API reference
+
+Full documentation: [mariusangermann08.github.io/Pianove/pylute.html](https://mariusangermann08.github.io/Pianove/pylute.html)
+
 ## License
 
 GNU General Public License v3.0 — see [`LICENSE`](../LICENSE).

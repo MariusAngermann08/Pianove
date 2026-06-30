@@ -122,7 +122,7 @@ vol = Storage.get("volume", default=1.0)
 
 ## API reference
 
-Full documentation: [`docs/pylay.html`](../docs/pylay.html)
+Full documentation: [mariusangermann08.github.io/Pianove/pylay.html](https://mariusangermann08.github.io/Pianove/pylay.html)
 
 ## License
 
