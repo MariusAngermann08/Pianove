@@ -25,5 +25,15 @@ def get_font():
     return _font
 
 
+_scaled_fonts = {}
+
+
 def make_font(size):
-    return pg.freetype.Font(FONT_PATH, size)
+    # Brace._build() calls this once per system on every redraw (each system
+    # resets its cached font), which without caching re-reads Bravura.otf from
+    # disk every time — a real cost on long, multi-system pieces.
+    font = _scaled_fonts.get(size)
+    if font is None:
+        font = pg.freetype.Font(FONT_PATH, size)
+        _scaled_fonts[size] = font
+    return font

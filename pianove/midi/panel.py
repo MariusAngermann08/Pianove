@@ -157,6 +157,8 @@ class MidiPanel:
             except Exception:
                 pass
             self.midi_in = None
+        from pianove.sound_engine_fs import set_sustain_pedal as _sustain
+        _sustain(0)
         self.active_notes.clear()
         self._cal_low = None
         self._state   = _S_IDLE
@@ -208,6 +210,9 @@ class MidiPanel:
                     self.active_notes.discard(msg.note)
                     from pianove.sound_engine_fs import stop as _stop
                     _stop(msg.note)
+                elif msg.type == "control_change" and msg.control == 64:  # sustain/damper pedal
+                    from pianove.sound_engine_fs import set_sustain_pedal as _sustain
+                    _sustain(msg.value)
         except Exception as e:
             print(f"MIDI read error: {e}")
             self.close()

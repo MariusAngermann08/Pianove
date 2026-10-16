@@ -20,6 +20,14 @@ _TYPE_BEATS = {
     "dotted-eighth": 0.75,
 }
 
+# MusicXML <type> text → pylute note-type vocabulary (see PyLute's durations.py).
+# Only these five base types are kept when importing (matches the note filter
+# below); anything else (32nd notes, etc.) is dropped rather than mismapped.
+_MXL_TYPE_TO_PYLUTE = {
+    "whole": "whole", "half": "half", "quarter": "quarter",
+    "eighth": "eighth", "16th": "sixteenth",
+}
+
 
 
 def _ensure_dirs():
@@ -118,7 +126,8 @@ def _parse_musicxml(filepath: str) -> dict:
     # Metadata
     work_el  = _find(root, "work")
     id_el    = _find(root, "identification")
-    title    = (_text(work_el, "work-title") or _text(root, "movement-title") or "Untitled")
+    _fallback_title = os.path.splitext(os.path.basename(filepath))[0]
+    title    = (_text(work_el, "work-title") or _text(root, "movement-title") or _fallback_title)
     composer = ""
     if id_el is not None:
         for c in _findall(id_el, "creator"):
@@ -161,28 +170,34 @@ def _parse_musicxml(filepath: str) -> dict:
     # Determine primary voice per staff (first voice encountered)
     primary_voice: dict[int, str] = {}
 
-    bars_rh: list[list[str]] = []
-    bars_lh: list[list[str]] = []
+    # Each bar entry is a "group" — a list of one or more [pitch, ntype] pairs
+    # that sound together. A plain note is a group of one; a MusicXML <chord/>
+    # note is appended to the previous group instead of being dropped, so
+    # stacked notes survive into lesson/practice mode instead of being
+    # silently reduced to their top note. ntype is the real duration read
+    # from <type>/<dot> (mapped to pylute's vocabulary).
+    bars_rh: list[list[list[list[str]]]] = []
+    bars_lh: list[list[list[list[str]]]] = []
 
     for measure in measures:
-        bar_rh: list[str] = []
-        bar_lh: list[str] = []
+        bar_rh: list[list[list[str]]] = []
+        bar_lh: list[list[list[str]]] = []
 
         for note_el in _findall(measure, "note"):
             if _find(note_el, "grace") is not None:
                 continue
-            if _find(note_el, "chord") is not None:
-                continue
+            is_chord_member = _find(note_el, "chord") is not None
             if _find(note_el, "time-modification") is not None:
                 continue
             if _find(note_el, "rest") is not None:
                 continue
 
             ntype_el = _find(note_el, "type")
-            if ntype_el is None or ntype_el.text not in (
-                "whole", "half", "quarter", "eighth", "16th"
-            ):
+            if ntype_el is None or ntype_el.text not in _MXL_TYPE_TO_PYLUTE:
                 continue
+            ntype = _MXL_TYPE_TO_PYLUTE[ntype_el.text]
+            if _findall(note_el, "dot"):
+                ntype = f"dotted_{ntype}"
 
             staff_idx = 0
             try:
@@ -208,10 +223,11 @@ def _parse_musicxml(filepath: str) -> dict:
             acc   = "#" if alter >= 0.5 else ("b" if alter <= -0.5 else "")
             pitch = f"{step}{acc}{octave}"
 
-            if staff_idx == 0:
-                bar_rh.append(pitch)
+            target_bar = bar_rh if staff_idx == 0 else bar_lh
+            if is_chord_member and target_bar:
+                target_bar[-1].append([pitch, ntype])
             else:
-                bar_lh.append(pitch)
+                target_bar.append([[pitch, ntype]])
 
         bars_rh.append(bar_rh)
         bars_lh.append(bar_lh)
@@ -228,7 +244,7 @@ def _parse_musicxml(filepath: str) -> dict:
 
 
 def _compute_difficulty(bars_rh: list[list[str]], bars_lh: list[list[str]]) -> str:
-    all_notes = [p for bar in bars_rh + bars_lh for p in bar]
+    all_notes = [pair[0] for bar in bars_rh + bars_lh for group in bar for pair in group]
     if not all_notes:
         return "beginner"
     avg_per_bar = len(all_notes) / max(1, len(bars_rh))

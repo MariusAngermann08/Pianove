@@ -59,14 +59,14 @@
 
     <section class="doc-section" id="overview">
       <h2>Overview</h2>
-      <p>Pianove uses <strong>FluidSynth</strong> as its audio backend via the <a href="https://pypi.org/project/pyfluidsynth/" target="_blank" rel="noopener">pyFluidSynth</a> Python binding. FluidSynth is a real-time software synthesiser that plays back General MIDI using a SoundFont 2 file (<code>.sf2</code>). The application bundles <strong>GeneralUser GS</strong> so no soundfont needs to be downloaded or configured manually.</p>
+      <p>Pianove uses <strong>FluidSynth</strong> as its audio backend via the <a href="https://pypi.org/project/pyfluidsynth/" target="_blank" rel="noopener">pyFluidSynth</a> Python binding. FluidSynth is a real-time software synthesiser that plays back MIDI using a SoundFont 2 file (<code>.sf2</code>). The application bundles a <strong>Salamander Grand Piano</strong> soundfont so no soundfont needs to be downloaded or configured manually.</p>
       <div class="doc-note"><strong>FluidSynth must be installed as a system library.</strong> pyFluidSynth is a Python binding — it wraps the native <code>libfluidsynth</code> library, which must be installed separately. See <a href="requirements.html">System Requirements</a> for platform-specific instructions.</div>
     </section>
 
     <section class="doc-section" id="soundfont">
       <h2>Bundled SoundFont</h2>
-      <p>The included soundfont is <strong>GeneralUser GS</strong> by S. Christian Collins — a high-quality, compact General MIDI soundfont. It covers all 128 GM instruments and covers the piano patches Pianove uses for playback. The file ships inside <code>bin/</code> alongside the application and is loaded automatically on startup.</p>
-      <p>Piano playback uses MIDI program 0 (Acoustic Grand Piano). The audio channel, sample rate (44100 Hz), and gain are configured internally and require no user adjustment.</p>
+      <p>The included soundfont is the <strong>Salamander Grand Piano</strong> (C5 Light) by Alexander Holm, sampled from a real Yamaha C5 grand piano and distributed under the <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">Creative Commons Attribution 3.0</a> license. It covers the full 88-key piano range with multiple velocity layers. The file ships inside <code>pianove/assets/soundfonts/</code> alongside the application and is loaded automatically on startup.</p>
+      <p>Piano playback uses MIDI program 0 (Acoustic Grand Piano) and responds to the sustain (damper) pedal via MIDI CC 64. The audio channel, sample rate (44100 Hz), and gain are configured internally and require no user adjustment.</p>
     </section>
 
     <section class="doc-section" id="volume">

@@ -51,7 +51,12 @@ class ScoreCanvas:
         if self.score.brace:
             self.score.brace.surface = sub
         sub.fill((255, 255, 255))
-        self.score.draw()
+        try:
+            self.score.draw()
+        except Exception as exc:
+            self.score = None
+            self.error = f"Render error: {exc}"
+            self._draw_placeholder(surface, safe)
 
     def _draw_placeholder(self, surface: pygame.Surface, rect: pygame.Rect):
         pygame.font.init()
@@ -124,7 +129,11 @@ class ScorePager:
     Each page snaps to system boundaries so no staff ever gets cut in half.
     """
 
-    MAX_PAGES = 50
+    # Pages are lazily built (see build_view), so a generous cap costs nothing
+    # until pages are actually rendered. A long piece at the minimum
+    # bars-per-system (narrow window) can produce well over 50 systems/pages,
+    # which used to be silently truncated once _n_pages exceeded this cap.
+    MAX_PAGES = 300
 
     def __init__(self, score_canvas: "ScoreCanvas | None" = None):
         self.score_canvas   = score_canvas if score_canvas is not None else ScoreCanvas()
@@ -245,7 +254,13 @@ class ScorePager:
                 score.brace.surface = self._offscreen
 
             self._offscreen.fill((255, 255, 255))
-            score.draw()
+            try:
+                score.draw()
+            except Exception as exc:
+                self.score_canvas.score = None
+                self.score_canvas.error = f"Render error: {exc}"
+                self.score_canvas.dirty = False
+                return None
             self.score_canvas.dirty = False
 
             new_bounds = self._compute_page_bounds(canvas_w, total_h)

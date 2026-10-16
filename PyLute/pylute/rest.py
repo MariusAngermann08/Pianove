@@ -31,6 +31,20 @@ class Rest:
     def _line_y(self, step):
         return self.staff.position[1] + 4 * self.staff.space - step * (self.staff.space / 2)
 
+    # Stubs so code that treats tuplet/beam members uniformly (e.g. Tuplet's
+    # bracket drawing) doesn't crash when a Rest sits alongside Notes/Chords.
+    def _stem_dir(self, voice=1):
+        return "up"
+
+    def _y_center(self):
+        return self._line_y(4)
+
+    def _stem_x(self):
+        return int(self.offset)
+
+    def _stem_tip_y(self):
+        return self._y_center()
+
     def _draw_dot(self, font, rest_y):
         import pygame as pg
         dr    = font.get_rect(AUG_DOT)

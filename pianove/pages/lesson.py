@@ -5,6 +5,8 @@ from pylay.core.physics import Spring
 from pylute.score import Score
 from pylute.note import Note as _PluteNote
 from pylute.rest import Rest as _PluteRest
+from pylute.chord import Chord as _PluteChord
+from pylute.durations import get_value as _duration_value, VALUES as _DURATION_TYPES
 import pianove.context as ctx
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
@@ -20,6 +22,14 @@ _KB_H       = 130       # keyboard canvas height when visible
 _BPM        = 80        # default performance tempo
 _SECTION_SZ = 4         # bars per practice section
 _PREP_BARS  = 2         # silent count-in bars before performance
+
+# Fraction of a bar (whole-note units) within which two hands' notes are
+# considered simultaneous. Procedurally generated lesson/practice bars carry
+# no real rhythm (a uniform note type is guessed per bar), so their onsets are
+# only ever an estimate — this tolerance keeps notes that are merely "close"
+# from being forced into one press-together step when the hands actually have
+# differing subdivisions (e.g. bass halves vs. treble eighths).
+_RHYTHM_MARGIN = 0.12
 
 _SEMITONES = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 
@@ -171,51 +181,118 @@ class _StaffView(PygameCanvas):
                 return "eighth"
             return "sixteenth"
 
+        def _bar_to_groups(bar_items, guessed_ntype: str) -> list[list[tuple[str, str]]]:
+            # A bar item can be, depending on where it came from:
+            #  - a bare pitch string ("E5")                     — procedurally
+            #    generated lesson/practice content, no real rhythm/chords.
+            #  - a flat [pitch, ntype] pair (["E5", "eighth"])   — a song
+            #    imported by an earlier version of song_store, before chord
+            #    grouping existed; may still be sitting in a saved song's
+            #    index.json.
+            #  - a group of one-or-more [pitch, ntype] pairs
+            #    ([["E5","eighth"],["G5","eighth"]]) — current song_store
+            #    format; more than one pair means a stacked/chord note.
+            # These are told apart structurally so old saved songs keep
+            # working after song_store's format changes.
+            groups: list[list[tuple[str, str]]] = []
+            for item in bar_items:
+                if (isinstance(item, (list, tuple)) and len(item) == 2
+                        and isinstance(item[0], str) and item[1] in _DURATION_TYPES):
+                    groups.append([(item[0], item[1])])
+                elif isinstance(item, (list, tuple)) and item and isinstance(item[0], (list, tuple)):
+                    groups.append([(p, nt) for p, nt in item])
+                else:
+                    groups.append([(item, guessed_ntype)])
+            return groups
+
+        def _make_event(group: list[tuple[str, str]], staff):
+            if len(group) == 1:
+                pitch, ntype = group[0]
+                return _PluteNote(ntype=ntype, pitch=pitch, staff=staff)
+            notes = [_PluteNote(ntype=nt, pitch=p, staff=staff) for p, nt in group]
+            return _PluteChord(notes, staff=staff)
+
         for prep_i in range(n_prep):
             st0.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st0))
             if st1:
                 st1.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st1))
 
-        for rel_i, bar_pitches in enumerate(bars):
+        for rel_i, bar_items in enumerate(bars):
             bar_obj = st0.bars[n_prep + rel_i]
-            if not bar_pitches:
+            if not bar_items:
                 bar_obj.events.append(_PluteRest(rtype="whole", staff=st0))
             else:
-                ntype = _ntype_for(len(bar_pitches))
-                for pitch in bar_pitches:
-                    bar_obj.events.append(_PluteNote(ntype=ntype, pitch=pitch, staff=st0))
+                guessed = _ntype_for(len(bar_items))
+                for group in _bar_to_groups(bar_items, guessed):
+                    bar_obj.events.append(_make_event(group, st0))
 
         if st1 is not None and bass_bars is not None:
-            for rel_i, bar_pitches in enumerate(bass_bars):
+            for rel_i, bar_items in enumerate(bass_bars):
                 bar_obj = st1.bars[n_prep + rel_i]
-                if not bar_pitches:
+                if not bar_items:
                     bar_obj.events.append(_PluteRest(rtype="whole", staff=st1))
                 else:
-                    ntype = _ntype_for(len(bar_pitches))
-                    for pitch in bar_pitches:
-                        bar_obj.events.append(_PluteNote(ntype=ntype, pitch=pitch, staff=st1))
+                    guessed = _ntype_for(len(bar_items))
+                    for group in _bar_to_groups(bar_items, guessed):
+                        bar_obj.events.append(_make_event(group, st1))
 
         # _step_list: each step is a list of simultaneous notes (one per stave at
         # the same beat position). Single-staff mode → one note per step.
-        # Grand-staff mode → treble note i paired with bass note i per bar;
-        # whichever stave runs out first, remaining notes become solo steps.
+        # Grand-staff mode → each hand's notes get a real onset time, computed
+        # as the cumulative duration of the notes preceding it in that hand's
+        # bar (in whole-note fractions, via pylute's duration table — falls
+        # back to the guessed uniform spacing for procedurally generated bars,
+        # since a uniform note type still yields evenly spaced onsets).
+        # A treble note and a bass note are merged into one press-together
+        # step only when their onsets fall within _RHYTHM_MARGIN of each
+        # other — otherwise the hands have differing subdivisions in this bar
+        # and their notes become separate, time-ordered solo steps instead of
+        # being forced together. Two notes from the *same* hand are never
+        # merged into one step regardless of how close their onsets are — a
+        # single hand always plays its own notes one at a time, so a fast
+        # same-hand run must stay as separate sequential steps rather than
+        # appearing as a simultaneous chord.
         self._step_list: list[list[_PluteNote]] = []
         if n_staves > 1:
             for bar_i in range(len(self._score.staffs[0].bars)):
-                rh = [ev for ev in self._score.staffs[0].bars[bar_i].events if isinstance(ev, _PluteNote)]
-                lh = [ev for ev in self._score.staffs[1].bars[bar_i].events if isinstance(ev, _PluteNote)]
-                for beat_i in range(max(len(rh), len(lh))):
-                    step: list[_PluteNote] = []
-                    if beat_i < len(rh):
-                        step.append(rh[beat_i])
-                    if beat_i < len(lh):
-                        step.append(lh[beat_i])
-                    if step:
-                        self._step_list.append(step)
+                rh = [ev for ev in self._score.staffs[0].bars[bar_i].events if isinstance(ev, (_PluteNote, _PluteChord))]
+                lh = [ev for ev in self._score.staffs[1].bars[bar_i].events if isinstance(ev, (_PluteNote, _PluteChord))]
+
+                def _with_onsets(notes):
+                    pos = 0.0
+                    out = []
+                    for note in notes:
+                        out.append((pos, note))
+                        pos += _duration_value(note.type)
+                    return out
+
+                rh_onsets = _with_onsets(rh)
+                lh_onsets = _with_onsets(lh)
+                ri = li = 0
+                while ri < len(rh_onsets) or li < len(lh_onsets):
+                    if ri < len(rh_onsets) and li < len(lh_onsets):
+                        r_onset, r_note = rh_onsets[ri]
+                        l_onset, l_note = lh_onsets[li]
+                        if abs(r_onset - l_onset) <= _RHYTHM_MARGIN:
+                            self._step_list.append([r_note, l_note])
+                            ri += 1
+                            li += 1
+                        elif r_onset < l_onset:
+                            self._step_list.append([r_note])
+                            ri += 1
+                        else:
+                            self._step_list.append([l_note])
+                            li += 1
+                    elif ri < len(rh_onsets):
+                        self._step_list.append([rh_onsets[ri][1]])
+                        ri += 1
+                    else:
+                        self._step_list.append([lh_onsets[li][1]])
+                        li += 1
         else:
             for bar_i in range(len(self._score.staffs[0].bars)):
                 for ev in self._score.staffs[0].bars[bar_i].events:
-                    if isinstance(ev, _PluteNote):
+                    if isinstance(ev, (_PluteNote, _PluteChord)):
                         self._step_list.append([ev])
 
         self.current_idx: int = min(initial_idx, len(self._step_list))
@@ -243,7 +320,13 @@ class _StaffView(PygameCanvas):
     def expected_midis(self) -> frozenset[int]:
         if self._in_prep or self.current_idx >= len(self._step_list):
             return frozenset()
-        return frozenset(_pitch_to_midi(n.pitch) for n in self._step_list[self.current_idx])
+        midis = set()
+        for ev in self._step_list[self.current_idx]:
+            if isinstance(ev, _PluteChord):
+                midis.update(_pitch_to_midi(n.pitch) for n in ev.notes)
+            else:
+                midis.add(_pitch_to_midi(ev.pitch))
+        return frozenset(midis)
 
     def expected_midi(self) -> int | None:
         m = self.expected_midis()
@@ -314,25 +397,11 @@ class _StaffView(PygameCanvas):
         if self._score.brace:
             self._score.brace.surface = self._offscreen
         self._score.draw()
-        n_st = len(self._score.staffs)
-        if n_st > 1:
-            # One x per step: use the treble note x (or bass if treble absent at that beat)
-            self._note_xs = []
-            for bar_i in range(len(self._score.staffs[0].bars)):
-                rh = [ev for ev in self._score.staffs[0].bars[bar_i].events if isinstance(ev, _PluteNote)]
-                lh = [ev for ev in self._score.staffs[1].bars[bar_i].events if isinstance(ev, _PluteNote)]
-                for beat_i in range(max(len(rh), len(lh))):
-                    if beat_i < len(rh):
-                        self._note_xs.append(rh[beat_i].offset)
-                    else:
-                        self._note_xs.append(lh[beat_i].offset)
-        else:
-            self._note_xs = [
-                ev.offset
-                for bar_i in range(len(self._score.staffs[0].bars))
-                for ev in self._score.staffs[0].bars[bar_i].events
-                if isinstance(ev, _PluteNote)
-            ]
+        # One x per step, taken straight from _step_list so the scroll/snap
+        # position always lines up with current_idx exactly — deriving this
+        # independently (re-walking bars/events) can disagree with
+        # _step_list's onset-based grouping and drift out of sync.
+        self._note_xs = [step[0].offset for step in self._step_list]
         if self._note_xs:
             snap_x = self._note_xs[min(self.current_idx, len(self._note_xs) - 1)]
             self._ph.snap_to(snap_x)
@@ -451,7 +520,15 @@ class _LessonPiano:
         self._sv      = staff_view
         self._advance = advance_fn
         self._wrong   = wrong_fn
-        self._prev    = frozenset()
+        # Seed with whatever is already held down rather than an empty set:
+        # the physical MIDI panel is a shared singleton that outlives this
+        # instance, so a key still held from just before a page rebuild
+        # (e.g. finishing the last note of a section, which triggers the
+        # rebuild synchronously) would otherwise look like a brand-new press
+        # on the very next frame and get matched against the new section's
+        # first expected note — usually wrong, bouncing the user back a
+        # section via the wrong-note tracker.
+        self._prev    = frozenset(self._panel.active_notes)
         self._pressed_this_step: set[int] = set()
 
     def update(self, dt: float, rect: pygame.Rect):
@@ -463,7 +540,7 @@ class _LessonPiano:
         self._prev = current
 
     def reset_midi_state(self):
-        self._prev = frozenset()
+        self._prev = frozenset(self._panel.active_notes)
         self._pressed_this_step.clear()
 
     def handle_event(self, event: pygame.event.Event, rect: pygame.Rect) -> bool:
@@ -906,11 +983,17 @@ def build():
                 active_bars   = rh_all
                 _both_lh_bars = lh_all
     if _both_lh_bars is not None:
-        # Count steps: each step is one beat position across both staves
-        n_notes = sum(
-            max(len(rb), len(lb))
-            for rb, lb in zip(active_bars, _both_lh_bars)
+        # Step count must match _StaffView's real onset-merged _step_list —
+        # a naive per-bar max(len(rh), len(lh)) undercounts whenever a bar
+        # has notes that don't align within _RHYTHM_MARGIN (differing
+        # subdivisions between hands), since those become extra separate
+        # steps rather than one merged step. Mismatching this count against
+        # the real step list caused the section-advance/completion gate below
+        # to fire before (or after) the section was actually finished.
+        _count_probe = _StaffView(
+            bars=active_bars, phase=phase, bass_bars=_both_lh_bars, time=song_time,
         )
+        n_notes = len(_count_probe._step_list)
     else:
         n_notes = sum(len(b) for b in active_bars)
 

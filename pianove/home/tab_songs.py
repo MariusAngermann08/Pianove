@@ -1,3 +1,4 @@
+import os
 import threading
 import queue as _queue_mod
 
@@ -57,7 +58,8 @@ def _delete_song(song_id: str):
 
 def _song_card(song: dict) -> FloatLayout:
     song_id  = song["id"]
-    title    = song.get("title", "Untitled")
+    default_title = os.path.splitext(os.path.basename(song.get("filepath", "")))[0] or "Untitled"
+    title    = song.get("title") or default_title
     composer = song.get("composer", "")
     diff     = song.get("difficulty", "beginner")
     n_bars   = song.get("n_bars", 0)

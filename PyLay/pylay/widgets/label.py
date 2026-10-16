@@ -50,6 +50,10 @@ class Label(UIElement):
             # Wrapped label: line count can change, so always re-layout
             self.get_root().layout()
         else:
+            # Keep the rendered lines in sync even when no re-layout is needed,
+            # otherwise render() keeps drawing the stale text until a layout
+            # call happens to be triggered by a later size change.
+            self._wrapped_lines = [new_text]
             new_w, new_h = font.size(new_text)
             if new_w != self.rect.width or new_h != self.rect.height:
                 self.get_root().layout()
