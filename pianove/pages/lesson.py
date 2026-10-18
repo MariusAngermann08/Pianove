@@ -6,11 +6,12 @@ from pylute.score import Score
 from pylute.note import Note as _PluteNote
 from pylute.rest import Rest as _PluteRest
 from pylute.chord import Chord as _PluteChord
-from pylute.durations import get_value as _duration_value, VALUES as _DURATION_TYPES
 import pianove.context as ctx
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
 from pianove.components import ORANGE, GREEN, RED, PURPLE
+from pianove.fingering import key_x as _key_x
+from pianove.hands import HandsOverlay, KeyboardGeometry
 
 _GREEN  = GREEN
 _RED    = RED
@@ -23,13 +24,27 @@ _BPM        = 80        # default performance tempo
 _SECTION_SZ = 4         # bars per practice section
 _PREP_BARS  = 2         # silent count-in bars before performance
 
-# Fraction of a bar (whole-note units) within which two hands' notes are
-# considered simultaneous. Procedurally generated lesson/practice bars carry
-# no real rhythm (a uniform note type is guessed per bar), so their onsets are
-# only ever an estimate — this tolerance keeps notes that are merely "close"
-# from being forced into one press-together step when the hands actually have
-# differing subdivisions (e.g. bass halves vs. treble eighths).
-_RHYTHM_MARGIN = 0.12
+
+def _kb_h_hands() -> int:
+    """Keyboard canvas height with the hands: below the keys, room for the backs of the
+    hands down to a little of their sleeves. The hands scale with the keys."""
+    from pianove.state import midi_panel
+    from pianove.hands import sleeve_depth
+    win_w = ctx.ui.width if ctx.ui else 1024
+    win_h = ctx.ui.height if ctx.ui else 768
+    u = (win_w - 2 * max(8, int(win_w * 0.02))) / max(1, len(midi_panel._white_notes) or 36)
+    status_h = max(16, int(_KB_H * 0.14))
+    key_h = _KB_H - status_h - max(3, int(_KB_H * 0.02)) - 4
+    fingertips = max(3, int(_KB_H * 0.02)) + key_h * 0.81      # the white keys' fingertip line
+    want = fingertips + (sleeve_depth() + 0.45) * u              # down to a little of the sleeve
+    return int(min(_kb_h_hands_max(), max(236, want)))
+
+
+def _kb_h_hands_max() -> int:
+    """The most the keyboard panel ever takes with the hands: a third of the window (but
+    always room for the keys and the fingers)."""
+    return max(236, int((ctx.ui.height if ctx.ui else 768) * 0.33))
+
 
 _SEMITONES = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 
@@ -55,6 +70,99 @@ class _WrongTracker:
 
     def reset(self):
         self._history.clear()
+
+
+_REST_STEPS = [("half", 2.0), ("quarter", 1.0), ("eighth", 0.5), ("sixteenth", 0.25)]
+
+
+def _even_type(n: int, beats: int) -> str:
+    if n <= beats:
+        return "quarter"
+    if n <= beats * 2:
+        return "eighth"
+    return "sixteenth"
+
+
+def _bar_types(tlist, i: int, pitches: list[str], time: tuple, olist=None) -> list[str]:
+    """Real note values (from an imported song) when they fit the bar, otherwise
+    evenly spaced notes. With stored positions, chord notes share their start."""
+    from pylute.durations import get_value
+    if tlist is not None and i < len(tlist) and len(tlist[i]) == len(pitches):
+        try:
+            bar_w = time[0] / time[1] + 1e-6
+            if olist is not None and i < len(olist) and len(olist[i]) == len(pitches):
+                if max(o / 4 + get_value(x) for o, x in zip(olist[i], tlist[i])) <= bar_w:
+                    return list(tlist[i])
+            elif sum(get_value(x) for x in tlist[i]) <= bar_w:
+                return list(tlist[i])
+        except KeyError:
+            pass
+    return [_even_type(len(pitches), time[0])] * len(pitches)
+
+
+def _bar_len_q(bar_lens, i: int, time: tuple) -> float:
+    if bar_lens is not None and i < len(bar_lens) and bar_lens[i]:
+        return float(bar_lens[i])
+    return time[0] * 4 / time[1]
+
+
+def _bar_positions(tlist, olist, i: int, ntypes: list[str], bar_len: float) -> list[float]:
+    """Where each note of bar i starts, in quarter notes: the stored positions when they
+    are consistent with the note values, otherwise one note after another."""
+    from pylute.durations import get_value
+    if (olist is not None and i < len(olist) and len(olist[i]) == len(ntypes)
+            and tlist is not None and i < len(tlist) and list(tlist[i]) == ntypes):
+        pos, cur, prev, ok = list(olist[i]), 0.0, None, True
+        for p, t in zip(pos, ntypes):
+            if prev is not None and abs(p - prev) < 1e-6:
+                continue                           # another note of the same chord
+            if p < cur - 1e-6:                     # overlaps the previous note
+                ok = False
+                break
+            cur, prev = p + get_value(t) * 4, p
+        if ok and cur <= bar_len + 1e-6:
+            return pos
+    out, cur = [], 0.0
+    for t in ntypes:
+        out.append(cur)
+        cur += get_value(t) * 4
+    return out
+
+
+def _step_positions(bars, bass_bars, types, bass_types, onsets, bass_onsets, bar_lens, time) -> list[float]:
+    """Distinct start positions (quarter notes from the first bar) of every note on both
+    staves. Notes that start together form one step."""
+    starts, bar_start = set(), 0.0
+    for i in range(len(bars)):
+        blen = _bar_len_q(bar_lens, i, time)
+        for staff_bars, tl, ol in ((bars, types, onsets), (bass_bars, bass_types, bass_onsets)):
+            if staff_bars is None or i >= len(staff_bars) or not staff_bars[i]:
+                continue
+            nt = _bar_types(tl, i, staff_bars[i], time, ol)
+            for p in _bar_positions(tl, ol, i, nt, blen):
+                starts.add(round(bar_start + p, 4))
+        bar_start += blen
+    return sorted(starts)
+
+
+def _plan_fingering(step_list, step_pos, bpm, hands_of) -> list[dict]:
+    """Finger every note: per step, {"right": {midi: finger}, "left": {midi: finger}}."""
+    from pianove.fingering import Step, finger_hand
+    from pylute.durations import get_value
+    q = 60.0 / max(1, bpm)
+    plan: list[dict] = [{} for _ in step_list]
+    for si, hand in hands_of.items():
+        idx, steps = [], []
+        for i, step in enumerate(step_list):
+            notes = [n for n in step if getattr(n, "_si", 0) == si]
+            if not notes:
+                continue
+            hold = min(get_value(n.type) * 4 for n in notes) * q
+            idx.append(i)
+            steps.append(Step(tuple(_pitch_to_midi(n.pitch) for n in notes), step_pos[i] * q, hold))
+        for i, fingers in zip(idx, finger_hand(steps, hand)):
+            plan[i][hand] = fingers
+    return plan
 
 
 def _bars_from_song_or_lesson(lesson: dict) -> list[list[str]]:
@@ -138,7 +246,12 @@ class _StaffView(PygameCanvas):
                  initial_idx: int = 0, on_advance=None,
                  bpm: int = _BPM, clef: str = "treble",
                  bass_bars: list[list[str]] | None = None,
-                 time: tuple = (4, 4), **kwargs):
+                 time: tuple = (4, 4),
+                 types: list[list[str]] | None = None,
+                 bass_types: list[list[str]] | None = None,
+                 onsets: list[list[float]] | None = None,
+                 bass_onsets: list[list[float]] | None = None,
+                 bar_lens: list[float] | None = None, **kwargs):
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
         self._bpm  = bpm
@@ -172,128 +285,81 @@ class _StaffView(PygameCanvas):
         # Populate all bars directly so notes never overflow between bars.
         st0 = self._score.staffs[0]
         st1 = self._score.staffs[1] if n_staves > 1 else None
-        beats = time[0]
-
-        def _ntype_for(n: int) -> str:
-            if n <= beats:
-                return "quarter"
-            elif n <= beats * 2:
-                return "eighth"
-            return "sixteenth"
-
-        def _bar_to_groups(bar_items, guessed_ntype: str) -> list[list[tuple[str, str]]]:
-            # A bar item can be, depending on where it came from:
-            #  - a bare pitch string ("E5")                     — procedurally
-            #    generated lesson/practice content, no real rhythm/chords.
-            #  - a flat [pitch, ntype] pair (["E5", "eighth"])   — a song
-            #    imported by an earlier version of song_store, before chord
-            #    grouping existed; may still be sitting in a saved song's
-            #    index.json.
-            #  - a group of one-or-more [pitch, ntype] pairs
-            #    ([["E5","eighth"],["G5","eighth"]]) — current song_store
-            #    format; more than one pair means a stacked/chord note.
-            # These are told apart structurally so old saved songs keep
-            # working after song_store's format changes.
-            groups: list[list[tuple[str, str]]] = []
-            for item in bar_items:
-                if (isinstance(item, (list, tuple)) and len(item) == 2
-                        and isinstance(item[0], str) and item[1] in _DURATION_TYPES):
-                    groups.append([(item[0], item[1])])
-                elif isinstance(item, (list, tuple)) and item and isinstance(item[0], (list, tuple)):
-                    groups.append([(p, nt) for p, nt in item])
-                else:
-                    groups.append([(item, guessed_ntype)])
-            return groups
-
-        def _make_event(group: list[tuple[str, str]], staff):
-            if len(group) == 1:
-                pitch, ntype = group[0]
-                return _PluteNote(ntype=ntype, pitch=pitch, staff=staff)
-            notes = [_PluteNote(ntype=nt, pitch=p, staff=staff) for p, nt in group]
-            return _PluteChord(notes, staff=staff)
+        from pylute.durations import get_value as _dur
 
         for prep_i in range(n_prep):
             st0.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st0))
             if st1:
                 st1.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st1))
 
-        for rel_i, bar_items in enumerate(bars):
-            bar_obj = st0.bars[n_prep + rel_i]
-            if not bar_items:
-                bar_obj.events.append(_PluteRest(rtype="whole", staff=st0))
-            else:
-                guessed = _ntype_for(len(bar_items))
-                for group in _bar_to_groups(bar_items, guessed):
-                    bar_obj.events.append(_make_event(group, st0))
+        def _fill(staff, bar_obj, pitches, ntypes, positions):
+            """Place notes at their positions: notes starting together become a chord,
+            and rests fill any gaps."""
+            placed, cur, i = [], 0.0, 0
+            while i < len(pitches):
+                pos, j = positions[i], i
+                while j + 1 < len(pitches) and abs(positions[j + 1] - pos) < 1e-6:
+                    j += 1
+                gap = pos - cur
+                for rname, rq in _REST_STEPS:
+                    while gap >= rq - 1e-6:
+                        bar_obj.events.append(_PluteRest(rtype=rname, staff=staff))
+                        gap -= rq
+                notes = [_PluteNote(ntype=ntypes[k], pitch=pitches[k], staff=staff) for k in range(i, j + 1)]
+                event = notes[0] if len(notes) == 1 else _PluteChord(notes, staff=staff)
+                bar_obj.events.append(event)
+                for note in notes:
+                    note._event = event            # the drawn event, for the playhead position
+                    placed.append((pos, note))
+                cur = pos + _dur(ntypes[i]) * 4
+                i = j + 1
+            return placed
 
-        if st1 is not None and bass_bars is not None:
-            for rel_i, bar_items in enumerate(bass_bars):
-                bar_obj = st1.bars[n_prep + rel_i]
-                if not bar_items:
-                    bar_obj.events.append(_PluteRest(rtype="whole", staff=st1))
-                else:
-                    guessed = _ntype_for(len(bar_items))
-                    for group in _bar_to_groups(bar_items, guessed):
-                        bar_obj.events.append(_make_event(group, st1))
+        # Every note with its start position (quarter notes from the first real bar)
+        timed: list[tuple[float, int, _PluteNote]] = []
+        bar_start = 0.0
+        for rel_i in range(len(bars)):
+            blen = _bar_len_q(bar_lens, rel_i, time)
+            for si, staff, staff_bars, tl, ol in ((0, st0, bars, types, onsets),
+                                                  (1, st1, bass_bars, bass_types, bass_onsets)):
+                if staff is None or staff_bars is None:
+                    continue
+                bar_obj = staff.bars[n_prep + rel_i]
+                pitches = staff_bars[rel_i] if rel_i < len(staff_bars) else []
+                if not pitches:
+                    bar_obj.events.append(_PluteRest(rtype="whole", staff=staff))
+                    continue
+                nt = _bar_types(tl, rel_i, pitches, time, ol)
+                for pos, note in _fill(staff, bar_obj, pitches, nt, _bar_positions(tl, ol, rel_i, nt, blen)):
+                    note._si = si
+                    note._bar = n_prep + rel_i
+                    timed.append((round(bar_start + pos, 4), si, note))
+            bar_start += blen
 
-        # _step_list: each step is a list of simultaneous notes (one per stave at
-        # the same beat position). Single-staff mode → one note per step.
-        # Grand-staff mode → each hand's notes get a real onset time, computed
-        # as the cumulative duration of the notes preceding it in that hand's
-        # bar (in whole-note fractions, via pylute's duration table — falls
-        # back to the guessed uniform spacing for procedurally generated bars,
-        # since a uniform note type still yields evenly spaced onsets).
-        # A treble note and a bass note are merged into one press-together
-        # step only when their onsets fall within _RHYTHM_MARGIN of each
-        # other — otherwise the hands have differing subdivisions in this bar
-        # and their notes become separate, time-ordered solo steps instead of
-        # being forced together. Two notes from the *same* hand are never
-        # merged into one step regardless of how close their onsets are — a
-        # single hand always plays its own notes one at a time, so a fast
-        # same-hand run must stay as separate sequential steps rather than
-        # appearing as a simultaneous chord.
+        # _step_list: notes that start at the same moment, on either staff, form one step.
+        # _step_beats: how long each step lasts, in quarter notes (used by performance mode).
+        timed.sort(key=lambda e: (e[0], e[1]))
         self._step_list: list[list[_PluteNote]] = []
-        if n_staves > 1:
-            for bar_i in range(len(self._score.staffs[0].bars)):
-                rh = [ev for ev in self._score.staffs[0].bars[bar_i].events if isinstance(ev, (_PluteNote, _PluteChord))]
-                lh = [ev for ev in self._score.staffs[1].bars[bar_i].events if isinstance(ev, (_PluteNote, _PluteChord))]
+        step_pos: list[float] = []
+        for pos, _, note in timed:
+            if step_pos and abs(pos - step_pos[-1]) < 1e-4:
+                self._step_list[-1].append(note)
+            else:
+                self._step_list.append([note])
+                step_pos.append(pos)
+        self._step_beats = [(step_pos[i + 1] if i + 1 < len(step_pos) else bar_start) - step_pos[i]
+                            for i in range(len(step_pos))]
 
-                def _with_onsets(notes):
-                    pos = 0.0
-                    out = []
-                    for note in notes:
-                        out.append((pos, note))
-                        pos += _duration_value(note.type)
-                    return out
-
-                rh_onsets = _with_onsets(rh)
-                lh_onsets = _with_onsets(lh)
-                ri = li = 0
-                while ri < len(rh_onsets) or li < len(lh_onsets):
-                    if ri < len(rh_onsets) and li < len(lh_onsets):
-                        r_onset, r_note = rh_onsets[ri]
-                        l_onset, l_note = lh_onsets[li]
-                        if abs(r_onset - l_onset) <= _RHYTHM_MARGIN:
-                            self._step_list.append([r_note, l_note])
-                            ri += 1
-                            li += 1
-                        elif r_onset < l_onset:
-                            self._step_list.append([r_note])
-                            ri += 1
-                        else:
-                            self._step_list.append([l_note])
-                            li += 1
-                    elif ri < len(rh_onsets):
-                        self._step_list.append([rh_onsets[ri][1]])
-                        ri += 1
-                    else:
-                        self._step_list.append([lh_onsets[li][1]])
-                        li += 1
+        # Fingering: the treble staff is the right hand and the bass staff the left; a single
+        # staff belongs to the hand its clef suggests
+        hands_of = ({0: "right", 1: "left"} if n_staves > 1
+                    else {0: "left" if clef == "bass" else "right"})
+        from pianove.state import beta_features_state
+        if beta_features_state.value:                   # the hands are a beta feature
+            self.finger_plan = _plan_fingering(self._step_list, step_pos, bpm, hands_of)
         else:
-            for bar_i in range(len(self._score.staffs[0].bars)):
-                for ev in self._score.staffs[0].bars[bar_i].events:
-                    if isinstance(ev, (_PluteNote, _PluteChord)):
-                        self._step_list.append([ev])
+            self.finger_plan = [{} for _ in self._step_list]
+        self.bottom_inset = None          # → px hidden at the bottom (the keyboard panel)
 
         self.current_idx: int = min(initial_idx, len(self._step_list))
         for i in range(self.current_idx):
@@ -306,6 +372,9 @@ class _StaffView(PygameCanvas):
         self._perf_hit   = False
 
         self._dirty      = True
+        self._dirty_bars: set[int] = set()   # bars whose notes changed colour
+        self._ink: tuple[int, int] | None = None
+        self._full_redraw = True
         self._strip_w    = 0
         self._offscreen: pygame.Surface | None = None
         self._note_xs:   list[float] = []
@@ -328,6 +397,13 @@ class _StaffView(PygameCanvas):
                 midis.add(_pitch_to_midi(ev.pitch))
         return frozenset(midis)
 
+    def upcoming_midis(self) -> frozenset[int]:
+        """The keys to show on the keyboard: the current step's, also during the count-in,
+        so the player sees where to start."""
+        if self.current_idx >= len(self._step_list):
+            return frozenset()
+        return frozenset(_pitch_to_midi(n.pitch) for n in self._step_list[self.current_idx])
+
     def expected_midi(self) -> int | None:
         m = self.expected_midis()
         return next(iter(m)) if m else None
@@ -337,7 +413,7 @@ class _StaffView(PygameCanvas):
             return
         for note in self._step_list[self.current_idx]:
             note.color = _GREEN
-        self._dirty = True
+        self._touch(self._step_list[self.current_idx])
         self.current_idx += 1
         self._update_spring_targets()
 
@@ -345,7 +421,7 @@ class _StaffView(PygameCanvas):
         if self.current_idx < len(self._step_list):
             for note in self._step_list[self.current_idx]:
                 note.color = _RED
-            self._dirty = True
+            self._touch(self._step_list[self.current_idx])
 
     @property
     def hits(self) -> int:
@@ -357,13 +433,14 @@ class _StaffView(PygameCanvas):
             self._hits += 1
             for note in self._step_list[self.current_idx]:
                 note.color = _GREEN
-            self._dirty = True
+            self._touch(self._step_list[self.current_idx])
 
     def restart(self):
         for step in self._step_list:
             for note in step:
                 note.color = None
         self._dirty      = True
+        self._full_redraw = True
         self.current_idx = 0
         self._perf_timer = 0.0
         self._perf_hit   = False
@@ -397,11 +474,11 @@ class _StaffView(PygameCanvas):
         if self._score.brace:
             self._score.brace.surface = self._offscreen
         self._score.draw()
-        # One x per step, taken straight from _step_list so the scroll/snap
-        # position always lines up with current_idx exactly — deriving this
-        # independently (re-walking bars/events) can disagree with
-        # _step_list's onset-based grouping and drift out of sync.
-        self._note_xs = [step[0].offset for step in self._step_list]
+        self._ink = None
+        self._full_redraw = False
+        self._dirty_bars.clear()
+        # One x per step: the leftmost note of the step
+        self._note_xs = [min(getattr(n, "_event", n).offset for n in step) for step in self._step_list]
         if self._note_xs:
             snap_x = self._note_xs[min(self.current_idx, len(self._note_xs) - 1)]
             self._ph.snap_to(snap_x)
@@ -409,10 +486,78 @@ class _StaffView(PygameCanvas):
             self._scroll.snap_to(max(0.0, snap_x - vw * 0.30))
         self._dirty = False
 
+    def _ink_extent(self) -> tuple[int, int]:
+        """The rows of the score that have anything drawn on them (worked out once)."""
+        if self._ink is None:
+            import numpy as np
+            off = self._offscreen
+            narrow = pygame.transform.smoothscale(off, (max(1, off.get_width() // 16), off.get_height()))
+            rows = np.nonzero(pygame.surfarray.array3d(narrow).min(axis=2).min(axis=0) < 245)[0]
+            self._ink = (int(rows[0]), int(rows[-1])) if len(rows) else (0, off.get_height())
+        return self._ink
+
+    def _touch(self, notes):
+        """These notes changed colour: their bars need drawing again."""
+        self._dirty_bars.update(getattr(n, "_bar", 0) for n in notes)
+        self._dirty = True
+
     def _redraw_offscreen(self):
-        self._offscreen.fill((255, 255, 255))
-        self._score.draw()
+        if self._full_redraw or len(self._dirty_bars) > 4:
+            self._offscreen.fill((255, 255, 255))
+            self._score.draw()
+        else:
+            for i in sorted(self._dirty_bars):
+                self._redraw_bar(i)
+        self._dirty_bars.clear()
+        self._full_redraw = False
         self._dirty = False
+
+    def _redraw_bar(self, i: int):
+        """Draw one bar again, in place: much quicker than the whole score, which matters
+        in timed play, where every note played recolours its bar. The bar's neighbours are
+        drawn too, for the ties that cross its bar lines. Text glyphs ignore the clip, so
+        whatever lies beside the bar is kept and put back afterwards: nothing outside the
+        bar is drawn twice."""
+        surf = self._offscreen
+        staffs = self._score.staffs
+        bars = staffs[0].bars
+        bar = bars[i]
+        x0 = int(bar.bar_start_x) + 2
+        x1 = int(bar.bar_start_x + bar.barspace) + 3
+        h = surf.get_height()
+        rect = pygame.Rect(x0, 0, max(1, x1 - x0), h)
+        pad = int(staffs[0].space * 3)
+        left_x = max(0, int(bars[i - 1].bar_start_x) - pad) if i > 0 else max(0, x0 - pad)
+        right_x = min(surf.get_width(), int(bars[i + 1].bar_start_x + bars[i + 1].barspace) + pad
+                      if i + 1 < len(bars) else x1 + pad)
+        beside = [(left_x, surf.subsurface((left_x, 0, x0 - left_x, h)).copy())] if x0 > left_x else []
+        if right_x > x1:
+            beside.append((x1, surf.subsurface((x1, 0, right_x - x1, h)).copy()))
+        old = surf.get_clip()
+        surf.set_clip(rect)
+        surf.fill((255, 255, 255), rect)
+        for staff in staffs:
+            staff.draw_lines()
+        for staff in staffs:
+            for j in (i - 1, i, i + 1):
+                if 0 <= j < len(staff.bars):
+                    staff.bars[j].draw()
+        # the bar lines, as Score.draw makes them
+        span = 4 * staffs[0].space
+        top, bot = staffs[0].position[1], staffs[-1].position[1] + span
+        last = len(staffs[0].bars) - 1
+        for j in (i - 1, i):
+            if 0 <= j <= last:
+                b = staffs[0].bars[j]
+                x = b.bar_start_x + b.barspace
+                if j == last:
+                    pygame.draw.line(surf, (0, 0, 0), (x - 4, top), (x - 4, bot), 1)
+                    pygame.draw.rect(surf, (0, 0, 0), (x, top, 3, bot - top))
+                else:
+                    pygame.draw.line(surf, (0, 0, 0), (x, top), (x, bot), 2)
+        surf.set_clip(old)
+        for x, strip in beside:
+            surf.blit(strip, (x, 0))
 
     def update_content(self, dt: float):
         if self._offscreen is None:
@@ -443,7 +588,7 @@ class _StaffView(PygameCanvas):
 
         if self._phase == "performance" and self.current_idx < len(self._step_list):
             self._perf_timer += dt
-            note_dur = 60.0 / self._bpm
+            note_dur = 60.0 / self._bpm * self._step_beats[self.current_idx]
 
             if self._note_xs:
                 idx   = min(self.current_idx, len(self._note_xs) - 1)
@@ -466,7 +611,7 @@ class _StaffView(PygameCanvas):
                 if not self._perf_hit and self.current_idx < len(self._step_list):
                     for note in self._step_list[self.current_idx]:
                         note.color = _ORANGE
-                    self._dirty = True
+                    self._touch(self._step_list[self.current_idx])
                 self.current_idx += 1
                 self._perf_hit = False
                 if self._on_advance:
@@ -483,13 +628,19 @@ class _StaffView(PygameCanvas):
         surface.fill((255, 255, 255), rect)
 
         scroll = max(0, min(int(self._scroll.value), max(0, off_w - vw)))
+        # the keyboard panel covers the bottom: centre the score in what is left
+        view_h = max(vh // 2, vh - int(self.bottom_inset())) if self.bottom_inset else vh
 
-        if off_h <= vh:
-            # Vertically centre the score content within the canvas
-            y_offset = (vh - off_h) // 2
+        if off_h <= view_h:
+            # Vertically centre what is drawn (notes far above or below the staves
+            # included) within the visible part of the canvas
+            ink_top, ink_bot = self._ink_extent()
+            y_offset = view_h // 2 - (ink_top + ink_bot) // 2
+            y_offset = max(4 - ink_top, min(view_h - 4 - ink_bot, y_offset))   # keep the ink in view
+            src_y = max(0, -y_offset)
             surface.blit(self._offscreen,
-                         (rect.left, rect.top + y_offset),
-                         pygame.Rect(scroll, 0, vw, off_h))
+                         (rect.left, rect.top + max(0, y_offset)),
+                         pygame.Rect(scroll, src_y, vw, off_h - src_y))
             ph_top = rect.top + y_offset + 4
             ph_bot = rect.top + y_offset + off_h - 4
         else:
@@ -500,7 +651,14 @@ class _StaffView(PygameCanvas):
             staff_top_y  = int(space * 4)                     # _MT=4
             staff_bot_y  = staff_top_y + int(sys_h)
             staff_center = (staff_top_y + staff_bot_y) // 2
-            y_src  = max(0, min(off_h - vh, staff_center - vh // 2))
+            # centre what is actually drawn (notes far above or below the staves included),
+            # as far as the staves themselves stay in view
+            ink_top, ink_bot = self._ink_extent()
+            lo = staff_bot_y + 6 - view_h // 2
+            hi = staff_top_y - 6 + view_h // 2
+            if lo <= hi:
+                staff_center = min(hi, max(lo, (ink_top + ink_bot) // 2))
+            y_src  = max(0, min(off_h - view_h, staff_center - view_h // 2))
             blit_h = min(vh, off_h - y_src)
             surface.blit(self._offscreen, rect.topleft,
                          pygame.Rect(scroll, y_src, vw, blit_h))
@@ -514,34 +672,38 @@ class _StaffView(PygameCanvas):
 
 
 class _LessonPiano:
-    def __init__(self, staff_view: _StaffView, advance_fn, wrong_fn):
+    def __init__(self, staff_view: _StaffView, advance_fn, wrong_fn, reveal_fn=None):
         from pianove.state import midi_panel
         self._panel   = midi_panel
         self._sv      = staff_view
         self._advance = advance_fn
         self._wrong   = wrong_fn
-        # Seed with whatever is already held down rather than an empty set:
-        # the physical MIDI panel is a shared singleton that outlives this
-        # instance, so a key still held from just before a page rebuild
-        # (e.g. finishing the last note of a section, which triggers the
-        # rebuild synchronously) would otherwise look like a brand-new press
-        # on the very next frame and get matched against the new section's
-        # first expected note — usually wrong, bouncing the user back a
-        # section via the wrong-note tracker.
-        self._prev    = frozenset(self._panel.active_notes)
+        self._reveal  = reveal_fn         # → px of the panel currently shown
+        self.fit_panel = None             # → keeps the panel's height fitted to the keyboard
+        # Key presses from before this page (the previous section) do not count
+        self._panel.take_note_ons()
         self._pressed_this_step: set[int] = set()
+        from pianove.state import hand_tone_state
+        self._hands   = HandsOverlay(staff_view.finger_plan,
+                                     memory=(ctx.current_song_id or ctx.current_lesson_id,
+                                             ctx.current_song_hand, ctx.practice_mode),
+                                     skin=hand_tone_state.value)
+        self._status_font: pygame.font.Font | None = None
 
     def update(self, dt: float, rect: pygame.Rect):
         self._panel.update(dt, rect)
-        current   = frozenset(self._panel.active_notes)
-        new_notes = current - self._prev
-        for note in new_notes:
+        if self.fit_panel:
+            self.fit_panel()
+        # every press counts, even a key let go and pressed again within one frame
+        for note in self._panel.take_note_ons():
             self._handle_note(note)
-        self._prev = current
 
-    def reset_midi_state(self):
-        self._prev = frozenset(self._panel.active_notes)
-        self._pressed_this_step.clear()
+        # In timed play the hands move on before the next note is due
+        sv, lead, step_time = self._sv, 0.0, 0.0
+        if sv._phase == "performance" and not sv._in_prep and sv.current_idx < len(sv._step_beats):
+            step_time = 60.0 / sv._bpm * sv._step_beats[sv.current_idx]
+            lead = sv._perf_timer / step_time if step_time > 0 else 0.0
+        self._hands.update(dt, sv.current_idx, frozenset(self._panel.active_notes), lead, step_time)
 
     def handle_event(self, event: pygame.event.Event, rect: pygame.Rect) -> bool:
         return False
@@ -564,17 +726,23 @@ class _LessonPiano:
             self._wrong()
 
     def draw(self, surface: pygame.Surface, rect: pygame.Rect):
-        expected = self._sv.expected_midis()   # frozenset[int]
+        expected = self._sv.upcoming_midis()   # frozenset[int]
         active   = self._panel.active_notes
+        idx      = self._sv.current_idx
 
-        # Expand keyboard range to include all expected notes
-        for m in expected:
+        # The panel opens from the bottom; above _KB_H it is the hands' room
+        shown    = self._reveal() if self._reveal else rect.height
+        hands_h  = max(0, shown - _KB_H)
+        hands_on = hands_h > 1
+
+        # Expand keyboard range to include all expected notes (and where the hands go next)
+        for m in (expected | self._hands.keys_needed(idx)) if hands_on else expected:
             self._panel._expand_for_note(m)
 
         margin_x = max(8, int(rect.width * 0.02))
-        status_h = max(16, int(rect.height * 0.14))
-        top      = rect.top + max(3, int(rect.height * 0.02))
-        key_h    = max(40, rect.bottom - status_h - top - 4)
+        status_h = max(16, int(_KB_H * 0.14))
+        top      = rect.bottom - shown + max(3, int(_KB_H * 0.02))
+        key_h    = max(40, _KB_H - status_h - max(3, int(_KB_H * 0.02)) - 4)
         avail_w  = max(60, rect.width - margin_x * 2)
         white_notes   = self._panel._white_notes
         black_notes   = self._panel._black_notes
@@ -586,14 +754,25 @@ class _LessonPiano:
         def _active(n): return n in active
         def _exp(n):    return n in expected
 
+        def _hand_col(note):
+            return self._hands.colour_of(note, idx) if hands_on else None
+
         def _wc(note):
             if _active(note): return (190, 60, 60)
-            if _exp(note):    return (120, 180, 255)
+            if _exp(note):
+                acc = _hand_col(note)          # the colour of the hand that plays it
+                if acc:
+                    return tuple(int(255 - (255 - c) * 0.5) for c in acc)
+                return (120, 180, 255)
             return (255, 255, 255)
 
         def _bc(note):
             if _active(note): return (140, 45, 45)
-            if _exp(note):    return (30, 100, 200)
+            if _exp(note):
+                acc = _hand_col(note)
+                if acc:
+                    return tuple(int(c * 0.85) for c in acc)
+                return (30, 100, 200)
             return (0, 0, 0)
 
         surface.fill(iOSTheme.tertiary_background, rect)
@@ -615,14 +794,27 @@ class _LessonPiano:
         for kr, col in black_keys:
             pygame.draw.rect(surface, col, kr, border_radius=4)
 
+        if hands_on and white_notes:
+            kb = KeyboardGeometry(left=rect.left + margin_x, white_w=white_w, top=top,
+                                  key_h=key_h, black_h=black_h,
+                                  first_white_x=_key_x(white_notes[0]), bottom=rect.bottom - 2)
+            self._hands.draw(surface, kb, alpha=min(1.0, hands_h / ((_kb_h_hands() - _KB_H) * 0.7)))
+
+        # the MIDI status, on top of everything (a sleeve may pass beneath it)
         connected = self._panel.midi_in is not None
         label_txt = (t("midi_connected", name=self._panel.midi_in.name)
                      if connected else t("midi_none"))
         label_col = (52, 199, 89) if connected else (180, 100, 100)
-        font = pygame.font.SysFont(None, max(14, status_h - 2))
-        ls   = font.render(label_txt, True, label_col)
-        surface.blit(ls, (rect.left + margin_x,
-                          rect.bottom - status_h + (status_h - ls.get_height()) // 2))
+        if self._status_font is None:
+            self._status_font = pygame.font.SysFont(None, max(14, status_h - 2))
+        ls = self._status_font.render(label_txt, True, label_col)
+        pos = (rect.left + margin_x, rect.bottom - status_h + (status_h - ls.get_height()) // 2)
+        if hands_on:
+            pill = pygame.Surface((ls.get_width() + 12, ls.get_height() + 4), pygame.SRCALPHA)
+            pygame.draw.rect(pill, (*iOSTheme.tertiary_background[:3], 225), pill.get_rect(),
+                             border_radius=pill.get_height() // 2)
+            surface.blit(pill, (pos[0] - 6, pos[1] - 2))
+        surface.blit(ls, pos)
 
 
 def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
@@ -905,6 +1097,12 @@ def build():
 
     lesson_id    = ctx.current_lesson_id
     keyboard_vis = ctx.lesson_keyboard_vis
+    if ctx.lesson_hands_vis is None:
+        from pianove.state import storage
+        ctx.lesson_hands_vis = bool(storage.get("show_hands", True))
+    from pianove.state import beta_features_state
+    beta         = bool(beta_features_state.value)  # the hands are a beta feature
+    hands_vis    = ctx.lesson_hands_vis and beta
     section_idx  = ctx.lesson_section_idx
     initial_idx  = ctx.lesson_current_idx
 
@@ -968,6 +1166,28 @@ def build():
     section_idx = max(0, min(section_idx, n_sections - 1))
     active_bars = sections[section_idx] if phase == "practice" else all_bars
 
+    # Real note values, positions and bar lengths for imported songs
+    # (None for lessons and for songs imported before rhythms were stored)
+    active_types = active_onsets = active_lens = None
+    _both_lh_types = _both_lh_onsets = None
+    rhythm = {}
+    if ctx.current_song_id and not is_practice:
+        from pianove.song_store import get_song_rhythm
+        rhythm = get_song_rhythm(ctx.current_song_id)
+        if rhythm.get("bpm"):
+            bpm = int(round(rhythm["bpm"]))          # songs play at their own tempo
+
+        def _for_view(lst):
+            if lst is None or len(lst) != len(all_bars):
+                return None
+            return _split_sections(lst)[section_idx] if phase == "practice" else lst
+
+        hand_key = {"right": "rh", "left": "lh"}.get(ctx.current_song_hand)
+        if hand_key:
+            active_types  = _for_view(rhythm.get(f"types_{hand_key}"))
+            active_onsets = _for_view(rhythm.get(f"onsets_{hand_key}"))
+        active_lens = _for_view(rhythm.get("bar_lens"))
+
     # For "both hands" song mode, split into treble/bass for grand-staff display
     _both_lh_bars = None
     if ctx.current_song_id and ctx.current_song_hand == "both":
@@ -980,22 +1200,19 @@ def build():
                 active_bars   = rh_all[start:end] or [["C4"]]
                 _both_lh_bars = lh_all[start:end] if lh_all else []
             else:
+                start, end    = 0, len(rh_all)
                 active_bars   = rh_all
                 _both_lh_bars = lh_all
-    if _both_lh_bars is not None:
-        # Step count must match _StaffView's real onset-merged _step_list —
-        # a naive per-bar max(len(rh), len(lh)) undercounts whenever a bar
-        # has notes that don't align within _RHYTHM_MARGIN (differing
-        # subdivisions between hands), since those become extra separate
-        # steps rather than one merged step. Mismatching this count against
-        # the real step list caused the section-advance/completion gate below
-        # to fire before (or after) the section was actually finished.
-        _count_probe = _StaffView(
-            bars=active_bars, phase=phase, bass_bars=_both_lh_bars, time=song_time,
-        )
-        n_notes = len(_count_probe._step_list)
-    else:
-        n_notes = sum(len(b) for b in active_bars)
+
+            def _cut(lst):
+                return lst[start:end] if lst else None
+
+            active_types,  _both_lh_types  = _cut(rhythm.get("types_rh")), _cut(rhythm.get("types_lh"))
+            active_onsets, _both_lh_onsets = _cut(rhythm.get("onsets_rh")), _cut(rhythm.get("onsets_lh"))
+            active_lens = _cut(rhythm.get("bar_lens"))
+    # One step per distinct start position, across both staves (matches _StaffView)
+    n_notes = len(_step_positions(active_bars, _both_lh_bars, active_types, _both_lh_types,
+                                  active_onsets, _both_lh_onsets, active_lens, song_time))
 
     # Completion screen
     if ctx.lesson_completed and initial_idx >= n_notes:
@@ -1021,6 +1238,14 @@ def build():
         ctx.lesson_keyboard_vis = val
         if _slide_ref[0]:
             _slide_ref[0].reveal(val)
+
+    def _on_hands_toggle(val: bool):
+        # The panel grows to make room for the hands
+        from pianove.state import storage
+        ctx.lesson_hands_vis = val
+        storage.set("show_hands", bool(val))
+        if _slide_ref[0]:
+            _slide_ref[0].set_max_height(_kb_h_hands() if val else _KB_H)
 
     def _on_restart():
         ctx.lesson_step_idx    = 0
@@ -1118,6 +1343,8 @@ def build():
 
     if is_practice:
         phase_label = t("practice_go_label", bpm=bpm)
+    elif phase == "performance" and ctx.current_song_id:
+        phase_label = f"{t('song_play_along')}  {bpm} BPM"
     elif phase == "performance":
         phase_label = t("lesson_final_go")
     elif n_sections > 1:
@@ -1153,10 +1380,17 @@ def build():
                              color=iOSTheme.secondary_label,
                              anchor="left", x=16, y=0, width=240, height=44))
     controls.add_child(Button(text="↺", on_click=_on_restart,
-                              anchor="right", x=-126, y=0,
+                              anchor="right", x=-252 if beta else -134, y=0,
                               width=36, height=32, font_size=18,
                               background_color=iOSTheme.fill, text_color=iOSTheme.label,
                               border_radius=8))
+    if beta:
+        controls.add_child(Label(text=t("hands"), font_size=13,
+                                 color=iOSTheme.secondary_label,
+                                 anchor="right", x=-192, y=0, width=52, height=44))
+        controls.add_child(Switch(value=hands_vis, on_change=_on_hands_toggle,
+                                  anchor="right", x=-134, y=0,
+                                  width=51, height=31, active_color=ColorPalette.BLUE))
     controls.add_child(Label(text="Piano", font_size=13,
                              color=iOSTheme.secondary_label,
                              anchor="right", x=-80, y=0, width=42, height=44))
@@ -1172,22 +1406,32 @@ def build():
         bars=active_bars, phase=phase,
         initial_idx=initial_idx, on_advance=_do_note_advance,
         bpm=bpm, clef=clef, bass_bars=_both_lh_bars, time=song_time,
+        types=active_types, bass_types=_both_lh_types,
+        onsets=active_onsets, bass_onsets=_both_lh_onsets, bar_lens=active_lens,
         width=1.0, height=staff_h,
     )
     _sv[0] = staff_view
+    staff_view.bottom_inset = lambda: _slide_ref[0].reveal_height if _slide_ref[0] else 0
     main.add_child(staff_view)
 
     # Piano — always instantiated so MIDI is active regardless of visibility.
     # Wrapped in SlideReveal for animated show/hide without a full page rebuild.
-    piano        = _LessonPiano(staff_view, _do_advance, _do_wrong)
+    piano        = _LessonPiano(staff_view, _do_advance, _do_wrong,
+                                reveal_fn=lambda: _slide_ref[0].reveal_height if _slide_ref[0] else _KB_H)
     piano_canvas = PygameCanvas(target=piano, draw_border=False,
                                 width=1.0, height=1.0)
     slide = SlideReveal(
         child=piano_canvas,
-        max_height=_KB_H,
+        max_height=_kb_h_hands_max(),
         visible=keyboard_vis,
         anchor="bottom_left", x=0, y=0, width=1.0,
     )
+    slide.set_max_height(_kb_h_hands() if hands_vis else _KB_H, animate=False)
+
+    def _fit_panel():
+        if beta and ctx.lesson_hands_vis and slide._max_h != _kb_h_hands():
+            slide.set_max_height(_kb_h_hands())
+    piano.fit_panel = _fit_panel
     _slide_ref[0] = slide
     root.add_child(slide)
 

@@ -34,12 +34,14 @@ def build():
         ctx.current_song_id = None
         ctx.router.navigate("home", "left")
 
-    def _start():
+    def _start(phase: str = "practice"):
+        # "practice": Pianove waits for each note, section by section.
+        # "performance": play along at the song's own tempo after a count-in.
         ctx.current_song_hand  = _HAND_KEYS[_hand_state.value]
         ctx.lesson_current_idx = 0
         ctx.lesson_section_idx = 0
         ctx.lesson_completed   = False
-        ctx.lesson_phase       = "practice"
+        ctx.lesson_phase       = phase
         ctx.router.navigate("lesson", "right")
 
     win_h = ctx.ui.height if ctx.ui else 768
@@ -131,16 +133,27 @@ def build():
         width=1.0, height=40,
     ))
 
-    # Start button
-    body.add_child(Button(
+    # Start buttons: practise note by note, or play along in tempo
+    buttons = FloatLayout(width=1.0, height=52)
+    buttons.add_child(Button(
         text=t("song_start"),
         on_click=_start,
-        anchor="center", x=0, y=0,
-        width=1.0, height=52, font_size=16,
+        anchor="left", x=0, y=0,
+        width=0.49, height=52, font_size=16,
         background_color=ColorPalette.BLUE,
         text_color=pygame.Color(255, 255, 255),
         border_radius=14,
     ))
+    buttons.add_child(Button(
+        text=t("song_play_along"),
+        on_click=lambda: _start("performance"),
+        anchor="right", x=0, y=0,
+        width=0.49, height=52, font_size=16,
+        background_color=iOSTheme.fill,
+        text_color=iOSTheme.label,
+        border_radius=14,
+    ))
+    body.add_child(buttons)
 
     main.add_child(body)
     return root

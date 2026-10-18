@@ -13,6 +13,7 @@ lesson_step_idx:      int        = 0   # which step in steps.json (text/demo/exe
 lesson_current_idx:   int        = 0
 lesson_section_idx:   int        = 0
 lesson_keyboard_vis:  bool       = True
+lesson_hands_vis:     bool | None = None   # None → the saved preference
 lesson_phase:         str        = "practice"   # "practice" | "performance"
 lesson_completed:     bool       = False
 
@@ -25,6 +26,8 @@ score_song_id: str | None = None
 
 # Inner tab router (home shell) — set by home/container.py so tabs can self-refresh
 inner_router: "PageRouter | None" = None
+# Page last opened from the sidebar, so a home-shell rebuild (theme change) stays there
+home_page: str | None = None
 
 # Sight-reading practice mode (go mode — performance-only, no practice sections)
 practice_mode:      bool        = False

@@ -40,6 +40,29 @@ def _text(el, tag, default=None):
     return child.text.strip() if (child is not None and child.text) else default
 
 
+def _credit_meta(root):
+    """Title and composer from <credit> blocks (MuseScore exports often store them only there)."""
+    words = []
+    for cr in root.iter():
+        if _tag(cr) != "credit":
+            continue
+        ctype = next((c.text.strip().lower() for c in cr if _tag(c) == "credit-type" and c.text), "")
+        for w in cr:
+            if _tag(w) == "credit-words" and w.text and w.text.strip():
+                try:
+                    size = float(w.get("font-size", "0"))
+                except ValueError:
+                    size = 0.0
+                words.append((ctype, size, w.get("justify", ""), w.text.strip()))
+    title = next((txt for c, _, _, txt in words if c == "title"), "")
+    composer = next((txt for c, _, _, txt in words if c == "composer"), "")
+    if not title and words:
+        title = max(words, key=lambda w: w[1])[3]
+    if not composer:
+        composer = next((txt for c, _, j, txt in words if j == "right" and txt != title), "")
+    return title, composer
+
+
 def _is_full_measure_rest(note_el):
     rest_el = _find(note_el, "rest")
     if rest_el is None:
@@ -173,6 +196,10 @@ def load_musicxml(filepath, surface=None, length=1100, bars_per_system=None):
     composer = _creator(id_el, "composer")
     lyricist = _creator(id_el, "lyricist")
     rights   = (_text(id_el, "rights") or "") if id_el is not None else ""
+    if not title or not composer:
+        credit_title, credit_composer = _credit_meta(root)
+        title    = title or credit_title
+        composer = composer or credit_composer
 
     parts = [el for el in root.iter() if _tag(el) == "part"]
     if not parts:

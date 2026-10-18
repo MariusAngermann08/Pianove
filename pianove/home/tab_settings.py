@@ -2,7 +2,8 @@ import pygame
 import pianove.context as ctx
 from pylay import FloatLayout, VStack, Label, Button, Switch, OptionSelector, ListItem, Avatar, ColorPalette, iOSTheme, Slider
 from pianove.i18n import t, language_state, available_languages
-from pianove.state import name_state, midi_device_state, dark_mode_state, sound_enabled_state, sound_volume_state, creator_mode_state, storage
+from pianove.state import name_state, midi_device_state, dark_mode_state, sound_enabled_state, sound_volume_state, creator_mode_state, hand_tone_state, beta_features_state, storage
+from pianove.components.tone_picker import TonePicker
 from pianove.ui_utils import ui_dims
 from pianove.components import section_subheader as _section_header, RED
 
@@ -16,6 +17,7 @@ def _reset():
     name_state.value = ""
     language_state.value = "en"
     dark_mode_state.value = True
+    ctx.home_page = None
     ctx.router.navigate("language", "left")
 
 
@@ -63,7 +65,8 @@ def build():
 
     scroll.add_child(_section_header(t("settings_language")))
     langs = available_languages()
-    lang_options = [(t(f"lang_{l}") if l in ("en", "de") else l.upper(), l)
+    _lang_keys = {"en": "lang_english", "de": "lang_german"}
+    lang_options = [(t(_lang_keys[l]) if l in _lang_keys else l.upper(), l)
                     for l in langs]
     scroll.add_child(OptionSelector(
         options=lang_options,
@@ -79,6 +82,19 @@ def build():
         title=t("settings_dark_mode"),
         trailing=Switch(value=dark_mode_state, enabled=True),
     ))
+
+    scroll.add_child(_section_header(t("settings_beta_section")))
+    scroll.add_child(ListItem(
+        title=t("settings_beta_features"),
+        subtitle=t("settings_beta_features_desc"),
+        trailing=Switch(value=beta_features_state, enabled=True),
+    ))
+    if beta_features_state.value:
+        scroll.add_child(ListItem(
+            title=t("settings_hand_tone"),
+            subtitle=t("settings_hand_tone_desc"),
+            trailing=TonePicker(hand_tone_state),
+        ))
 
     scroll.add_child(_section_header(t("settings_creator_section")))
     scroll.add_child(ListItem(

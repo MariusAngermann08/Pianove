@@ -3,6 +3,7 @@ from pylay import State, Storage
 from pylay.core.theme import iOSTheme
 from pianove.i18n import language_state, t
 from pianove.midi.panel import MidiPanel
+from pianove.hands import DEFAULT_SKIN
 
 storage = Storage("pianove")
 
@@ -12,6 +13,8 @@ dark_mode_state      = State(bool(storage.get("dark_mode", True)))
 sound_enabled_state  = State(bool(storage.get("midi_sound", False)))
 sound_volume_state   = State(float(storage.get("midi_volume", 1.0)))
 creator_mode_state   = State(bool(storage.get("creator_mode", False)))
+hand_tone_state      = State(storage.get("hand_tone", DEFAULT_SKIN))
+beta_features_state  = State(bool(storage.get("beta_features", False)))
 midi_device_state    = State("")
 midi_key_played      = State(False)
 midi_skip_state      = State(False)
@@ -53,6 +56,17 @@ dark_mode_state.bind(_on_dark_mode_change)
 sound_enabled_state.bind(_on_sound_enabled_change)
 sound_volume_state.bind(_on_sound_volume_change)
 creator_mode_state.bind(_on_creator_mode_change)
+hand_tone_state.bind(lambda val: storage.set("hand_tone", val))
+
+
+def _on_beta_features_change(val):
+    storage.set("beta_features", bool(val))
+    import pianove.context as ctx
+    if ctx.router:
+        ctx.router.reload_current_page(delay=0.10)
+
+
+beta_features_state.bind(_on_beta_features_change)
 
 midi_panel = MidiPanel(
     device_state=midi_device_state,

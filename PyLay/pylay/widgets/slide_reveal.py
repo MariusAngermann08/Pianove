@@ -31,6 +31,16 @@ class SlideReveal(UIElement):
     def reveal(self, visible: bool) -> None:
         self._spring.target = float(self._max_h if visible else 0)
 
+    def set_max_height(self, max_height: int, animate: bool = True) -> None:
+        """Change how far the panel opens, up to the height it was created with (the slot
+        it reserves keeps that size). When open, it springs to the new height."""
+        self._max_h = max_height
+        if self._spring.target > 0:
+            if animate:
+                self._spring.target = float(max_height)
+            else:
+                self._spring.snap_to(float(max_height))
+
     @property
     def reveal_height(self) -> int:
         return round(self._spring.value)

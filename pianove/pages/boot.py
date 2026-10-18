@@ -48,8 +48,11 @@ class BootPage(FloatLayout):
         w, h = self.rect.width, self.rect.height
         if w <= 0 or h <= 0:
             return
-        if self._vignette is None or self._vignette.get_size() != (w, h):
-            self._vignette = _make_vignette(w, h)
+        strength = 88 if iOSTheme.dark else 24     # a heavy vignette turns grey on a light theme
+        if (self._vignette is None or self._vignette.get_size() != (w, h)
+                or getattr(self, "_vignette_strength", None) != strength):
+            self._vignette = _make_vignette(w, h, strength)
+            self._vignette_strength = strength
         surface.blit(self._vignette, self.rect.topleft)
 
     def draw(self, surface: pygame.Surface):
@@ -85,12 +88,12 @@ class BootPage(FloatLayout):
         return self._font
 
 
-def _make_vignette(w: int, h: int) -> pygame.Surface:
+def _make_vignette(w: int, h: int, strength: int = 88) -> pygame.Surface:
     surf = pygame.Surface((w, h), pygame.SRCALPHA)
     steps = 50
     for i in range(steps):
         t = 1.0 - i / steps          # 1.0 at outermost, ~0 at innermost
-        alpha = int(88 * t * t)      # quadratic: 88 at edge, 0 at center
+        alpha = int(strength * t * t)   # quadratic: strongest at the edge, 0 at center
         inset_x = int(w * 0.5 * i / steps)
         inset_y = int(h * 0.5 * i / steps)
         pygame.draw.rect(surf, (0, 0, 0, alpha),

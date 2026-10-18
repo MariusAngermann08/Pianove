@@ -1,6 +1,8 @@
 ﻿from __future__ import annotations
 
 import math
+from collections import deque
+
 import pygame
 import mido
 from pylay.core.theme import iOSTheme
@@ -80,6 +82,8 @@ class MidiPanel:
                  text_fn=None, storage=None):
         self.midi_in = None
         self.active_notes: set[int] = set()
+        # every key press, in order, until someone takes them (see take_note_ons)
+        self._note_ons: deque[int] = deque(maxlen=64)
         self._last_device_check = 0.0
         self._font_cache: dict[int, pygame.font.Font] = {}
 
@@ -238,9 +242,17 @@ class MidiPanel:
         if self._state in (_S_READY, _S_ANIM):
             self._expand_for_note(note)
             self.active_notes.add(note)
+            self._note_ons.append(note)
             self._mark_key_played()
             from pianove.sound_engine_fs import play as _play
             _play(note, velocity)
+
+    def take_note_ons(self) -> list[int]:
+        """Every key pressed since the last call, in order. Unlike comparing active_notes
+        from frame to frame, this never misses a key released and pressed again quickly."""
+        out = list(self._note_ons)
+        self._note_ons.clear()
+        return out
 
     def _set_device_name(self, name: str):
         if self.device_state is not None:

@@ -37,18 +37,26 @@ class Tuplet:
         base_dur = get_value(self.notes[0].type)
         return base_dur * self.actual * (self.normal / self.actual)
 
+    def _pitched(self) -> list:
+        """The members with a stem: a tuplet may contain rests, even start with one."""
+        return [n for n in self.notes if hasattr(n, "_stem_dir")]
+
     # stubs so Bar beam code doesn't crash on a Tuplet
     def _stem_dir(self):
-        return self.notes[0]._stem_dir() if self.notes else "up"
+        p = self._pitched()
+        return p[0]._stem_dir() if p else "up"
 
     def _y_center(self):
-        return self.notes[0]._y_center() if self.notes else 0
+        p = self._pitched()
+        return p[0]._y_center() if p else 0
 
     def _stem_x(self):
-        return self.notes[0]._stem_x() if self.notes else 0
+        p = self._pitched()
+        return p[0]._stem_x() if p else 0
 
     def _stem_tip_y(self):
-        return self.notes[0]._stem_tip_y() if self.notes else 0
+        p = self._pitched()
+        return p[0]._stem_tip_y() if p else 0
 
     def draw(self):
         if not self.staff or not self.notes:
@@ -79,11 +87,14 @@ class Tuplet:
         x2 = self.notes[-1].offset + int(space * 1.2)
         mid_x = (x1 + x2) // 2
 
-        if stem_dir == "up":
-            tip_y     = min(n._stem_tip_y() for n in self.notes) - int(space * 0.5)
+        pitched  = self._pitched()
+        if not pitched:                       # only rests: the bracket sits above the staff
+            bracket_y = int(self.staff.position[1] - space * 1.5) - lh
+        elif stem_dir == "up":
+            tip_y     = min(n._stem_tip_y() for n in pitched) - int(space * 0.5)
             bracket_y = int(tip_y) - lh - 2
         else:
-            tip_y     = max(n._stem_tip_y() for n in self.notes) + int(space * 0.5)
+            tip_y     = max(n._stem_tip_y() for n in pitched) + int(space * 0.5)
             bracket_y = int(tip_y) + 2
 
         surface.blit(surf_lbl, (mid_x - lw // 2, bracket_y))

@@ -45,9 +45,13 @@ def build():
 
     root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
 
+    initial = tab_keys[active_idx]
+    if ctx.home_page in pages and ctx.home_page not in tab_keys:
+        initial = ctx.home_page
+
     tab_router = PageRouter(
         pages=pages,
-        initial_page=tab_keys[active_idx],
+        initial_page=initial,
         anchor="top_left",
         x=nav_w,
         y=0,
@@ -63,19 +67,25 @@ def build():
     ]
     header_h = scaled_px(64)
 
+    def _go(page: str):
+        ctx.home_page = page
+        tab_router.navigate(page)
+
     side_nav = SideNav(
         active_tab_state=_active_tab,
         items=nav_items,
-        on_change=lambda idx: tab_router.navigate(tab_keys[idx]),
+        on_change=lambda idx: _go(tab_keys[idx]),
         width=nav_w,
         title="",          # suppressed — logo widget renders in its place
         footer_fn=lambda: midi_device_state.value,
         bottom_action={
             "icon_fn":  Icon.as_icon_fn("settings", base_size=20),
             "label":    t("nav_settings"),
-            "on_click": lambda: tab_router.navigate("settings"),
+            "on_click": lambda: _go("settings"),
         },
     )
+    if initial == "settings":
+        side_nav._bottom_active = True
     side_nav.add_child(PianoveLogoWidget(
         anchor="top_left", x=0, y=0,
         width=nav_w, height=header_h,
