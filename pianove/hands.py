@@ -1253,6 +1253,8 @@ class HandsOverlay:
         self._memory = memory
         self._black_depth = -1.0
         self._waited: dict = {}
+        self._last_draw = None
+        self._skipped = False
         self._presolved = None
         used = {s for st in plan for s, fm in st.items() if fm}
         if used:
@@ -1341,6 +1343,17 @@ class HandsOverlay:
         # other keeps its last image for that frame, moving with the hand
         stale = [p for p in poses if not self._renderer.is_current(p)]
         allowed = None
+        # When the last frame came late (a dense passage, a slow machine), the hands keep
+        # their shape for one frame, still moving with the hand, so the music keeps time
+        import time as _time
+        now = _time.perf_counter()
+        late = self._last_draw is not None and now - self._last_draw > 1.0 / 48
+        self._last_draw = now
+        if late and not self._skipped:
+            self._skipped = True
+            stale = []
+        else:
+            self._skipped = False
         if stale:
             stale.sort(key=lambda p: self._waited.get(p.side, 0), reverse=True)
             allowed = stale[0].side

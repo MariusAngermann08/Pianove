@@ -10,6 +10,12 @@ BEAM_GAP = 3
 
 
 def _event_duration(event):
+    """How much of the bar an event takes. An event may say so itself (_layout_dur, in
+    whole notes): with several voices on one staff, a chord's notes can differ in length,
+    and the room up to the next event is what counts."""
+    layout = getattr(event, "_layout_dur", None)
+    if layout:
+        return layout
     from .tuplet import Tuplet
     if isinstance(event, Tuplet):
         return event.total_duration()
@@ -127,7 +133,7 @@ class Bar:
         group_beat = -1
 
         for event in self.events:
-            dur  = get_value(event.type)
+            dur  = _event_duration(event)
             beat = int(pos / beat_dur + 1e-9)
             is_beamable = (
                 (isinstance(event, Note)  and event._base_type in BEAMABLE) or

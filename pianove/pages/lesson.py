@@ -72,7 +72,8 @@ class _WrongTracker:
         self._history.clear()
 
 
-_REST_STEPS = [("half", 2.0), ("quarter", 1.0), ("eighth", 0.5), ("sixteenth", 0.25)]
+_REST_STEPS = [("half", 2.0), ("quarter", 1.0), ("eighth", 0.5), ("sixteenth", 0.25),
+               ("thirty_second", 0.125)]
 
 
 def _even_type(n: int, beats: int) -> str:
@@ -129,18 +130,59 @@ def _bar_positions(tlist, olist, i: int, ntypes: list[str], bar_len: float) -> l
     return out
 
 
-def _step_positions(bars, bass_bars, types, bass_types, onsets, bass_onsets, bar_lens, time) -> list[float]:
-    """Distinct start positions (quarter notes from the first bar) of every note on both
-    staves. Notes that start together form one step."""
+def _bar_notes(tl, ol, meta, si: int, i: int, pitches: list[str], time: tuple, blen: float):
+    """Bar i's notes on one staff: (types, positions, lengths in quarters, tie
+    continuations, velocities). A song imported with real lengths is taken as written;
+    otherwise the values and positions are checked and, if need be, evened out."""
+    from pylute.durations import get_value, VALUES
+    n = len(pitches)
+
+    def per_bar(key):
+        lst = ((meta or {}).get(key) or (None, None))[si]
+        return lst[i] if lst is not None and i < len(lst) and len(lst[i]) == n else None
+
+    lengths = per_bar("durs")
+    if (lengths is not None and tl is not None and i < len(tl) and len(tl[i]) == n
+            and ol is not None and i < len(ol) and len(ol[i]) == n):
+        nt = [x if x in VALUES else "sixteenth" for x in tl[i]]
+        return (nt, list(ol[i]), list(lengths), list(per_bar("ties") or [False] * n),
+                list(per_bar("vels") or [None] * n))
+    nt = _bar_types(tl, i, pitches, time, ol)
+    return (nt, _bar_positions(tl, ol, i, nt, blen), [get_value(x) * 4 for x in nt],
+            [False] * n, [None] * n)
+
+
+def _seconds_fn(tempos, bpm: float):
+    """Quarter-note position from the start → seconds, through the tempo changes."""
+    import bisect
+    pts = sorted((float(q), float(b)) for q, b in (tempos or []) if b)
+    if not pts or pts[0][0] > 0:
+        pts.insert(0, (0.0, pts[0][1] if pts else float(bpm)))
+    cum = [0.0]
+    for (q0, b0), (q1, _) in zip(pts, pts[1:]):
+        cum.append(cum[-1] + (q1 - q0) * 60.0 / b0)
+    qs = [q for q, _ in pts]
+
+    def sec(q: float) -> float:
+        i = max(0, bisect.bisect_right(qs, q) - 1)
+        return cum[i] + (q - pts[i][0]) * 60.0 / pts[i][1]
+    return sec
+
+
+def _step_positions(bars, bass_bars, types, bass_types, onsets, bass_onsets, bar_lens, time,
+                    meta=None) -> list[float]:
+    """Distinct start positions (quarter notes from the first bar) of every struck note on
+    both staves. Notes that start together form one step."""
     starts, bar_start = set(), 0.0
     for i in range(len(bars)):
         blen = _bar_len_q(bar_lens, i, time)
-        for staff_bars, tl, ol in ((bars, types, onsets), (bass_bars, bass_types, bass_onsets)):
+        for si, staff_bars, tl, ol in ((0, bars, types, onsets), (1, bass_bars, bass_types, bass_onsets)):
             if staff_bars is None or i >= len(staff_bars) or not staff_bars[i]:
                 continue
-            nt = _bar_types(tl, i, staff_bars[i], time, ol)
-            for p in _bar_positions(tl, ol, i, nt, blen):
-                starts.add(round(bar_start + p, 4))
+            _, positions, _, ties, _ = _bar_notes(tl, ol, meta, si, i, staff_bars[i], time, blen)
+            for p, tied in zip(positions, ties):
+                if not tied:
+                    starts.add(round(bar_start + p, 4))
         bar_start += blen
     return sorted(starts)
 
@@ -216,7 +258,162 @@ def _next_in_course() -> tuple[str, int] | None:
     return None
 
 
+def _listen_on(t: float, midi: int, velocity: int):
+    """Strike a key for listen mode (t: when it was due, in the piece's seconds)."""
+    from pianove.sound_engine_fs import play_raw
+    play_raw(midi, velocity)
+
+
+def _listen_off(t: float, midi: int):
+    from pianove.sound_engine_fs import stop
+    stop(midi)
+
+
+def _listen_clock() -> float:
+    import time
+    return time.perf_counter()
+
+
+_LISTEN_THREADED = True       # tests and recordings drive the player frame by frame instead
+
+
+class _Player:
+    """Plays a piece on Pianove's piano by itself, on its own clock: a worker thread
+    strikes and releases each key when it is due, however busy the screen is. The
+    screen asks it where the music is."""
+
+    def __init__(self, events: list, total: float):
+        import threading
+        self._events = events             # (time s, 0 = release / 1 = strike, key, velocity, staff)
+        self._times = [e[0] for e in events]
+        self.total = total
+        self.playing = False
+        self._offset = 0.0                # piece time when last started or moved
+        self._t0 = 0.0                    # clock time then
+        self._i = 0                       # the next event
+        self.sounding: dict[int, int] = {}   # key → staff
+        self._lock = threading.RLock()
+        self._thread = None
+        self._alive = True
+
+    def position(self) -> float:
+        if not self.playing:
+            return self._offset
+        return min(self.total, self._offset + (_listen_clock() - self._t0))
+
+    def play(self):
+        with self._lock:
+            if self._offset >= self.total - 1e-3:
+                self._seek(0.0)
+            self._t0 = _listen_clock()
+            self.playing = True
+        if _LISTEN_THREADED and self._thread is None:
+            import threading
+            self._thread = threading.Thread(target=self._run, daemon=True, name="listen-player")
+            self._thread.start()
+
+    def pause(self):
+        with self._lock:
+            self._offset = self.position()
+            self.playing = False
+            self._release_all()
+
+    def seek(self, t: float):
+        with self._lock:
+            self._seek(t)
+
+    def _seek(self, t: float):
+        import bisect
+        self._release_all()
+        self._offset = max(0.0, min(self.total, t))
+        self._t0 = _listen_clock()
+        self._i = bisect.bisect_left(self._times, self._offset)
+
+    def close(self):
+        self._alive = False
+        self.pause()
+
+    def _release_all(self):
+        for m in list(self.sounding):
+            _listen_off(self._offset, m)
+        self.sounding.clear()
+
+    def advance(self):
+        """Strike and release every key that is due by now."""
+        with self._lock:
+            if not self.playing:
+                return
+            t = self.position()
+            while self._i < len(self._events) and self._events[self._i][0] <= t:
+                et, kind, m, vel, si = self._events[self._i]
+                self._i += 1
+                if kind:
+                    if m in self.sounding:
+                        _listen_off(et, m)             # the same key struck again
+                    _listen_on(et, m, vel)
+                    self.sounding[m] = si
+                elif m in self.sounding:
+                    _listen_off(et, m)
+                    del self.sounding[m]
+            if t >= self.total:
+                self._offset = self.total
+                self.playing = False
+                self._release_all()
+
+    def _run(self):
+        import time
+        nap = _short_sleep()
+        while self._alive:
+            if self.playing:
+                self.advance()
+                nap(0.001)
+            else:
+                time.sleep(0.02)
+
+
+def _short_sleep():
+    """A sleep that wakes after about a millisecond. Windows' ordinary one (as Python 3.10
+    uses it) wakes only every 15.6 ms, too coarse for fast notes: there a
+    high-resolution waitable timer does it."""
+    import sys
+    import time
+    if sys.platform != "win32":
+        return time.sleep
+    try:
+        import ctypes
+        from ctypes import wintypes
+        k = ctypes.WinDLL("kernel32")
+        k.CreateWaitableTimerExW.restype = wintypes.HANDLE
+        k.CreateWaitableTimerExW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, wintypes.DWORD, wintypes.DWORD]
+        k.SetWaitableTimer.argtypes = [wintypes.HANDLE, ctypes.POINTER(ctypes.c_longlong), wintypes.LONG,
+                                       ctypes.c_void_p, ctypes.c_void_p, wintypes.BOOL]
+        k.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+        timer = k.CreateWaitableTimerExW(None, None, 0x00000002, 0x1F0003)   # HIGH_RESOLUTION
+        if not timer:
+            return time.sleep
+    except Exception:
+        return time.sleep
+
+    def nap(seconds: float):
+        due = ctypes.c_longlong(-int(seconds * 1e7))  # relative, in 100 ns
+        k.SetWaitableTimer(timer, ctypes.byref(due), 0, None, None, False)
+        k.WaitForSingleObject(timer, 0xFFFFFFFF)
+    return nap
+
+
+# The score view that is playing the piece in listen mode, so its sound stops when the
+# page goes away
+_LISTENING: list = [None]
+
+
+def _stop_listening():
+    sv, _LISTENING[0] = _LISTENING[0], None
+    if sv is not None:
+        sv.stop_listening()
+
+
 def _nav_back():
+    _stop_listening()
     ctx.lesson_step_idx    = 0
     ctx.lesson_current_idx = 0
     ctx.lesson_section_idx = 0
@@ -251,7 +448,7 @@ class _StaffView(PygameCanvas):
                  bass_types: list[list[str]] | None = None,
                  onsets: list[list[float]] | None = None,
                  bass_onsets: list[list[float]] | None = None,
-                 bar_lens: list[float] | None = None, **kwargs):
+                 bar_lens: list[float] | None = None, meta: dict | None = None, **kwargs):
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
         self._bpm  = bpm
@@ -292,27 +489,46 @@ class _StaffView(PygameCanvas):
             if st1:
                 st1.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st1))
 
-        def _fill(staff, bar_obj, pitches, ntypes, positions):
-            """Place notes at their positions: notes starting together become a chord,
-            and rests fill any gaps."""
-            placed, cur, i = [], 0.0, 0
-            while i < len(pitches):
-                pos, j = positions[i], i
-                while j + 1 < len(pitches) and abs(positions[j + 1] - pos) < 1e-6:
-                    j += 1
-                gap = pos - cur
+        def _fill(staff, bar_obj, pitches, ntypes, positions, lengths, blen):
+            """Place notes at their positions, in time order across all voices: notes
+            starting together become a chord. Each event takes the room up to the next one
+            (_layout_dur), and rests fill only where nothing sounds."""
+            def rests(gap):
+                out = []
                 for rname, rq in _REST_STEPS:
                     while gap >= rq - 1e-6:
-                        bar_obj.events.append(_PluteRest(rtype=rname, staff=staff))
+                        out.append(_PluteRest(rtype=rname, staff=staff))
                         gap -= rq
-                notes = [_PluteNote(ntype=ntypes[k], pitch=pitches[k], staff=staff) for k in range(i, j + 1)]
+                return out, gap
+
+            groups: list[tuple[float, list[int]]] = []
+            for k in sorted(range(len(pitches)), key=lambda k: positions[k]):
+                if groups and abs(positions[k] - groups[-1][0]) < 1e-6:
+                    groups[-1][1].append(k)
+                else:
+                    groups.append((positions[k], [k]))
+            placed, sounding = [], 0.0
+            if groups and groups[0][0] > 1e-6:                # silence at the start of the bar
+                lead, left = rests(groups[0][0])
+                if not lead:
+                    lead = [_PluteRest(rtype="thirty_second", staff=staff)]
+                lead[-1]._layout_dur = (_dur(lead[-1].type) * 4 + left) / 4 if left > 1e-6 else None
+                if len(lead) == 1 and left > 1e-6:
+                    lead[-1]._layout_dur = groups[0][0] / 4
+                bar_obj.events.extend(lead)
+            for gi, (pos, ks) in enumerate(groups):
+                notes = [_PluteNote(ntype=ntypes[k], pitch=pitches[k], staff=staff) for k in ks]
                 event = notes[0] if len(notes) == 1 else _PluteChord(notes, staff=staff)
                 bar_obj.events.append(event)
-                for note in notes:
+                for note, k in zip(notes, ks):
                     note._event = event            # the drawn event, for the playhead position
-                    placed.append((pos, note))
-                cur = pos + _dur(ntypes[i]) * 4
-                i = j + 1
+                    placed.append((pos, note, k))
+                sounding = max(sounding, max(pos + lengths[k] for k in ks))
+                nxt = groups[gi + 1][0] if gi + 1 < len(groups) else max(blen, pos)
+                quiet = max(pos, min(sounding, nxt))           # where silence begins before nxt
+                fill, left = rests(nxt - quiet) if nxt - quiet > 0.124 else ([], nxt - quiet)
+                event._layout_dur = max(1e-3, quiet - pos + left) / 4
+                bar_obj.events.extend(fill)
             return placed
 
         # Every note with its start position (quarter notes from the first real bar)
@@ -329,12 +545,22 @@ class _StaffView(PygameCanvas):
                 if not pitches:
                     bar_obj.events.append(_PluteRest(rtype="whole", staff=staff))
                     continue
-                nt = _bar_types(tl, rel_i, pitches, time, ol)
-                for pos, note in _fill(staff, bar_obj, pitches, nt, _bar_positions(tl, ol, rel_i, nt, blen)):
+                nt, positions, lengths, ties, vels = _bar_notes(tl, ol, meta, si, rel_i, pitches, time, blen)
+                for pos, note, k in _fill(staff, bar_obj, pitches, nt, positions, lengths, blen):
                     note._si = si
                     note._bar = n_prep + rel_i
-                    timed.append((round(bar_start + pos, 4), si, note))
+                    note._len_q = lengths[k]
+                    note._vel = vels[k]
+                    note._tied = ties[k]
+                    if not ties[k]:                    # a tied note sounds on, it is not struck again
+                        timed.append((round(bar_start + pos, 4), si, note))
             bar_start += blen
+
+        # Room per bar: enough for the busier bars of this piece to stay readable (every
+        # bar of the strip gets the same width)
+        busy = sorted(max(len(st.bars[b].events) for st in self._score.staffs)
+                      for b in range(n_prep, n_bars)) or [0]
+        self._px_per_bar = max(_PX_PER_BAR, 24 * busy[int(len(busy) * 0.85)] + 70)
 
         # _step_list: notes that start at the same moment, on either staff, form one step.
         # _step_beats: how long each step lasts, in quarter notes (used by performance mode).
@@ -349,6 +575,10 @@ class _StaffView(PygameCanvas):
                 step_pos.append(pos)
         self._step_beats = [(step_pos[i + 1] if i + 1 < len(step_pos) else bar_start) - step_pos[i]
                             for i in range(len(step_pos))]
+        # seconds, through the piece's tempo changes (timed play and listening)
+        self._sec = _seconds_fn((meta or {}).get("tempos") if phase != "practice" else None, bpm)
+        self._step_secs = [self._sec(step_pos[i] + self._step_beats[i]) - self._sec(step_pos[i])
+                           for i in range(len(step_pos))]
 
         # Fingering: the treble staff is the right hand and the bass staff the left; a single
         # staff belongs to the hand its clef suggests
@@ -370,6 +600,9 @@ class _StaffView(PygameCanvas):
         self._on_advance = on_advance
         self._perf_timer = 0.0
         self._perf_hit   = False
+        self.on_tick     = None           # listen mode: (time, length, playing) every frame
+        if phase == "listen":
+            self._setup_listen(step_pos, bar_start)
 
         self._dirty      = True
         self._dirty_bars: set[int] = set()   # bars whose notes changed colour
@@ -463,7 +696,7 @@ class _StaffView(PygameCanvas):
 
     def _build_offscreen(self):
         vw = max(1, self.rect.width)
-        self._strip_w = max(vw, self._n_bars * _PX_PER_BAR)
+        self._strip_w = max(vw, self._n_bars * self._px_per_bar)
         self._score._on_resize(self._strip_w)
         h = self._score.total_content_height(self._strip_w)
         self._offscreen = pygame.Surface((self._strip_w, h))
@@ -559,6 +792,137 @@ class _StaffView(PygameCanvas):
         for x, strip in beside:
             surf.blit(strip, (x, 0))
 
+    # ── Listen mode: Pianove plays the piece itself ──────────────────────────────
+
+    def _setup_listen(self, step_pos: list[float], end_q: float):
+        """The timeline of the piece in seconds: when each step starts, and when each of
+        its notes is struck and let go (by the player, on its own clock)."""
+        sec = self._sec
+        self._step_t = [sec(p) for p in step_pos]
+        self._step_ends = []
+        events = []
+        for p, t0, step in zip(step_pos, self._step_t, self._step_list):
+            ends = []
+            for n in step:
+                end = max(t0 + 0.03, t0 + (sec(p + n._len_q) - t0) * 0.96)
+                ends.append(end)
+                m = _pitch_to_midi(n.pitch)
+                vel = n._vel or (82 if n._si == 0 else 74)
+                events.append((t0, 1, m, vel, n._si))
+                events.append((end, 0, m, 0, n._si))
+            self._step_ends.append(ends)
+        events.sort(key=lambda e: (e[0], e[1]))          # at the same moment: release first
+        self.total_time = sec(end_q)
+        self._player = _Player(events, self.total_time)
+        self._next = 0                                    # steps shown as started
+        self._lit: dict = {}                              # note → ends at (drawn blue)
+        _LISTENING[0] = self
+
+    @property
+    def listen_t(self) -> float:
+        return self._player.position()
+
+    @property
+    def playing(self) -> bool:
+        return self._player.playing
+
+    @property
+    def sounding(self) -> dict[int, int]:
+        """The keys sounding now → the staff each belongs to (0 treble, 1 bass)."""
+        return dict(self._player.sounding) if self._phase == "listen" else {}
+
+    def _unlight(self):
+        for note in self._lit:
+            note.color = None
+        if self._lit:
+            self._touch(list(self._lit))
+        self._lit.clear()
+
+    def stop_listening(self):
+        self._player.close()
+        self._unlight()
+
+    def toggle_play(self):
+        if self._player.playing:
+            self._player.pause()
+            self._unlight()
+        else:
+            if self._player.position() >= self.total_time - 1e-3:
+                self.seek(0.0)
+            self._player.play()
+
+    def seek(self, t: float):
+        """Jump to a moment of the piece. Notes already under way there are not struck
+        again; the next ones play as the time comes."""
+        import bisect
+        self._player.seek(t)
+        self._unlight()
+        t = self._player.position()
+        self._next = bisect.bisect_left(self._step_t, t - 1e-6)
+        self.current_idx = max(0, min(len(self._step_list) - 1, self._next - 1 if self._next else 0))
+        self._place_playhead(snap=True)
+
+    def _place_playhead(self, snap: bool = False):
+        """The playhead glides between the steps' x positions with the time."""
+        if not self._note_xs:
+            return
+        t = self._player.position()
+        i = self._next - 1
+        if i < 0:
+            x = self._note_xs[0] * min(1.0, t / max(1e-3, self._step_t[0])) if self._step_t else 0
+        else:
+            t0 = self._step_t[i]
+            t1 = self._step_t[i + 1] if i + 1 < len(self._step_t) else self.total_time
+            x0 = self._note_xs[i]
+            x1 = self._note_xs[i + 1] if i + 1 < len(self._note_xs) else x0 + 60
+            x = x0 + (x1 - x0) * min(1.0, (t - t0) / max(1e-3, t1 - t0))
+        vw = max(1, self.rect.width)
+        target = min(max(0.0, self._strip_w - vw), max(0.0, x - vw * 0.30))
+        self._ph.snap_to(x)
+        if snap:
+            self._scroll.snap_to(target)
+        self._scroll.target = target
+
+    def _listen_update(self, dt: float):
+        """The screen follows the music: notes light up while they sound."""
+        if not _LISTEN_THREADED:
+            self._player.advance()
+        t = self._player.position()
+        if self._player.playing:
+            started = []
+            while self._next < len(self._step_t) and self._step_t[self._next] <= t:
+                for note, end in zip(self._step_list[self._next], self._step_ends[self._next]):
+                    note.color = _BLUE
+                    self._lit[note] = end
+                    started.append(note)
+                self.current_idx = self._next
+                self._next += 1
+            if started:
+                self._touch(started)
+        done = [n for n, end in self._lit.items() if end <= t or not self._player.playing]
+        for note in done:
+            note.color = None
+            del self._lit[note]
+        if done:
+            self._touch(done)
+        if self._player.playing or not self._note_xs or self._ph.value == 0:
+            self._place_playhead()
+        if self.on_tick:
+            self.on_tick(t, self.total_time, self._player.playing)
+
+    def handle_content_event(self, event: pygame.event.Event) -> bool:
+        if self._phase != "listen" or event.type != pygame.KEYDOWN:
+            return False
+        if event.key == pygame.K_SPACE:
+            self.toggle_play()
+        elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+            self.seek(self.listen_t + (5.0 if event.key == pygame.K_RIGHT else -5.0))
+        elif event.key == pygame.K_HOME:
+            self.seek(0.0)
+        else:
+            return False
+        return True
+
     def update_content(self, dt: float):
         if self._offscreen is None:
             self._build_offscreen()
@@ -586,9 +950,13 @@ class _StaffView(PygameCanvas):
                 self._perf_timer = 0.0
             return
 
+        if self._phase == "listen":
+            self._listen_update(dt)
+            return
+
         if self._phase == "performance" and self.current_idx < len(self._step_list):
             self._perf_timer += dt
-            note_dur = 60.0 / self._bpm * self._step_beats[self.current_idx]
+            note_dur = self._step_secs[self.current_idx]
 
             if self._note_xs:
                 idx   = min(self.current_idx, len(self._note_xs) - 1)
@@ -689,6 +1057,7 @@ class _LessonPiano:
                                              ctx.current_song_hand, ctx.practice_mode),
                                      skin=hand_tone_state.value)
         self._status_font: pygame.font.Font | None = None
+        self._kb_cache = None
 
     def update(self, dt: float, rect: pygame.Rect):
         self._panel.update(dt, rect)
@@ -701,14 +1070,25 @@ class _LessonPiano:
         # In timed play the hands move on before the next note is due
         sv, lead, step_time = self._sv, 0.0, 0.0
         if sv._phase == "performance" and not sv._in_prep and sv.current_idx < len(sv._step_beats):
-            step_time = 60.0 / sv._bpm * sv._step_beats[sv.current_idx]
+            step_time = sv._step_secs[sv.current_idx]
             lead = sv._perf_timer / step_time if step_time > 0 else 0.0
+        if sv._phase == "listen":
+            # the hands play what sounds; while playing they move on in time like a player
+            step = max(0, sv._next - 1)
+            if sv.playing and sv._next < len(sv._step_t):
+                t0 = sv._step_t[step] if sv._next else 0.0
+                step_time = max(1e-3, sv._step_t[sv._next] - t0)
+                lead = min(1.0, max(0.0, (sv.listen_t - t0) / step_time))
+            self._hands.update(dt, step, frozenset(sv.sounding), lead, step_time)
+            return
         self._hands.update(dt, sv.current_idx, frozenset(self._panel.active_notes), lead, step_time)
 
     def handle_event(self, event: pygame.event.Event, rect: pygame.Rect) -> bool:
         return False
 
     def _handle_note(self, note_num: int):
+        if self._sv._phase == "listen":
+            return                                    # listening: the keys are only played back
         expected = self._sv.expected_midis()
         if not expected:
             return
@@ -729,6 +1109,9 @@ class _LessonPiano:
         expected = self._sv.upcoming_midis()   # frozenset[int]
         active   = self._panel.active_notes
         idx      = self._sv.current_idx
+        sounding = self._sv.sounding           # listen mode: the keys Pianove is playing
+        if self._sv._phase == "listen":
+            expected, active = frozenset(), frozenset(sounding)
 
         # The panel opens from the bottom; above _KB_H it is the hands' room
         shown    = self._reveal() if self._reveal else rect.height
@@ -757,7 +1140,15 @@ class _LessonPiano:
         def _hand_col(note):
             return self._hands.colour_of(note, idx) if hands_on else None
 
+        def _played(note):
+            """A key Pianove plays, in the colour of the hand playing it."""
+            from pianove.hands import ACCENT
+            side = "left" if sounding.get(note) == 1 or (sounding.get(note) == 0 and
+                                                        ctx.current_song_hand == "left") else "right"
+            return ACCENT[side]
+
         def _wc(note):
+            if note in sounding: return tuple(int(255 - (255 - c) * 0.75) for c in _played(note))
             if _active(note): return (190, 60, 60)
             if _exp(note):
                 acc = _hand_col(note)          # the colour of the hand that plays it
@@ -767,6 +1158,7 @@ class _LessonPiano:
             return (255, 255, 255)
 
         def _bc(note):
+            if note in sounding: return tuple(int(c * 0.9) for c in _played(note))
             if _active(note): return (140, 45, 45)
             if _exp(note):
                 acc = _hand_col(note)
@@ -788,11 +1180,21 @@ class _LessonPiano:
             for idx, note in zip(black_indices, black_notes)
         ]
 
-        for kr, col in white_keys:
-            pygame.draw.rect(surface, col, kr)
-            pygame.draw.rect(surface, (80, 80, 80), kr, 1)
-        for kr, col in black_keys:
-            pygame.draw.rect(surface, col, kr, border_radius=4)
+        # the keys, drawn again only when one of them changes colour
+        key = (rect.size, rect.topleft, tuple(white_keys), tuple(black_keys))
+        if self._kb_cache is None or self._kb_cache[0] != key:
+            x0 = min((kr.left for kr, _ in white_keys), default=rect.left)
+            y0 = int(top)
+            surf = pygame.Surface((max(1, rect.right - x0), max(1, int(key_h) + 1)))
+            surf.fill(iOSTheme.tertiary_background)
+            for kr, col in white_keys:
+                r = kr.move(-x0, -y0)
+                pygame.draw.rect(surf, col, r)
+                pygame.draw.rect(surf, (80, 80, 80), r, 1)
+            for kr, col in black_keys:
+                pygame.draw.rect(surf, col, kr.move(-x0, -y0), border_radius=4)
+            self._kb_cache = (key, surf, (x0, y0))
+        surface.blit(self._kb_cache[1], self._kb_cache[2])
 
         if hands_on and white_notes:
             kb = KeyboardGeometry(left=rect.left + margin_x, white_w=white_w, top=top,
@@ -815,6 +1217,67 @@ class _LessonPiano:
                              border_radius=pill.get_height() // 2)
             surface.blit(pill, (pos[0] - 6, pos[1] - 2))
         surface.blit(ls, pos)
+
+
+def _clock(t: float, total: float) -> str:
+    return f"{int(t) // 60}:{int(t) % 60:02d} / {int(total) // 60}:{int(total) % 60:02d}"
+
+
+def _add_transport(controls: FloatLayout, sv_ref: list, right_w: int):
+    """Listen mode's transport in the controls bar: play/pause, a timeline to jump
+    anywhere in the piece, and the time."""
+    from pylay import Slider
+    win_w = ctx.ui.width if ctx.ui else 1024
+    x_play, time_w = 150, 96
+    slider_w = max(80, win_w - (x_play + 44) - time_w - right_w - 16)
+
+    def _draw_play(surface: pygame.Surface, rect: pygame.Rect):
+        sv = sv_ref[0]
+        pygame.draw.rect(surface, iOSTheme.fill, rect, border_radius=8)
+        c, (cx, cy) = iOSTheme.label, rect.center
+        if sv is not None and sv.playing:
+            for dx in (-5, 2):
+                pygame.draw.rect(surface, c, pygame.Rect(cx + dx, cy - 7, 4, 14), border_radius=1)
+        else:
+            pygame.draw.polygon(surface, c, [(cx - 4, cy - 8), (cx - 4, cy + 8), (cx + 8, cy)])
+
+    def _press_play(event: pygame.event.Event, rect: pygame.Rect) -> bool:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and rect.collidepoint(event.pos):
+            if sv_ref[0] is not None:
+                sv_ref[0].toggle_play()
+            return True
+        return False
+
+    controls.add_child(PygameCanvas(on_draw=_draw_play, on_event=_press_play, draw_border=False,
+                                    anchor="left", x=x_play, y=0, width=36, height=32))
+    pos_state = State(0.0)
+    time_state = State(_clock(0, 0))
+
+    def _seek(v: float):
+        if sv_ref[0] is not None:
+            sv_ref[0].seek(v * sv_ref[0].total_time)
+
+    slider = Slider(value=pos_state, on_change=_seek,
+                    anchor="left", x=x_play + 44, y=0, width=slider_w, height=32)
+    controls.add_child(slider)
+    controls.add_child(Label(text=time_state, font_size=13, color=iOSTheme.secondary_label,
+                             anchor="left", x=x_play + 52 + slider_w, y=0, width=time_w, height=44))
+
+    def _tick(t: float, total: float, playing: bool):
+        if not slider.is_dragging and total > 0 and abs(pos_state.value - t / total) > 1e-4:
+            pos_state.value = t / total
+        txt = _clock(t, total)
+        if txt != time_state.value:
+            time_state.value = txt
+
+    def _hook():
+        if sv_ref[0] is not None:
+            sv_ref[0].on_tick = _tick
+            time_state.value = _clock(0, sv_ref[0].total_time)
+    _TRANSPORT_HOOKS.append(_hook)
+
+
+_TRANSPORT_HOOKS: list = []
 
 
 def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
@@ -1095,6 +1558,8 @@ def _build_completion(lesson_title: str) -> FloatLayout:
 def build():
     from pianove.lesson_loader import load_lesson
 
+    _stop_listening()                                 # a page rebuilt while listening falls silent
+
     lesson_id    = ctx.current_lesson_id
     keyboard_vis = ctx.lesson_keyboard_vis
     if ctx.lesson_hands_vis is None:
@@ -1171,6 +1636,7 @@ def build():
     active_types = active_onsets = active_lens = None
     _both_lh_types = _both_lh_onsets = None
     rhythm = {}
+    meta = None                     # real lengths, ties, loudness and tempo changes, per staff
     if ctx.current_song_id and not is_practice:
         from pianove.song_store import get_song_rhythm
         rhythm = get_song_rhythm(ctx.current_song_id)
@@ -1186,6 +1652,8 @@ def build():
         if hand_key:
             active_types  = _for_view(rhythm.get(f"types_{hand_key}"))
             active_onsets = _for_view(rhythm.get(f"onsets_{hand_key}"))
+            meta = {k: (_for_view(rhythm.get(f"{k}_{hand_key}")), None) for k in ("durs", "ties", "vels")}
+            meta["tempos"] = rhythm.get("tempos")
         active_lens = _for_view(rhythm.get("bar_lens"))
 
     # For "both hands" song mode, split into treble/bass for grand-staff display
@@ -1210,9 +1678,12 @@ def build():
             active_types,  _both_lh_types  = _cut(rhythm.get("types_rh")), _cut(rhythm.get("types_lh"))
             active_onsets, _both_lh_onsets = _cut(rhythm.get("onsets_rh")), _cut(rhythm.get("onsets_lh"))
             active_lens = _cut(rhythm.get("bar_lens"))
+            meta = {k: (_cut(rhythm.get(f"{k}_rh")), _cut(rhythm.get(f"{k}_lh")))
+                    for k in ("durs", "ties", "vels")}
+            meta["tempos"] = rhythm.get("tempos")
     # One step per distinct start position, across both staves (matches _StaffView)
     n_notes = len(_step_positions(active_bars, _both_lh_bars, active_types, _both_lh_types,
-                                  active_onsets, _both_lh_onsets, active_lens, song_time))
+                                  active_onsets, _both_lh_onsets, active_lens, song_time, meta))
 
     # Completion screen
     if ctx.lesson_completed and initial_idx >= n_notes:
@@ -1248,6 +1719,10 @@ def build():
             _slide_ref[0].set_max_height(_kb_h_hands() if val else _KB_H)
 
     def _on_restart():
+        if phase == "listen":
+            if _sv[0]:
+                _sv[0].seek(0.0)
+            return
         ctx.lesson_step_idx    = 0
         ctx.lesson_current_idx = 0
         ctx.lesson_section_idx = 0
@@ -1345,6 +1820,9 @@ def build():
         phase_label = t("practice_go_label", bpm=bpm)
     elif phase == "performance" and ctx.current_song_id:
         phase_label = f"{t('song_play_along')}  {bpm} BPM"
+    elif phase == "listen":
+        phase_label = f"{t('song_listen')}  {bpm} BPM"
+        counter_state.value = ""
     elif phase == "performance":
         phase_label = t("lesson_final_go")
     elif n_sections > 1:
@@ -1379,6 +1857,8 @@ def build():
     controls.add_child(Label(text=phase_label, font_size=13,
                              color=iOSTheme.secondary_label,
                              anchor="left", x=16, y=0, width=240, height=44))
+    if phase == "listen":
+        _add_transport(controls, _sv, right_w=270 if beta else 150)
     controls.add_child(Button(text="↺", on_click=_on_restart,
                               anchor="right", x=-252 if beta else -134, y=0,
                               width=36, height=32, font_size=18,
@@ -1407,10 +1887,12 @@ def build():
         initial_idx=initial_idx, on_advance=_do_note_advance,
         bpm=bpm, clef=clef, bass_bars=_both_lh_bars, time=song_time,
         types=active_types, bass_types=_both_lh_types,
-        onsets=active_onsets, bass_onsets=_both_lh_onsets, bar_lens=active_lens,
+        onsets=active_onsets, bass_onsets=_both_lh_onsets, bar_lens=active_lens, meta=meta,
         width=1.0, height=staff_h,
     )
     _sv[0] = staff_view
+    while _TRANSPORT_HOOKS:
+        _TRANSPORT_HOOKS.pop()()
     staff_view.bottom_inset = lambda: _slide_ref[0].reveal_height if _slide_ref[0] else 0
     main.add_child(staff_view)
 

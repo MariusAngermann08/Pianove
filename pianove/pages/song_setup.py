@@ -37,7 +37,8 @@ def build():
     def _start(phase: str = "practice"):
         # "practice": Pianove waits for each note, section by section.
         # "performance": play along at the song's own tempo after a count-in.
-        ctx.current_song_hand  = _HAND_KEYS[_hand_state.value]
+        # listening plays the whole piece, both hands
+        ctx.current_song_hand  = "both" if phase == "listen" else _HAND_KEYS[_hand_state.value]
         ctx.lesson_current_idx = 0
         ctx.lesson_section_idx = 0
         ctx.lesson_completed   = False
@@ -133,13 +134,17 @@ def build():
         width=1.0, height=40,
     ))
 
-    # Start buttons: practise note by note, or play along in tempo
+    # Start buttons: practise note by note, or play along in tempo; with beta features
+    # also listen to the piece played for you
+    from pianove.state import beta_features_state
+    listen = bool(beta_features_state.value)
+    bw = 0.32 if listen else 0.49
     buttons = FloatLayout(width=1.0, height=52)
     buttons.add_child(Button(
         text=t("song_start"),
         on_click=_start,
         anchor="left", x=0, y=0,
-        width=0.49, height=52, font_size=16,
+        width=bw, height=52, font_size=16,
         background_color=ColorPalette.BLUE,
         text_color=pygame.Color(255, 255, 255),
         border_radius=14,
@@ -147,12 +152,22 @@ def build():
     buttons.add_child(Button(
         text=t("song_play_along"),
         on_click=lambda: _start("performance"),
-        anchor="right", x=0, y=0,
-        width=0.49, height=52, font_size=16,
+        anchor="center" if listen else "right", x=0, y=0,
+        width=bw, height=52, font_size=16,
         background_color=iOSTheme.fill,
         text_color=iOSTheme.label,
         border_radius=14,
     ))
+    if listen:
+        buttons.add_child(Button(
+            text=t("song_listen"),
+            on_click=lambda: _start("listen"),
+            anchor="right", x=0, y=0,
+            width=bw, height=52, font_size=16,
+            background_color=iOSTheme.fill,
+            text_color=iOSTheme.label,
+            border_radius=14,
+        ))
     body.add_child(buttons)
 
     main.add_child(body)

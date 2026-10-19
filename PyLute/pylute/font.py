@@ -18,10 +18,33 @@ def set_font_size(size):
         _font     = None
 
 
+class _MeasuredFont:
+    """The music font, remembering each glyph's size: a score measures the same few
+    glyphs (noteheads, flags, accidentals) thousands of times while it is drawn."""
+
+    def __init__(self, font):
+        object.__setattr__(self, "_font", font)
+        object.__setattr__(self, "_rects", {})
+
+    def get_rect(self, text, *args, **kwargs):
+        if args or kwargs:
+            return self._font.get_rect(text, *args, **kwargs)
+        r = self._rects.get(text)
+        if r is None:
+            r = self._rects[text] = self._font.get_rect(text)
+        return r.copy()
+
+    def __getattr__(self, name):
+        return getattr(self._font, name)
+
+    def __setattr__(self, name, value):
+        setattr(self._font, name, value)
+
+
 def get_font():
     global _font
     if _font is None:
-        _font = pg.freetype.Font(FONT_PATH, FONT_SIZE)
+        _font = _MeasuredFont(pg.freetype.Font(FONT_PATH, FONT_SIZE))
     return _font
 
 

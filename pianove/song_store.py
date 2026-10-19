@@ -21,12 +21,17 @@ _TYPE_BEATS = {
 }
 
 # MusicXML <type> text → pylute note-type vocabulary (see PyLute's durations.py).
-# Only these five base types are kept when importing (matches the note filter
-# below); anything else (32nd notes, etc.) is dropped rather than mismapped.
 _MXL_TYPE_TO_PYLUTE = {
-    "whole": "whole", "half": "half", "quarter": "quarter",
-    "eighth": "eighth", "16th": "sixteenth",
+    "breve": "whole", "whole": "whole", "half": "half", "quarter": "quarter",
+    "eighth": "eighth", "16th": "sixteenth", "32nd": "thirty_second",
+    "64th": "thirty_second", "128th": "thirty_second",    # drawn as 32nds; they sound as written
 }
+_QUARTERS_OF = {"whole": 4.0, "half": 2.0, "quarter": 1.0, "eighth": 0.5, "sixteenth": 0.25,
+                "thirty_second": 0.125}
+
+# Bumped whenever the importer reads more of a file: songs imported by an older version
+# are read again from their file the next time they are opened
+PARSER_VERSION = 2
 
 
 
@@ -195,28 +200,67 @@ def _parse_musicxml(filepath: str) -> dict:
             except (ValueError, TypeError):
                 pass
 
-    # Determine primary voice per staff (first voice encountered)
-    primary_voice: dict[int, str] = {}
-
-    bars_rh: list[list[str]] = []
-    bars_lh: list[list[str]] = []
-    types_rh: list[list[str]] = []
-    types_lh: list[list[str]] = []
-    onsets_rh: list[list[float]] = []      # quarter-note position of each note in its bar
-    onsets_lh: list[list[float]] = []
+    # Every note of every voice on both staves, as it sounds: where it starts in its bar,
+    # how long it really lasts (tuplets included), whether it only continues a tie, and
+    # how loud it is. Tempo changes become a tempo map. Two-note and single-note
+    # tremolos are written out as the notes they sound as.
+    S = {0: "rh", 1: "lh"}
+    data = {k: [] for k in ("bars", "types", "onsets", "durs", "ties", "vels")}
+    out = {f"{k}_{h}": [] for k in data for h in S.values()}
     bar_lens: list[float] = []             # real length of each bar in quarters (pickups are short)
+    tempos: list[list[float]] = []         # [position in quarters from the start, quarter bpm]
     divisions = 1
     bpm = None
     full_bar = time[0] * 4 / time[1]
+    bar_start_q = 0.0
+    velocity = 80                          # MusicXML's default forte is 90; mf ≈ 80
+    open_ties: dict = {}                   # (staff, voice, pitch) → (bar list, index) of the first note
+    trem_start = None                      # the first note of a two-note tremolo
+
+    def _tempo_of(el):
+        """A tempo from a <direction>/<sound>, in quarter notes per minute."""
+        for sub in el.iter():
+            if _tag(sub) == "sound" and sub.get("tempo"):
+                try:
+                    return float(sub.get("tempo"))
+                except ValueError:
+                    pass
+        for sub in el.iter():
+            if _tag(sub) == "metronome":
+                unit = _text(sub, "beat-unit", "quarter")
+                try:
+                    per = float(_text(sub, "per-minute", "") or 0)
+                except ValueError:
+                    per = 0
+                if per:
+                    q = {"whole": 4, "half": 2, "quarter": 1, "eighth": 0.5, "16th": 0.25}.get(unit, 1)
+                    if _find(sub, "beat-unit-dot") is not None:
+                        q *= 1.5
+                    return per * q
+        return None
+
+    def _dynamics_of(el):
+        for sub in el.iter():
+            if _tag(sub) == "sound" and sub.get("dynamics"):
+                try:
+                    return max(20, min(127, round(90 * float(sub.get("dynamics")) / 100)))
+                except ValueError:
+                    pass
+        return None
 
     for measure in measures:
-        bar_rh: list[str] = []
-        bar_lh: list[str] = []
-        tbar_rh: list[str] = []
-        tbar_lh: list[str] = []
-        obar_rh: list[float] = []
-        obar_lh: list[float] = []
+        bar = {h: {k: [] for k in data} for h in S.values()}
         cursor = longest = last_onset = 0
+
+        def add(staff_idx, pitch, ntype, on_div, dur_div, tied=False, vel=None):
+            b = bar[S.get(staff_idx, "lh")]
+            b["bars"].append(pitch)
+            b["types"].append(ntype)
+            b["onsets"].append(round(on_div / divisions, 6))
+            b["durs"].append(round(dur_div / divisions, 6))
+            b["ties"].append(bool(tied))
+            b["vels"].append(vel or velocity)
+            return b, len(b["bars"]) - 1
 
         # Walk the measure in document order with a time cursor, as MusicXML defines it
         for el in measure:
@@ -236,15 +280,14 @@ def _parse_musicxml(filepath: str) -> dict:
                 longest = max(longest, cursor)
                 continue
             if tag in ("direction", "sound"):
-                if bpm is None:
-                    for sub in el.iter():
-                        if _tag(sub) == "sound" and sub.get("tempo"):
-                            bpm = float(sub.get("tempo"))
-                        elif _tag(sub) == "per-minute" and sub.text:
-                            try:
-                                bpm = float(sub.text)
-                            except ValueError:
-                                pass
+                tempo = _tempo_of(el)
+                if tempo:
+                    if bpm is None:
+                        bpm = tempo
+                    tempos.append([round(bar_start_q + cursor / divisions, 6), tempo])
+                dyn = _dynamics_of(el)
+                if dyn:
+                    velocity = dyn
                 continue
             if tag != "note":
                 continue
@@ -262,18 +305,20 @@ def _parse_musicxml(filepath: str) -> dict:
                 cursor += dur
                 longest = max(longest, cursor)
 
-            if is_grace:
-                continue                   # chord notes are kept: they share the chord's position
-            if _find(note_el, "time-modification") is not None:
-                continue
+            if is_grace or _find(note_el, "cue") is not None:
+                continue                   # ornaments without time of their own
             if _find(note_el, "rest") is not None:
+                continue
+            pitch_el = _find(note_el, "pitch")
+            if pitch_el is None:
                 continue
 
             ntype_el = _find(note_el, "type")
-            if ntype_el is None or ntype_el.text not in _MXL_TYPE_TO_PYLUTE:
-                continue
-            ntype = _MXL_TYPE_TO_PYLUTE[ntype_el.text]
-            if _findall(note_el, "dot"):
+            ntype = _MXL_TYPE_TO_PYLUTE.get(ntype_el.text if ntype_el is not None else "", "")
+            if not ntype:                  # no written value: the closest one to its length
+                q = dur / max(1, divisions)
+                ntype = min(_QUARTERS_OF, key=lambda k: abs(_QUARTERS_OF[k] - q))
+            if _findall(note_el, "dot") and ntype != "whole":
                 ntype = f"dotted_{ntype}"
 
             staff_idx = 0
@@ -281,58 +326,93 @@ def _parse_musicxml(filepath: str) -> dict:
                 staff_idx = int(_text(note_el, "staff", "1")) - 1
             except (ValueError, TypeError):
                 pass
-
             voice = _text(note_el, "voice", "1")
-            if staff_idx not in primary_voice:
-                primary_voice[staff_idx] = voice
-            elif voice != primary_voice[staff_idx]:
-                continue
 
-            pitch_el = _find(note_el, "pitch")
-            if pitch_el is None:
-                continue
             step   = _text(pitch_el, "step", "C")
             octave = _text(pitch_el, "octave", "4")
             try:
                 alter = float(_text(pitch_el, "alter", "0"))
             except (ValueError, TypeError):
                 alter = 0.0
-            acc   = "#" if alter >= 0.5 else ("b" if alter <= -0.5 else "")
-            pitch = f"{step}{acc}{octave}"
-            on_q = round(onset / divisions, 4)
+            pitch = _spell(step, round(alter), octave)
+            vel = None
+            if note_el.get("dynamics"):
+                try:
+                    vel = max(20, min(127, round(90 * float(note_el.get("dynamics")) / 100)))
+                except ValueError:
+                    pass
 
-            if staff_idx == 0:
-                bar_rh.append(pitch)
-                tbar_rh.append(ntype)
-                obar_rh.append(on_q)
-            else:
-                bar_lh.append(pitch)
-                tbar_lh.append(ntype)
-                obar_lh.append(on_q)
+            # tremolos: written as what they sound as
+            trem = next((n for n in note_el.iter() if _tag(n) == "tremolo"), None)
+            if trem is not None:
+                try:
+                    beams = int((trem.text or "3").strip())
+                except ValueError:
+                    beams = 3
+                step_div = max(1, divisions // (2 ** max(1, beams)))
+                kind = trem.get("type", "single")
+                if kind == "start":
+                    trem_start = (staff_idx, pitch, onset, dur, vel)
+                    continue
+                if kind == "stop" and trem_start is not None:
+                    s_idx, p0, on0, d0, v0 = trem_start
+                    trem_start = None
+                    small = "thirty_second" if beams >= 3 else "sixteenth" if beams == 2 else "eighth"
+                    for k in range(max(2, (d0 + dur) // step_div)):
+                        add(s_idx, p0 if k % 2 == 0 else pitch, small, on0 + k * step_div, step_div, vel=v0)
+                    continue
+                if kind == "single":
+                    small = "thirty_second" if beams >= 3 else "sixteenth" if beams == 2 else "eighth"
+                    for k in range(max(1, dur // step_div)):
+                        add(staff_idx, pitch, small, onset + k * step_div, step_div, vel=vel)
+                    continue
 
-        bars_rh.append(bar_rh)
-        bars_lh.append(bar_lh)
-        types_rh.append(tbar_rh)
-        types_lh.append(tbar_lh)
-        onsets_rh.append(obar_rh)
-        onsets_lh.append(obar_lh)
-        bar_lens.append(round(longest / divisions, 4) if longest else full_bar)
+            # ties: a note that only continues a tied one is drawn, but not struck again;
+            # its length is added to the note it continues
+            tie_types = {t.get("type") for t in note_el if _tag(t) == "tie"}
+            key_ = (staff_idx, voice, pitch)
+            if "stop" in tie_types and key_ in open_ties:
+                b0, i0 = open_ties[key_]
+                b0["durs"][i0] = round(b0["durs"][i0] + dur / divisions, 6)
+                add(staff_idx, pitch, ntype, onset, dur, tied=True, vel=vel)
+                if "start" not in tie_types:
+                    del open_ties[key_]
+                continue
+            b, i = add(staff_idx, pitch, ntype, onset, dur, vel=vel)
+            if "start" in tie_types:
+                open_ties[key_] = (b, i)
+
+        for h in S.values():
+            for k in data:
+                out[f"{k}_{h}"].append(bar[h][k])
+        blen = round(longest / divisions, 6) if longest else full_bar
+        bar_lens.append(blen)
+        bar_start_q += blen
 
     return {
         "title":     title,
         "composer":  composer,
         "key":       key,
         "time":      list(time),
-        "bars_rh":   bars_rh,
-        "bars_lh":   bars_lh,
-        "types_rh":  types_rh,
-        "types_lh":  types_lh,
-        "onsets_rh": onsets_rh,
-        "onsets_lh": onsets_lh,
+        **out,
         "bar_lens":  bar_lens,
         "bpm":       bpm,
+        "tempos":    tempos,
+        "parser":    PARSER_VERSION,
     }
 
+
+_STEP_SEMI = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+_SHARP_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+
+def _spell(step: str, alter: int, octave) -> str:
+    """A pitch name the rest of Pianove reads. A single sharp or flat is kept as written;
+    a double sharp or flat (F## is G) is spelled as the key it sounds as."""
+    if alter in (-1, 0, 1):
+        return f"{step}{'#' if alter == 1 else 'b' if alter == -1 else ''}{octave}"
+    midi = 12 * (int(octave) + 1) + _STEP_SEMI.get(step, 0) + alter
+    return f"{_SHARP_NAMES[midi % 12]}{midi // 12 - 1}"
 
 
 def _bar_pitches(bar) -> list[str]:
@@ -369,6 +449,14 @@ def list_songs() -> list[dict]:
     return _load_index()
 
 
+_MUSIC_KEYS = tuple(f"{k}_{h}" for k in ("bars", "types", "onsets", "durs", "ties", "vels")
+                    for h in ("rh", "lh")) + ("bar_lens", "bpm", "tempos", "parser")
+
+
+def _music_of(parsed: dict) -> dict:
+    return {k: parsed.get(k) for k in _MUSIC_KEYS}
+
+
 def import_song(filepath: str) -> dict:
     _ensure_dirs()
     parsed = _parse_musicxml(filepath)
@@ -390,14 +478,7 @@ def import_song(filepath: str) -> dict:
         "difficulty": difficulty,
         "n_bars":     n_bars,
         "filepath":   dest,
-        "bars_rh":    parsed["bars_rh"],
-        "bars_lh":    parsed["bars_lh"],
-        "types_rh":   parsed["types_rh"],
-        "types_lh":   parsed["types_lh"],
-        "onsets_rh":  parsed["onsets_rh"],
-        "onsets_lh":  parsed["onsets_lh"],
-        "bar_lens":   parsed["bar_lens"],
-        "bpm":        parsed["bpm"],
+        **_music_of(parsed),
     }
 
     index = _load_index()
@@ -450,12 +531,33 @@ def _get_song_raw(song_id: str) -> dict | None:
     return next((s for s in _load_index() if s["id"] == song_id), None)
 
 
+def _reimport(song: dict) -> dict:
+    """Read an older import again from its file, so it gains everything the importer now
+    understands (all voices, tuplets, short notes, ties, tempo changes, dynamics)."""
+    try:
+        parsed = _parse_musicxml(song["filepath"])
+    except Exception as e:                      # keep the old import rather than nothing
+        print(f"Re-import of {song.get('title')} failed: {e}")
+        return song
+    new = {**song, **_music_of(parsed),
+           "n_bars": len(parsed["bars_rh"]),
+           "difficulty": _compute_difficulty(parsed["bars_rh"], parsed["bars_lh"])}
+    index = _load_index()
+    for i, s in enumerate(index):
+        if s["id"] == song["id"]:
+            index[i] = new
+    _save_index(index)
+    return new
+
+
 def get_song(song_id: str) -> dict | None:
     """A song from the library. Songs saved with chords as groups of [pitch, type]
     pairs read the same as the rest: plain pitches, with their types and positions."""
     song = _get_song_raw(song_id)
     if song is None:
         return None
+    if song.get("parser", 1) < PARSER_VERSION and os.path.exists(song.get("filepath", "")):
+        song = _reimport(song)
     out = dict(song)
     for hand in ("rh", "lh"):
         bars, types, onsets = _flatten_bars(song.get(f"bars_{hand}", []))
@@ -485,7 +587,8 @@ def get_song_rhythm(song_id: str) -> dict:
     """Note values, positions, bar lengths and tempo of an imported song. Keys are
     missing (None) for songs imported before rhythms were stored."""
     song = get_song(song_id) or {}
-    return {k: song.get(k) for k in ("types_rh", "types_lh", "onsets_rh", "onsets_lh", "bar_lens", "bpm")}
+    return {k: song.get(k) for k in ("types_rh", "types_lh", "onsets_rh", "onsets_lh", "durs_rh", "durs_lh",
+                                     "ties_rh", "ties_lh", "vels_rh", "vels_lh", "bar_lens", "bpm", "tempos")}
 
 
 def get_song_bars(song_id: str, hand: str = "right") -> list[list[str]]:
