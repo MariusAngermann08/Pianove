@@ -1202,10 +1202,9 @@ class _LessonPiano:
                                   first_white_x=_key_x(white_notes[0]), bottom=rect.bottom - 2)
             self._hands.draw(surface, kb, alpha=min(1.0, hands_h / ((_kb_h_hands() - _KB_H) * 0.7)))
 
-        # the MIDI status, on top of everything (a sleeve may pass beneath it)
-        connected = self._panel.midi_in is not None
-        label_txt = (t("midi_connected", name=self._panel.midi_in.name)
-                     if connected else t("midi_none"))
+        # the MIDI (or microphone) status, on top of everything (a sleeve may pass beneath it)
+        connected = self._panel.connected
+        label_txt = self._panel.status_text()
         label_col = (52, 199, 89) if connected else (180, 100, 100)
         if self._status_font is None:
             self._status_font = pygame.font.SysFont(None, max(14, status_h - 2))
@@ -1217,6 +1216,11 @@ class _LessonPiano:
                              border_radius=pill.get_height() // 2)
             surface.blit(pill, (pos[0] - 6, pos[1] - 2))
         surface.blit(ls, pos)
+        if connected and self._panel.input_mode == "mic":
+            from pianove.midi.panel import draw_level_meter
+            draw_level_meter(surface, pygame.Rect(pos[0] + ls.get_width() + 10,
+                                                  pos[1] + ls.get_height() // 2 - 3, 80, 6),
+                             self._panel.input_level)
 
 
 def _clock(t: float, total: float) -> str:

@@ -35,6 +35,8 @@ from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_s
 _sound_init()
 _sound_set(bool(storage.get("midi_sound", False)))
 _sound_vol(float(storage.get("midi_volume", 1.0)))
+from pianove.state import hook_sound_engine
+hook_sound_engine()
 
 
 def _on_resize(w: int, h: int):

@@ -117,9 +117,28 @@ def init():
     threading.Thread(target=_load, daemon=True).start()
 
 
+# Told about every key Pianove itself sounds: (midi_note, playing). The microphone input
+# uses it so it doesn't take Pianove's own notes from the speakers for the player's.
+_note_hooks: "list" = []
+
+
+def add_note_hook(fn):
+    if fn not in _note_hooks:
+        _note_hooks.append(fn)
+
+
+def _tell(midi_note: int, playing: bool):
+    for fn in _note_hooks:
+        try:
+            fn(midi_note, playing)
+        except Exception:
+            pass
+
+
 def play(midi_note: int, velocity: int = 80):
     if not _enabled or not _ready:
         return
+    _tell(midi_note, True)
     with _lock:
         if _fs is not None:
             _fs.noteon(_CHANNEL, midi_note, max(1, min(127, velocity)))
@@ -128,6 +147,7 @@ def play(midi_note: int, velocity: int = 80):
 def play_raw(midi_note: int, velocity: int = 80):
     if not _ready:
         return
+    _tell(midi_note, True)
     with _lock:
         if _fs is not None:
             _fs.noteon(_CHANNEL, midi_note, max(1, min(127, velocity)))
@@ -136,6 +156,7 @@ def play_raw(midi_note: int, velocity: int = 80):
 def stop(midi_note: int):
     if not _ready:
         return
+    _tell(midi_note, False)
     with _lock:
         if _fs is not None:
             _fs.noteoff(_CHANNEL, midi_note)

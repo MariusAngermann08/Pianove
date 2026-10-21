@@ -87,6 +87,19 @@
       <div class="doc-note">You can re-run calibration at any time from <strong>Settings → MIDI Device → Recalibrate</strong>.</div>
     </section>
 
+    <section class="doc-section" id="microphone">
+      <h2>No MIDI? Use the Microphone (Beta)</h2>
+      <p>An acoustic piano — or a digital one without a MIDI cable — works too. Pianove's piano sound detection engine listens through the microphone and works out which keys you play, chords included.</p>
+      <ol>
+        <li>Go to <strong>Settings</strong> and switch on <strong>Hear My Piano (Microphone)</strong>. During onboarding, tap <strong>Use the microphone instead</strong> on the keyboard screen.</li>
+        <li>Put the computer near the piano. The status line under the keys shows the microphone's name and a level meter. Play a note; the key lights up.</li>
+        <li>If soft notes are missed, raise <strong>Microphone Sensitivity</strong>. If keys light up that you didn't play (a noisy room, a loud fan), lower it.</li>
+      </ol>
+      <p>How it works: every 10&nbsp;ms the last eighth of a second of sound is turned into a spectrum on a musical scale and explained as a mix of the 88 keys' own spectra, measured from a real grand piano. A key whose share of the mix rises sharply has been struck. The engine follows the room's noise, the loudness of your playing and the tuning of your piano (up to about a quarter tone off), so neither the microphone's gain nor an old upright gets in the way. Notes are reported about a tenth of a second after you play them.</p>
+      <p>Pianove doesn't play its own piano sound for notes it hears, and notes it plays itself (in listen mode, for example) are not taken for yours. The microphone is only open while a page with the keyboard is on screen.</p>
+      <div class="doc-note">The microphone needs <code>sounddevice</code> (<code>pip install sounddevice</code>); without it Pianove falls back to SDL's capture through pygame.</div>
+    </section>
+
     <section class="doc-section" id="troubleshooting">
       <h2>Troubleshooting</h2>
       <table class="param-table">
@@ -96,6 +109,8 @@
           <tr><td>Notes not registering</td><td>Ensure no other app (DAW, browser MIDI API) holds exclusive access to the device.</td></tr>
           <tr><td>Import error on startup</td><td>Run <code>pip install python-rtmidi</code> to ensure the package is installed in the active environment.</td></tr>
           <tr><td>Wrong keys highlighted</td><td>Re-run calibration: Settings → MIDI Device → Recalibrate.</td></tr>
+          <tr><td>"No microphone found"</td><td>Plug in a microphone, check that your system lets Pianove use it, and install <code>sounddevice</code>.</td></tr>
+          <tr><td>Microphone: notes missed or extra keys</td><td>Adjust Settings → Microphone Sensitivity, move closer to the piano, and turn off other sound sources (music, the MIDI Sound Output on a second device).</td></tr>
         </tbody>
       </table>
     </section>

@@ -25,6 +25,10 @@ _ANIM_DUR = 0.70
 _SK_LOW  = "midi_range_low"
 _SK_HIGH = "midi_range_high"
 
+# Where the notes come from
+INPUT_MIDI = "midi"   # a MIDI keyboard
+INPUT_MIC  = "mic"    # any piano, heard through the microphone (pianove.audio_input)
+
 # State machine values
 _S_IDLE     = 0   # no device
 _S_CAL_LOW  = 1   # device connected, waiting for lowest key
@@ -70,6 +74,19 @@ def _snap_low(note: int) -> int:
 def _snap_high(note: int) -> int:
     return note if note % 12 == 0 else (note // 12 + 1) * 12
 
+def draw_level_meter(surface: pygame.Surface, r: pygame.Rect, level: float):
+    """A small bar showing how loud the microphone hears the room (log scale, -60..0 dB)."""
+    if r.width < 8:
+        return
+    db   = 20 * math.log10(max(level, 1e-6))
+    frac = max(0.0, min(1.0, (db + 60) / 60))
+    pygame.draw.rect(surface, (70, 70, 70), r, border_radius=3)
+    if frac > 0:
+        col = (52, 199, 89) if db < -6 else (255, 204, 0) if db < -1 else (255, 69, 58)
+        pygame.draw.rect(surface, col, pygame.Rect(r.left, r.top, int(r.width * frac), r.height),
+                         border_radius=3)
+
+
 def get_physical_inputs() -> list[str]:
     try:
         return [n for n in mido.get_input_names() if "Midi Through" not in n]
@@ -81,6 +98,8 @@ class MidiPanel:
     def __init__(self, device_state=None, key_played_state=None,
                  text_fn=None, storage=None):
         self.midi_in = None
+        self.input_mode = INPUT_MIDI
+        self.mic = None                   # pianove.audio_input.Microphone, in INPUT_MIC mode
         self.active_notes: set[int] = set()
         # every key press, in order, until someone takes them (see take_note_ons)
         self._note_ons: deque[int] = deque(maxlen=64)
@@ -128,9 +147,60 @@ class MidiPanel:
         if self._storage:
             self._storage.remove(_SK_LOW)
             self._storage.remove(_SK_HIGH)
-        if self.midi_in is not None:
+        if self.connected:
             self._cal_low = None
             self._state   = _S_CAL_LOW
+
+    # -- where the notes come from --
+
+    def set_input_mode(self, mode: str, sensitivity: float | None = None):
+        """Switch between a MIDI keyboard and the microphone."""
+        if sensitivity is not None:
+            self.set_mic_sensitivity(sensitivity)
+        if mode == self.input_mode:
+            return
+        self.close()
+        self.input_mode = mode
+        self._last_device_check = -1e9            # look for the new input right away
+        self._set_device_name(self._txt("midi_not_connected"))
+
+    def set_mic_sensitivity(self, value: float):
+        self._mic_sensitivity = float(value)
+        if self.mic is not None:
+            self.mic.sensitivity = self._mic_sensitivity
+
+    @property
+    def connected(self) -> bool:
+        if self.input_mode == INPUT_MIC:
+            return self.mic is not None and self.mic.is_open
+        return self.midi_in is not None
+
+    @property
+    def input_name(self) -> str:
+        if self.input_mode == INPUT_MIC:
+            return self.mic.name if self.mic is not None else ""
+        return self.midi_in.name if self.midi_in is not None else ""
+
+    def status_text(self) -> str:
+        """The line under the keys: what is connected, or what to do."""
+        if self.input_mode == INPUT_MIC:
+            if self.connected:
+                return self._txt("mic_listening", name=self.input_name)
+            return self._txt("mic_none")
+        if self.midi_in is not None:
+            return self._txt("midi_connected", name=self.midi_in.name)
+        return self._txt("midi_none")
+
+    @property
+    def input_level(self) -> float:
+        """The microphone's level, 0..1 (0 with a MIDI keyboard)."""
+        return self.mic.level if self.input_mode == INPUT_MIC and self.mic is not None else 0.0
+
+    def hear_own_note(self, note: int, playing: bool):
+        """Pianove plays (or stops) a key through the speakers: the microphone must not
+        take it for the player's."""
+        if self.mic is not None and self.input_mode == INPUT_MIC:
+            self.mic.mute(note, 8.0 if playing else 0.7)
 
     def _rebuild_keys(self):
         self._white_notes, self._black_notes, self._black_indices = _build_note_lists(
@@ -161,6 +231,8 @@ class MidiPanel:
             except Exception:
                 pass
             self.midi_in = None
+        if self.mic is not None:
+            self.mic.close()
         from pianove.sound_engine_fs import set_sustain_pedal as _sustain
         _sustain(0)
         self.active_notes.clear()
@@ -173,6 +245,9 @@ class MidiPanel:
         if now - self._last_device_check < 1.0:
             return
         self._last_device_check = now
+        if self.input_mode == INPUT_MIC:
+            self._poll_mic()
+            return
         devices = get_physical_inputs()
 
         if self.midi_in is None:
@@ -203,7 +278,41 @@ class MidiPanel:
             self.close()
             self._set_device_name(self._txt("midi_not_connected"))
 
+    def _poll_mic(self):
+        if self.mic is None:
+            from pianove.audio_input.microphone import Microphone
+            self.mic = Microphone(sensitivity=getattr(self, "_mic_sensitivity", 1.0))
+        if not self.mic.is_open:
+            self.mic.open()
+        if self.mic.is_open and self._state == _S_IDLE:
+            # Ready straight away: an acoustic piano has all 88 keys, and the keyboard
+            # drawn grows to whatever is played
+            print(f"Listening through microphone: {self.mic.name}")
+            self._set_device_name(self._txt("mic_device", name=self.mic.name))
+            self._set_range(*(self._saved_range or (_DEFAULT_LOW, _DEFAULT_HIGH)))
+            self._anim_t = 0.0
+            self._state  = _S_ANIM
+        elif not self.mic.is_open and self._state != _S_IDLE:
+            self.active_notes.clear()
+            self._state = _S_IDLE
+            self._reset_range()
+            self._set_device_name(self._txt("midi_not_connected"))
+
+    def _poll_mic_messages(self):
+        if self.mic is None:
+            return
+        for ev in self.mic.poll():
+            if ev.on:
+                self._on_note_on(ev.note, ev.velocity, sound=False)
+            else:
+                self.active_notes.discard(ev.note)
+        if self.mic.is_open and self._state == _S_IDLE:
+            self._last_device_check = -1e9            # it just opened: get ready now
+
     def _poll_messages(self):
+        if self.input_mode == INPUT_MIC:
+            self._poll_mic_messages()
+            return
         if not self.midi_in:
             return
         try:
@@ -222,7 +331,7 @@ class MidiPanel:
             self.close()
             self.active_notes.clear()
 
-    def _on_note_on(self, note: int, velocity: int):
+    def _on_note_on(self, note: int, velocity: int, sound: bool = True):
         if self._state == _S_CAL_LOW:
             self._cal_low = note
             self._state   = _S_CAL_HIGH
@@ -244,8 +353,9 @@ class MidiPanel:
             self.active_notes.add(note)
             self._note_ons.append(note)
             self._mark_key_played()
-            from pianove.sound_engine_fs import play as _play
-            _play(note, velocity)
+            if sound:   # a piano heard through the microphone sounds by itself
+                from pianove.sound_engine_fs import play as _play
+                _play(note, velocity)
 
     def take_note_ons(self) -> list[int]:
         """Every key pressed since the last call, in order. Unlike comparing active_notes
@@ -323,7 +433,9 @@ class MidiPanel:
         surface.blit(surf, (x, y))
 
     def _draw_idle(self, surface, rect):
-        self._blit_center(surface, rect, self._txt("midi_none"), (180, 100, 100), 17)
+        self._blit_center(surface, rect, self.status_text(), (180, 100, 100), 17)
+        if self.input_mode == INPUT_MIC:
+            self._blit_center(surface, rect, self._txt("mic_none_hint"), (110, 110, 110), 13, dy=24)
 
     def _draw_cal_low(self, surface, rect):
         ms    = pygame.time.get_ticks()
@@ -436,14 +548,16 @@ class MidiPanel:
         for kr, col in black_draws:
             pygame.draw.rect(surface, col, kr, border_radius=4)
 
-        connected  = self.midi_in is not None
-        label_text = (
-            self._txt("midi_connected", name=self.midi_in.name)
-            if connected else self._txt("midi_none")
-        )
+        connected  = self.connected
+        label_text = self.status_text()
         label_color = (52, 199, 89) if connected else (255, 99, 99)
         font_size   = max(14, min(28, status_h - 4))
         font        = self._get_font(font_size)
         label       = font.render(label_text, True, label_color)
         label_y     = rect.bottom - status_h + (status_h - label.get_height()) // 2
         surface.blit(label, (rect.left + margin_x, label_y))
+        if self.input_mode == INPUT_MIC and connected:
+            x = rect.left + margin_x + label.get_width() + 12
+            draw_level_meter(surface, pygame.Rect(x, label_y + label.get_height() // 2 - 3,
+                                                  min(120, max(0, rect.right - margin_x - x)), 6),
+                             self.input_level)
