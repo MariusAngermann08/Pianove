@@ -1,6 +1,6 @@
 from pylay import PygameCanvas, Button, Label, ColorPalette, iOSTheme
 from pianove.i18n import t
-from pianove.state import midi_key_played, midi_panel, midi_skip_state
+from pianove.state import midi_key_played, midi_panel, midi_skip_state, mic_input_state
 from pianove.ui_utils import page_shell, set_continue_enabled, ui_dims
 
 _continue_btn = None
@@ -30,7 +30,7 @@ def build():
         PygameCanvas(
             target=midi_panel,
             width=0.98,
-            height=0.72,
+            height=0.72 if mic_input_state.value else 0.46,  # room for the microphone button
             draw_border=True,
         )
     )
@@ -52,6 +52,18 @@ def build():
         text_color=ColorPalette.BLUE,
         border_radius=8,
     ))
+    if not mic_input_state.value:
+        # an acoustic piano: hear it instead (the keyboard above starts listening)
+        content.add_child(Button(
+            text=t("midi_use_mic"),
+            on_click=lambda: setattr(mic_input_state, "value", True),
+            width=0.98,
+            height=U["field_h_frac"] * 0.75,
+            font_size=U["option_font"] - 1,
+            background_color=iOSTheme.secondary_background,
+            text_color=ColorPalette.BLUE,
+            border_radius=8,
+        ))
 
     _continue_btn = next_btn
     _sync()

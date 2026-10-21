@@ -38,6 +38,7 @@ A MIDI keyboard is detected automatically if connected. Without one you can stil
 - 16 built-in progressive lessons
 - Import any MusicXML file (`.xml`, `.musicxml`, `.mxl`) and practice it immediately
 - Real-time note detection from any MIDI keyboard
+- No MIDI? The piano sound detection engine hears the keys you play on any piano through the microphone (beta)
 - Built-in software synthesiser — no external audio setup required
 - Full sheet music rendering via PyLute (clefs, key signatures, beams, ties, dynamics, articulations)
 - Onboarding wizard with language selection and MIDI device configuration
@@ -49,6 +50,7 @@ A MIDI keyboard is detected automatically if connected. Without one you can stil
 - Python 3.10 or later
 - `pygame` (`pip install pygame`)
 - MIDI keyboard (optional)
+- `sounddevice` for playing an acoustic piano through the microphone (optional)
 
 ## Project structure
 

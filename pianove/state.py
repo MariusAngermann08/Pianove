@@ -15,6 +15,8 @@ sound_volume_state   = State(float(storage.get("midi_volume", 1.0)))
 creator_mode_state   = State(bool(storage.get("creator_mode", False)))
 hand_tone_state      = State(storage.get("hand_tone", DEFAULT_SKIN))
 beta_features_state  = State(bool(storage.get("beta_features", False)))
+mic_input_state      = State(bool(storage.get("mic_input", False)))
+mic_sensitivity_state = State(float(storage.get("mic_sensitivity", 0.5)))   # slider 0..1
 midi_device_state    = State("")
 midi_key_played      = State(False)
 midi_skip_state      = State(False)
@@ -76,6 +78,35 @@ midi_panel = MidiPanel(
 )
 
 
+def _on_mic_input_change(val):
+    from pianove.midi.panel import INPUT_MIC, INPUT_MIDI
+    storage.set("mic_input", bool(val))
+    midi_panel.set_input_mode(INPUT_MIC if val else INPUT_MIDI)
+    import pianove.context as ctx
+    if ctx.router and ctx.router.active_page_name:
+        ctx.router.reload_current_page(delay=0.10)
+
+
+def _on_mic_sensitivity_change(val):
+    storage.set("mic_sensitivity", float(val))
+    midi_panel.set_mic_sensitivity(0.5 * 4.0 ** float(val))    # 0.5× .. 1× (middle) .. 2×
+
+
+mic_input_state.bind(_on_mic_input_change)
+mic_sensitivity_state.bind(_on_mic_sensitivity_change)
+
+
+def _own_note(note, playing):
+    midi_panel.hear_own_note(note, playing)
+
+
+def hook_sound_engine():
+    """Lets the microphone input ignore the notes Pianove plays itself (call once the
+    sound engine is imported)."""
+    from pianove.sound_engine_fs import add_note_hook
+    add_note_hook(_own_note)
+
+
 def _sync_welcome_greeting(name):
     n = name.strip() or t("friend")
     welcome_greeting.value = t("welcome_title", name=n)
@@ -99,7 +130,7 @@ def on_language_change(_=None):
     if midi_device_state.value in (
         TEXT["en"]["midi_not_connected"],
         TEXT["de"]["midi_not_connected"],
-    ) or not midi_panel.midi_in:
+    ) or not midi_panel.connected:
         midi_device_state.value = t("midi_not_connected")
     _sync_welcome_greeting(name_state.value)
     refresh_summary()
