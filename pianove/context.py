@@ -20,6 +20,11 @@ lesson_completed:     bool       = False
 # Song mode (set when user starts a custom imported song)
 current_song_id:   str | None = None   # None → lesson mode
 current_song_hand: str        = "right"  # "right" | "left" | "both"
+# A step of the song's learning path (pianove/song_path.py): only these bars, and the
+# stars it earns are kept. None → the whole song, practised freely
+song_range:      tuple[int, int] | None = None
+path_step:       str | None = None
+path_last_stars: int        = 0
 
 # Score viewer (set when user taps "View Score" on the songs tab)
 score_song_id: str | None = None

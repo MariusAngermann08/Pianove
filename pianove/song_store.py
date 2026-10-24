@@ -496,6 +496,8 @@ def delete_song(song_id: str):
         except OSError:
             pass
     _save_index([s for s in index if s["id"] != song_id])
+    from pianove import song_path
+    song_path.forget(song_id)
 
 
 _QUARTERS = {"whole": 4.0, "half": 2.0, "quarter": 1.0, "eighth": 0.5, "sixteenth": 0.25}

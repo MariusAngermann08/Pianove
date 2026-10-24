@@ -212,8 +212,36 @@ def _bars_from_song_or_lesson(lesson: dict) -> list[list[str]]:
         return ctx.practice_bars
     if ctx.current_song_id:
         from pianove.song_store import get_song_bars
-        return get_song_bars(ctx.current_song_id, ctx.current_song_hand)
+        return _in_range(get_song_bars(ctx.current_song_id, ctx.current_song_hand))
     return _bars_from_lesson(lesson)
+
+
+def _in_range(per_bar):
+    """A per-bar list cut to the bars of the learning-path step being played."""
+    rng = ctx.song_range if ctx.current_song_id else None
+    if rng is None or per_bar is None:
+        return per_bar
+    return per_bar[rng[0]:rng[1]]
+
+
+def _rhythm_in_range(rhythm: dict, time: tuple) -> dict:
+    """A song's rhythm from the first bar of the step on: its per-bar lists cut, its
+    tempo changes moved to start there (with the tempo in force at that bar)."""
+    rng = ctx.song_range
+    if rng is None:
+        return rhythm
+    a = rng[0]
+    out = {k: (_in_range(v) if isinstance(v, list) and k != "tempos" else v)
+           for k, v in rhythm.items()}
+    start = sum(_bar_len_q(rhythm.get("bar_lens"), i, time) for i in range(a))
+    pts = sorted((float(q), float(b)) for q, b in (rhythm.get("tempos") or []) if b)
+    if pts:
+        before = [b for q, b in pts if q <= start + 1e-6]
+        moved = [[0.0, before[-1] if before else pts[0][1]]]
+        moved += [[q - start, b] for q, b in pts if q > start + 1e-6]
+        out["tempos"] = moved
+        out["bpm"] = moved[0][1]
+    return out
 
 
 def _pitch_to_midi(pitch_str: str) -> int:
@@ -1128,7 +1156,8 @@ class _LessonPiano:
         from pianove.state import hand_tone_state
         self._hands   = HandsOverlay(staff_view.finger_plan,
                                      memory=(ctx.current_song_id or ctx.current_lesson_id,
-                                             ctx.current_song_hand, ctx.practice_mode),
+                                             ctx.current_song_hand, ctx.practice_mode,
+                                             ctx.song_range),
                                      skin=hand_tone_state.value)
         self._status_font: pygame.font.Font | None = None
         self._kb_cache = None
@@ -1633,6 +1662,97 @@ def _build_completion(lesson_title: str) -> FloatLayout:
     return root
 
 
+def _build_path_completion(song_title: str) -> FloatLayout:
+    """A step of a song's learning path done: its stars, and on to the next step."""
+    from pianove import song_path
+    from pylay.widgets.icon import Icon
+    path  = song_path.build_path(ctx.current_song_id) or {"steps": []}
+    steps = path["steps"]
+    here  = next((s for s in steps if s["id"] == ctx.path_step), None)
+    done  = song_path.progress(ctx.current_song_id)
+    nxt_i = song_path.next_step(path, done)
+    nxt   = steps[nxt_i] if nxt_i < len(steps) else None
+    stars = ctx.path_last_stars
+
+    win_h  = ctx.ui.height if ctx.ui else 768
+    body_h = max(100, win_h - 52 - 1)
+
+    root = FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
+    main = VStack(spacing=0, padding=0, width=1.0, height=1.0)
+    root.add_child(main)
+
+    nav = FloatLayout(width=1.0, height=52, background_color=iOSTheme.secondary_background)
+    nav.add_child(Button(text=t("back"), on_click=_nav_back,
+                         anchor="left", x=12, y=0, width=72, height=34, font_size=14,
+                         background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                         border_radius=8))
+    nav.add_child(Label(text=song_title, font_size=16, bold=True, color=iOSTheme.label,
+                        anchor="center", x=0, y=0))
+    main.add_child(nav)
+    main.add_child(FloatLayout(width=1.0, height=1,
+                               background_color=pygame.Color(120, 120, 128, 60)))
+
+    body = VStack(spacing=18, padding=32, width=1.0, height=body_h)
+    row = FloatLayout(width=1.0, height=64)
+    for k in range(3):
+        row.add_child(Icon("star" if k < stars else "star_border", size=56 if k == 1 else 46,
+                           color=_ORANGE if k < stars else iOSTheme.fill_tertiary,
+                           anchor="center", x=(k - 1) * 62, y=-6 if k == 1 else 0))
+    body.add_child(row)
+    body.add_child(Label(text=t(["path_stars_1", "path_stars_1", "path_stars_2", "path_stars_3"][stars]),
+                         font_size=26, bold=True, color=iOSTheme.label,
+                         anchor="center", x=0, y=0))
+    if here:
+        key, fmt = here["title"]
+        body.add_child(Label(text=t(key, **fmt), font_size=15, color=iOSTheme.secondary_label,
+                             anchor="center", x=0, y=0))
+    body.add_child(Label(text=t("path_progress", done=min(len(done), len(steps)), total=len(steps)),
+                         font_size=13, color=iOSTheme.secondary_label, anchor="center", x=0, y=0))
+
+    def _again():
+        ctx.lesson_current_idx = 0
+        ctx.lesson_section_idx = 0
+        ctx.lesson_completed   = False
+        ctx.lesson_phase       = "practice" if here and here["kind"] == "learn" else "performance"
+        ctx.router.refresh()
+
+    btn_row = FloatLayout(width=1.0, height=50)
+    btn_row.add_child(Button(text=t("lesson_play_again"), on_click=_again,
+                             anchor="left", x=16, y=0, width=0.42, height=44, font_size=14,
+                             background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                             border_radius=12))
+    if nxt is not None:
+        def _go_next():
+            start_path_step(nxt)
+            ctx.router.refresh()
+        btn_row.add_child(Button(text=t("path_next_step"), on_click=_go_next,
+                                 anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
+                                 background_color=_GREEN, text_color=pygame.Color(255, 255, 255),
+                                 border_radius=12))
+    else:
+        btn_row.add_child(Button(text=t("path_to_path"), on_click=_nav_back,
+                                 anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
+                                 background_color=_GREEN, text_color=pygame.Color(255, 255, 255),
+                                 border_radius=12))
+    body.add_child(btn_row)
+    main.add_child(body)
+    return root
+
+
+def start_path_step(step: dict):
+    """Set up the lesson page for a step of the song's learning path: its bars and hand;
+    a part is learned note by note and then played in tempo, a join or the whole piece is
+    played in tempo straight away."""
+    ctx.song_range         = tuple(step["bars"])
+    ctx.path_step          = step["id"]
+    ctx.path_last_stars    = 0
+    ctx.current_song_hand  = step["hand"]
+    ctx.lesson_current_idx = 0
+    ctx.lesson_section_idx = 0
+    ctx.lesson_completed   = False
+    ctx.lesson_phase       = "practice" if step["kind"] == "learn" else "performance"
+
+
 def build():
     from pianove.lesson_loader import load_lesson
 
@@ -1720,7 +1840,7 @@ def build():
     meta = None                     # real lengths, ties, loudness and tempo changes, per staff
     if ctx.current_song_id and not is_practice:
         from pianove.song_store import get_song_rhythm
-        rhythm = get_song_rhythm(ctx.current_song_id)
+        rhythm = _rhythm_in_range(get_song_rhythm(ctx.current_song_id), song_time)
         if rhythm.get("bpm"):
             bpm = int(round(rhythm["bpm"]))          # songs play at their own tempo
 
@@ -1742,6 +1862,7 @@ def build():
     if ctx.current_song_id and ctx.current_song_hand == "both":
         from pianove.song_store import get_song_bars_split
         rh_all, lh_all = get_song_bars_split(ctx.current_song_id)
+        rh_all, lh_all = _in_range(rh_all), _in_range(lh_all)
         if rh_all:
             if phase == "practice":
                 start         = section_idx * _SECTION_SZ
@@ -1772,6 +1893,8 @@ def build():
             return _build_practice_completion(
                 ctx.practice_last_hits, ctx.practice_last_total, bpm
             )
+        if ctx.path_step:
+            return _build_path_completion(lesson_title)
         return _build_completion(lesson_title)
 
     win_h   = ctx.ui.height if ctx.ui else 768
@@ -1865,6 +1988,12 @@ def build():
             if not ctx.current_song_id:
                 mark_complete(lesson_id)
                 record_session(lesson_id)
+            elif ctx.path_step:
+                from pianove import song_path
+                total = _sv[0].total_notes if _sv[0] else 0
+                hits  = _sv[0].hits        if _sv[0] else 0
+                ctx.path_last_stars = song_path.record(ctx.current_song_id, ctx.path_step,
+                                                       hits / total if total else 1.0)
             ctx.lesson_completed = True
             ctx.router.refresh()
 
