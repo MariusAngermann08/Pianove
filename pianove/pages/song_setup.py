@@ -56,8 +56,10 @@ def build():
     main.add_child(nav)
     main.add_child(FloatLayout(width=1.0, height=1, background_color=_SEP_COLOR))
 
-    body = VStack(spacing=14, padding=20, width=1.0, height=win_h - 54)
-    body.add_child(_song_card(song))
+    compact = win_h < 640                     # a phone on its side: every line counts
+    body = VStack(spacing=10 if compact else 14, padding=14 if compact else 20,
+                  width=1.0, height=win_h - 54)
+    body.add_child(_song_card(song, compact))
 
     def _on_mode(i):
         _mode[0] = i
@@ -86,11 +88,31 @@ def build():
     return root
 
 
-def _song_card(song: dict) -> FloatLayout:
+def _song_card(song: dict, compact: bool = False) -> FloatLayout:
     title    = song.get("title", "")
     composer = song.get("composer", "")
     n_bars   = song.get("n_bars", 0)
     diff     = song.get("difficulty", "beginner")
+
+    diff_color = {
+        "beginner":     pygame.Color(52, 199, 89),
+        "intermediate": pygame.Color(255, 149, 0),
+        "advanced":     pygame.Color(255, 59, 48),
+    }.get(diff, iOSTheme.secondary_label)
+    if compact:                               # title, then composer and length on one line
+        card = FloatLayout(width=1.0, height=60,
+                           background_color=iOSTheme.secondary_background,
+                           border_radius=12)
+        card.add_child(Icon("library_music", size=26, color=ColorPalette.BLUE,
+                            anchor="left", x=16, y=0))
+        card.add_child(Label(text=title, font_size=16, bold=True, color=iOSTheme.label,
+                             anchor="left", x=56, y=-9))
+        card.add_child(Label(text="  ·  ".join(x for x in (composer, t("song_bars", n=n_bars)) if x),
+                             font_size=12, color=iOSTheme.secondary_label,
+                             anchor="left", x=56, y=11))
+        card.add_child(Label(text=t(f"diff_{diff}"), font_size=11, color=diff_color,
+                             anchor="right", x=-16, y=0))
+        return card
 
     card = FloatLayout(width=1.0, height=96,
                        background_color=iOSTheme.secondary_background,
@@ -111,11 +133,6 @@ def _song_card(song: dict) -> FloatLayout:
         font_size=12, color=iOSTheme.secondary_label,
         anchor="left", x=66, y=24 if composer else 10,
     ))
-    diff_color = {
-        "beginner":     pygame.Color(52, 199, 89),
-        "intermediate": pygame.Color(255, 149, 0),
-        "advanced":     pygame.Color(255, 59, 48),
-    }.get(diff, iOSTheme.secondary_label)
     card.add_child(Label(
         text=t(f"diff_{diff}"),
         font_size=11, color=diff_color,
