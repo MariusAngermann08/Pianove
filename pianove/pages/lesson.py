@@ -448,7 +448,8 @@ class _StaffView(PygameCanvas):
                  bass_types: list[list[str]] | None = None,
                  onsets: list[list[float]] | None = None,
                  bass_onsets: list[list[float]] | None = None,
-                 bar_lens: list[float] | None = None, meta: dict | None = None, **kwargs):
+                 bar_lens: list[float] | None = None, meta: dict | None = None,
+                 key=None, **kwargs):
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
         self._bpm  = bpm
@@ -475,7 +476,9 @@ class _StaffView(PygameCanvas):
         self._n_bars = n_bars
         self._score  = Score(
             surface=None, staffs=n_staves, bars=n_bars,
-            clef_types=clef_types, key="C", time=time,
+            clef_types=clef_types,
+            key=key if key is not None else _guess_key(bars + (bass_bars or [])),
+            time=time,
             bars_per_system=n_bars,
         )
 
@@ -692,7 +695,7 @@ class _StaffView(PygameCanvas):
         vw         = max(1, self.rect.width)
         max_scroll = max(0.0, self._strip_w - vw)
         self._ph.target     = target_x
-        self._scroll.target = min(max_scroll, max(0.0, target_x - vw * 0.30))
+        self._scroll.target = min(max_scroll, max(0.0, target_x - self._lead(vw)))
 
     def _build_offscreen(self):
         vw = max(1, self.rect.width)
@@ -708,6 +711,7 @@ class _StaffView(PygameCanvas):
             self._score.brace.surface = self._offscreen
         self._score.draw()
         self._ink = None
+        self._fade = None
         self._full_redraw = False
         self._dirty_bars.clear()
         # One x per step: the leftmost note of the step
@@ -716,7 +720,7 @@ class _StaffView(PygameCanvas):
             snap_x = self._note_xs[min(self.current_idx, len(self._note_xs) - 1)]
             self._ph.snap_to(snap_x)
             vw = max(1, self.rect.width)
-            self._scroll.snap_to(max(0.0, snap_x - vw * 0.30))
+            self._scroll.snap_to(max(0.0, snap_x - self._lead(vw)))
         self._dirty = False
 
     def _ink_extent(self) -> tuple[int, int]:
@@ -877,7 +881,7 @@ class _StaffView(PygameCanvas):
             x1 = self._note_xs[i + 1] if i + 1 < len(self._note_xs) else x0 + 60
             x = x0 + (x1 - x0) * min(1.0, (t - t0) / max(1e-3, t1 - t0))
         vw = max(1, self.rect.width)
-        target = min(max(0.0, self._strip_w - vw), max(0.0, x - vw * 0.30))
+        target = min(max(0.0, self._strip_w - vw), max(0.0, x - self._lead(vw)))
         self._ph.snap_to(x)
         if snap:
             self._scroll.snap_to(target)
@@ -944,7 +948,7 @@ class _StaffView(PygameCanvas):
                 self._ph.snap_to(ph_x)
                 vw            = max(1, self.rect.width)
                 max_scroll    = max(0.0, self._strip_w - vw)
-                self._scroll.target = min(max_scroll, max(0.0, ph_x - vw * 0.30))
+                self._scroll.target = min(max_scroll, max(0.0, ph_x - self._lead(vw)))
             if self._prep_elapsed >= self._prep_duration:
                 self._in_prep = False
                 self._perf_timer = 0.0
@@ -972,7 +976,7 @@ class _StaffView(PygameCanvas):
 
                 vw         = max(1, self.rect.width)
                 max_scroll = max(0.0, self._strip_w - vw)
-                self._scroll.target = min(max_scroll, max(0.0, ph_x - vw * 0.30))
+                self._scroll.target = min(max_scroll, max(0.0, ph_x - self._lead(vw)))
 
             if self._perf_timer >= note_dur:
                 self._perf_timer -= note_dur
@@ -1006,9 +1010,8 @@ class _StaffView(PygameCanvas):
             y_offset = view_h // 2 - (ink_top + ink_bot) // 2
             y_offset = max(4 - ink_top, min(view_h - 4 - ink_bot, y_offset))   # keep the ink in view
             src_y = max(0, -y_offset)
-            surface.blit(self._offscreen,
-                         (rect.left, rect.top + max(0, y_offset)),
-                         pygame.Rect(scroll, src_y, vw, off_h - src_y))
+            self._blit_strip(surface, rect.left, rect.top + max(0, y_offset),
+                             scroll, src_y, vw, off_h - src_y)
             ph_top = rect.top + y_offset + 4
             ph_bot = rect.top + y_offset + off_h - 4
         else:
@@ -1028,15 +1031,86 @@ class _StaffView(PygameCanvas):
                 staff_center = min(hi, max(lo, (ink_top + ink_bot) // 2))
             y_src  = max(0, min(off_h - view_h, staff_center - view_h // 2))
             blit_h = min(vh, off_h - y_src)
-            surface.blit(self._offscreen, rect.topleft,
-                         pygame.Rect(scroll, y_src, vw, blit_h))
+            self._blit_strip(surface, rect.left, rect.top, scroll, y_src, vw, blit_h)
             ph_top = rect.top + 4
             ph_bot = rect.bottom - 4
 
         ph_sx = rect.left + int(self._ph.value) - scroll
-        if rect.left <= ph_sx <= rect.right:
+        if rect.left + (self._header_w() if scroll else 0) <= ph_sx <= rect.right:
             pygame.draw.line(surface, _BLUE,
                              (ph_sx, ph_top), (ph_sx, ph_bot), 2)
+
+
+    # ── The line's start (braces, clefs, key, time) stays while the music runs ──────
+
+    def _lead(self, vw: int) -> float:
+        """How far from the left the music being played is kept: a third of the way in,
+        and always clear of the line's start and the fade beside it."""
+        if self._offscreen is None:
+            return vw * 0.30
+        head = self._header_w()
+        fade = max(16, int(self._score._space() * 2.6))
+        return max(vw * 0.30, head + fade + self._score._space() * 2)
+
+    def _header_w(self) -> int:
+        """Where the first bar begins: everything left of it is the line's start."""
+        try:
+            return max(0, int(self._score.staffs[0].bars[0].bar_start_x) - 2)
+        except (IndexError, AttributeError):
+            return 0
+
+    def _fade_strip(self, h: int):
+        """An empty stretch of staff, opaque at its left and clear at its right: laid
+        over the music where it slides under the line's start, so the notes fade out
+        while the staff lines run on unbroken."""
+        head = self._header_w()
+        width = max(16, int(self._score._space() * 2.6))
+        key = (head, width, self._offscreen.get_height())
+        if self._fade is None or self._fade[0] != key:
+            col = self._offscreen.subsurface(pygame.Rect(max(0, head - 3), 0, 1, self._offscreen.get_height()))
+            strip = pygame.transform.scale(col, (width, self._offscreen.get_height())).convert_alpha()
+            import numpy as np
+            alpha = pygame.surfarray.pixels_alpha(strip)
+            ramp = (255 * (1.0 - np.linspace(0.0, 1.0, width)) ** 1.6).astype(np.uint8)
+            alpha[:, :] = ramp[:, None]
+            del alpha
+            self._fade = (key, strip)
+        return self._fade[1]
+
+    def _blit_strip(self, surface, x: int, y: int, scroll: int, src_y: int, w: int, h: int):
+        """The score at this scroll: the line's start stays at the left (as in a
+        printed part, where every line begins with it), the bars run beneath it."""
+        head = self._header_w()
+        if scroll <= 0 or head <= 0 or head >= w * 0.5:
+            surface.blit(self._offscreen, (x, y), pygame.Rect(scroll, src_y, w, h))
+            return
+        surface.blit(self._offscreen, (x + head, y), pygame.Rect(scroll + head, src_y, w - head, h))
+        surface.blit(self._offscreen, (x, y), pygame.Rect(0, src_y, head, h))
+        surface.blit(self._fade_strip(h), (x + head, y), pygame.Rect(0, src_y, self._fade[1].get_width(), h))
+
+
+def _guess_key(bars: list[list[str]]) -> int:
+    """The key signature (sharps > 0, flats < 0) a piece without one reads best in:
+    the one that leaves the fewest notes needing an accidental of their own."""
+    from collections import Counter
+    sharps, flats = "FCGDAEB", "BEADGCF"
+    seen = Counter()
+    for bar in bars:
+        for chord in bar:
+            for p in str(chord).split("+"):
+                p = p.strip()
+                if len(p) >= 2 and p[0].upper() in "ABCDEFG" and p[0] != "r":
+                    seen[(p[0].upper(), p[1] if p[1] in "#b" else "")] += 1
+    if not seen:
+        return 0
+    best, best_cost = 0, None
+    for k in range(-6, 7):
+        sig = {n: "#" for n in sharps[:k]} if k > 0 else {n: "b" for n in flats[:-k]}
+        cost = sum(c for (name, acc), c in seen.items() if sig.get(name, "") != acc)
+        cost += abs(k) * 0.01                               # a tie goes to the simpler key
+        if best_cost is None or cost < best_cost:
+            best, best_cost = k, cost
+    return best
 
 
 class _LessonPiano:
@@ -1592,6 +1666,7 @@ def build():
         lesson_title = t("practice_title")
         lesson       = {"title": lesson_title, "steps": []}
         song_time    = (4, 4)
+        song_key     = None
     else:
         phase  = ctx.lesson_phase
         lesson = load_lesson(lesson_id)
@@ -1602,9 +1677,11 @@ def build():
             _song = get_song(ctx.current_song_id)
             lesson_title = _song["title"] if _song else ctx.current_song_id
             song_time    = tuple(_song["time"]) if _song and "time" in _song else (4, 4)
+            song_key     = _song.get("key") if _song else None   # as written in the piece
         else:
             lesson_title = lesson.get("title", lesson_id)
             song_time    = (4, 4)
+            song_key     = None
 
     # Non-exercise steps (text, notation_demo) are handled before the full
     # exercise layout is built.  Songs and practice-go mode bypass step routing.
@@ -1892,7 +1969,7 @@ def build():
         bpm=bpm, clef=clef, bass_bars=_both_lh_bars, time=song_time,
         types=active_types, bass_types=_both_lh_types,
         onsets=active_onsets, bass_onsets=_both_lh_onsets, bar_lens=active_lens, meta=meta,
-        width=1.0, height=staff_h,
+        key=song_key, width=1.0, height=staff_h,
     )
     _sv[0] = staff_view
     while _TRANSPORT_HOOKS:

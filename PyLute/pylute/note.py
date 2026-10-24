@@ -95,6 +95,9 @@ class Note:
                 pg.draw.line(surface, color, (lx, y), (lx + lw, y), 2)
 
     def _resolve_accidental(self, note_name, written_acc):
+        shown = getattr(self, "_shown_acc", None)
+        if shown is not None:                 # worked out for the whole bar (Bar.draw)
+            return shown
         key_notes = getattr(self.staff.score, "key_notes", {}) if self.staff else {}
         key_acc   = key_notes.get(note_name, "")
         if written_acc == key_acc:

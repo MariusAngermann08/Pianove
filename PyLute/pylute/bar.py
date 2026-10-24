@@ -305,6 +305,35 @@ class Bar:
                     pg.draw.line(surface, (0, 0, 0), (x1, int(yc) + dy), (mid_x, ctrl_y + dy), 1)
                     pg.draw.line(surface, (0, 0, 0), (mid_x, ctrl_y + dy), (x2, int(yc) + dy), 1)
 
+    def _mark_accidentals(self):
+        """Which notes show an accidental, as music is written: the key signature says
+        what a note is unless marked; a mark holds for that note (same octave) to the end
+        of the bar, so it is written once; a natural is written only where it changes
+        something."""
+        from .pitch import parse_pitch
+        score = getattr(self.staff, "score", None)
+        key = getattr(score, "key_notes", {}) if score is not None else {}
+        now: dict = {}
+
+        def notes_of(ev):
+            inner = getattr(ev, "notes", None)
+            if inner is None:
+                return [ev] if hasattr(ev, "pitch") else []
+            out = []
+            for n in inner:
+                out.extend(notes_of(n))
+            return out
+
+        for event in self.events:
+            for note in notes_of(event):
+                try:
+                    name, acc, octave = parse_pitch(note.pitch)
+                except Exception:
+                    continue
+                current = now.get((name, octave), key.get(name, ""))
+                note._shown_acc = "" if acc == current else (acc or "n")
+                now[(name, octave)] = acc
+
     def draw(self):
         if not self.staff:
             print(f"{DEBUG} <Bar> object needs :staff: to be drawn")
@@ -317,6 +346,8 @@ class Bar:
         for group in groups:
             for ev in group:
                 ev.beamed = True
+
+        self._mark_accidentals()
 
         for event in self.events:
             from .chord import Chord
