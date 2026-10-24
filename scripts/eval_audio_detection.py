@@ -7,6 +7,7 @@ the sound as a live stream and scores the keys it reports against the keys playe
 Run:  python scripts/eval_audio_detection.py              (everything)
       python scripts/eval_audio_detection.py --quick      (fewer pieces and rooms)
       python scripts/eval_audio_detection.py --show-errors
+      python scripts/eval_audio_detection.py --param on_noise=3   (try a detector setting)
 """
 import argparse
 import os
@@ -41,13 +42,20 @@ ROOMS = {
 }
 
 
+def _value(s: str):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+
+
 def _run_case(job):
-    piece, room, fname, sf2, sr = job
+    piece, room, fname, sf2, sr, params = job
     notes = PIECES[piece]()
     x = pa.render(notes, sf2, sr=sr, cents=-35.0 if room == "detuned" else 0.0)
     x = pa.room(x, sr, **ROOMS[room])
     t0 = time.perf_counter()
-    det = pa.run_detector(x, sr)
+    det = pa.run_detector(x, sr, **params)
     return pa.score(notes, det), len(x) / sr, time.perf_counter() - t0
 
 
@@ -60,7 +68,9 @@ def main():
     ap.add_argument("--show-errors", action="store_true")
     ap.add_argument("--sr", type=int, default=44100)
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 1)
+    ap.add_argument("--param", action="append", default=[], help="detector parameter, name=value")
     args = ap.parse_args()
+    params = {k: _value(v) for k, v in (p.split("=", 1) for p in args.param)}
 
     pieces = args.pieces.split(",") if args.pieces else (
         ["single", "chords", "lessons", "chopin"] if args.quick else list(PIECES))
@@ -69,13 +79,13 @@ def main():
     if args.fonts:
         fonts = {k: v for k, v in fonts.items() if k in args.fonts.split(",")}
 
-    jobs = [(piece, room, fname, sf2, args.sr) for piece in pieces for room in rooms
+    jobs = [(piece, room, fname, sf2, args.sr, params) for piece in pieces for room in rooms
             for fname, sf2 in fonts.items()]
     with Pool(args.jobs) as pool:
         results = pool.map(_run_case, jobs)
     rows, t_audio, t_cpu = [], 0.0, 0.0
     print(f"{'piece':9} {'room':8} {'piano':11} {'notes':>5} {'P':>6} {'R':>6} {'F1':>6} {'lat ms':>7}")
-    for (piece, room, fname, _, _), (s, secs, cpu) in zip(jobs, results):
+    for (piece, room, fname, _, _, _), (s, secs, cpu) in zip(jobs, results):
         rows.append((piece, room, fname, s))
         t_audio += secs
         t_cpu += cpu

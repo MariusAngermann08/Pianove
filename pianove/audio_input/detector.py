@@ -200,6 +200,8 @@ class PianoNoteDetector:
     abs_floor = 3e-7       # quietest magnitude worth hearing (≈ -124 dBFS: digital silence)
     # deciding what was played
     on_noise = 1.0         # a strike must stand this far above the noise
+    on_noise_low = 1.5     # … below low_split, where the hammers' and keys' thumps land
+    low_split = 48         #   (MIDI number: C3)
     on_rel = 0.35          # … and not be lost under the loudest key ringing now
     on_peak = 0.14         # … nor far below the loudest playing of the last seconds
     shadow_part = 0.5      # a key on a louder key's partial must reach this share of it
@@ -209,6 +211,7 @@ class PianoNoteDetector:
     restrike = 1.2         # … to count as struck again while it still rings
     min_gap = 14           # frames after a strike before the same key can be struck again
     confirm = 5            # frames a strike must hold before it is reported
+    confirm_low = 12       # … below low_split (a thump fades within a few frames, a string rings)
     off_ratio = 0.06       # let go when it fades to this share of its peak
     off_noise = 2.0        # … or sinks this close to the noise
     onset_shift = 0.045    # the analysis sees a strike this long after it happens
@@ -243,6 +246,10 @@ class PianoNoteDetector:
         self._proj = 1.0 / (np.einsum("ij,ij->i", self.Wt, self.Wt) + 1e-12)   # one template's own fit
         self.n_comp = self.W.shape[1]
         self.sensitivity = float(sensitivity)
+        self._on_noise = np.where(np.arange(LOW, HIGH + 1) < self.low_split,
+                                  self.on_noise_low, self.on_noise).astype(np.float32)
+        self._confirm = np.where(np.arange(LOW, HIGH + 1) < self.low_split,
+                                 self.confirm_low, self.confirm).astype(np.int16)
         self.track_tuning = track_tuning
         self.record: list | None = None               # set to [] to keep every frame's analysis
         self.reset()
@@ -361,7 +368,7 @@ class PianoNoteDetector:
         self._loud = max(float(a.max()), self._loud * (1 - HOP_S / 4.0))   # fades over ~4 s
         recent_min = hist[-6:].min(axis=0)
 
-        cand = ((a * sens > self.on_noise * noise) & (a * sens > self.on_rel * float(a.max()))
+        cand = ((a * sens > self._on_noise * noise) & (a * sens > self.on_rel * float(a.max()))
                 & (a * sens > self.on_peak * self._loud))
         if cand.any() and (self.shadow_part or self.shadow_near):
             spill = np.maximum(self.shadow_part * (a[:, None] * _S_PART).max(axis=0),
@@ -386,7 +393,7 @@ class PianoNoteDetector:
         self._pend_onset[rising & (self._pending == 0)] = now - self.onset_shift
         self._pending = np.where(rising | holding, self._pending + 1, 0).astype(np.int16)
 
-        for i in np.nonzero(self._pending >= self.confirm)[0]:
+        for i in np.nonzero(self._pending >= self._confirm)[0]:
             note = LOW + int(i)
             self._pending[i] = 0
             was_active = self.active[i]
