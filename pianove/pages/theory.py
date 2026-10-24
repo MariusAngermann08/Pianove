@@ -225,6 +225,8 @@ class Scene:
         self._hands = HandsOverlay(plan, memory=("scene", id(self)),
                                    skin=self._skin())
         if old is not None:
+            self._hands._renderer = old._renderer
+        if old is not None:
             for s, h in self._hands.hands.items():
                 h.alpha.value = old.hands[s].alpha.value     # fades from where it was
         if self.on_change:
@@ -344,7 +346,20 @@ class Scene:
         self._hands.update(dt, step, active, glow=self._glowing(step))
         self._staff_k.target = 1.0 if b.staff else 0.0
         self._staff_k.update(dt)
-        _dirty.mark()
+        if self._moving(held):
+            _dirty.mark()
+
+    def _moving(self, held) -> bool:
+        """Whether the next frame looks different: text and keys still coming in, the
+        hand playing or moving, keys pressed or glowing, the player's keys pulsing."""
+        if self.t < 2.5 or self.phase in ("demo", "try") or self.sounding or self.flash or held:
+            return True
+        if self.phase == "done" or abs(self._staff_k.value - self._staff_k.target) > 1e-3:
+            return True
+        for h in self._hands.hands.values():
+            if any(abs(sp.value - sp.target) > 1e-3 for sp in (h.hx, h.hy, h.th, h.alpha)):
+                return True
+        return False
 
     def _glowing(self, step: int) -> dict | None:
         """Of a hand's fingers resting on their keys, only the one that plays now glows
@@ -758,31 +773,34 @@ class Scene:
             if (m + 1) % 12 not in _WHITE_PC and i < n - 1:
                 blacks.append((i, m + 1))
 
-        # keys
-        for i, m in enumerate(whites):
-            r = pygame.Rect(int(left + i * u), int(top), max(2, int(u) - 1), int(key_h))
-            pygame.draw.rect(surface, self._key_colour(m, True), r,
-                             border_bottom_left_radius=max(2, int(u * 0.12)),
-                             border_bottom_right_radius=max(2, int(u * 0.12)))
-            pygame.draw.rect(surface, (150, 150, 156), r, 1,
-                             border_bottom_left_radius=max(2, int(u * 0.12)),
-                             border_bottom_right_radius=max(2, int(u * 0.12)))
-            self._key_rects.append((r, m, False))
-        shade = pygame.Rect(int(left), int(top), int(u * n), max(2, int(u * 0.12)))
-        pygame.draw.rect(surface, (60, 60, 66), shade)
-        black_rects = []
-        for i, m in blacks:
-            r = pygame.Rect(int(left + (i + 1) * u - bw / 2), int(top), max(2, int(bw)), int(black_h))
-            pygame.draw.rect(surface, self._key_colour(m, False), r,
-                             border_bottom_left_radius=max(2, int(u * 0.1)),
-                             border_bottom_right_radius=max(2, int(u * 0.1)))
-            hi = r.inflate(-max(2, int(bw * 0.3)), 0)
-            hi.height = max(2, int(black_h * 0.08))
-            hi.bottom = r.bottom - max(2, int(black_h * 0.05))
-            pygame.draw.rect(surface, _mix(self._key_colour(m, False), (255, 255, 255), 0.18), hi,
-                             border_radius=2)
-            black_rects.append((r, m, True))
-        self._key_rects = black_rects + self._key_rects
+        # keys (as a picture, drawn again only when one of them changes colour)
+        x0, y0 = int(left), int(top)
+        white_rects = [(pygame.Rect(int(left + i * u), y0, max(2, int(u) - 1), int(key_h)), m, False)
+                       for i, m in enumerate(whites)]
+        black_rects = [(pygame.Rect(int(left + (i + 1) * u - bw / 2), y0, max(2, int(bw)), int(black_h)), m, True)
+                       for i, m in blacks]
+        self._key_rects = black_rects + white_rects
+        cols = (tuple(self._key_colour(m, True) for _, m, _ in white_rects),
+                tuple(self._key_colour(m, False) for _, m, _ in black_rects))
+        ck = (x0, y0, round(u, 2), n, first, int(key_h), cols)
+        if self._kb_cache is None or self._kb_cache[0] != ck:
+            pic = pygame.Surface((int(u * n) + 2, int(key_h) + 1), pygame.SRCALPHA)
+            rw, rb = max(2, int(u * 0.12)), max(2, int(u * 0.1))
+            for (r, m, _), col in zip(white_rects, cols[0]):
+                r = r.move(-x0, -y0)
+                pygame.draw.rect(pic, col, r, border_bottom_left_radius=rw, border_bottom_right_radius=rw)
+                pygame.draw.rect(pic, (150, 150, 156), r, 1,
+                                 border_bottom_left_radius=rw, border_bottom_right_radius=rw)
+            pygame.draw.rect(pic, (60, 60, 66), pygame.Rect(0, 0, int(u * n), max(2, int(u * 0.12))))
+            for (r, m, _), col in zip(black_rects, cols[1]):
+                r = r.move(-x0, -y0)
+                pygame.draw.rect(pic, col, r, border_bottom_left_radius=rb, border_bottom_right_radius=rb)
+                hi = r.inflate(-max(2, int(bw * 0.3)), 0)
+                hi.height = max(2, int(black_h * 0.08))
+                hi.bottom = r.bottom - max(2, int(black_h * 0.05))
+                pygame.draw.rect(pic, _mix(col, (255, 255, 255), 0.18), hi, border_radius=2)
+            self._kb_cache = (ck, pic)
+        surface.blit(self._kb_cache[1], (x0, y0))
 
         # the hands
         if whites:
