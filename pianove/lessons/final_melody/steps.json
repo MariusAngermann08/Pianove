@@ -1,17 +1,61 @@
 [
   {
-    "type": "text",
-    "emoji": "🏁",
-    "title": "Final Melody",
-    "body": "This is your capstone: a full G major melody spanning the complete range you've practised. It uses leaps, stepwise runs, and a satisfying return to the home chord G-B-D-G. Take it slow — every note counts."
-  },
-  {
-    "type": "notation_demo",
-    "title": "The Full Arc",
-    "caption": "The melody opens with a broken G chord leaping up to G5 — a full octave and a half. It then spirals down in waves. The journey away from home and back is the shape of almost every great melody.",
-    "bars": [
-      ["G4", "B4", "D5", "G5"],
-      ["F#5", "E5", "D5", "B4"]
+    "type": "scene",
+    "title": {"en": "The final melody", "de": "Die Abschlussmelodie"},
+    "beats": [
+      {
+        "title": {"en": "The G major chord", "de": "Der G-Dur-Akkord"},
+        "say": {
+          "en": "G, B and D together are the G major chord: home for this melody.",
+          "de": "G, H und D zusammen sind der G-Dur-Akkord: das Zuhause dieser Melodie."
+        },
+        "hand": {
+          "right": {"G4": 1, "B4": 3, "D5": 5}
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "treble",
+          "key": 1,
+          "notes": ["G4+B4+D5"]
+        },
+        "play": ["G4+B4+D5"],
+        "tempo": 40
+      },
+      {
+        "title": {"en": "Up the chord", "de": "Den Akkord hinauf"},
+        "say": {
+          "en": "The melody opens by climbing the chord, G B D, up to the high G: an octave and a half in four notes.",
+          "de": "Die Melodie beginnt mit dem Akkord hinauf, G H D, bis zum hohen G: anderthalb Oktaven in vier Tönen."
+        },
+        "staff": {
+          "clef": "treble",
+          "key": 1,
+          "notes": ["G4", "B4", "D5", "G5"],
+          "under": "names"
+        },
+        "play": ["G4", "B4", "D5", "G5"],
+        "fingers": [1, 2, 3, 5],
+        "side": "right",
+        "tempo": 76
+      },
+      {
+        "title": {"en": "Waves down", "de": "In Wellen hinab"},
+        "say": {
+          "en": "From the top it comes down in waves: F♯ E D B. Away from home, and back again: the shape of many great melodies.",
+          "de": "Von oben kommt sie in Wellen herunter: F♯ E D H. Weg von zu Hause und wieder zurück: die Form vieler großer Melodien."
+        },
+        "staff": {
+          "clef": "treble",
+          "key": 1,
+          "time": [4, 4],
+          "notes": ["G4", "B4", "D5", "G5", "F#5", "E5", "D5", "B4"]
+        },
+        "play": ["G4", "B4", "D5", "G5", "F#5", "E5", "D5", "B4"],
+        "fingers": [1, 2, 3, 5, 4, 3, 2, 1],
+        "side": "right",
+        "tempo": 84,
+        "try": "play"
+      }
     ]
   },
   {

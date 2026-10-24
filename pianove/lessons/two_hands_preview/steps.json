@@ -1,16 +1,76 @@
 [
   {
-    "type": "text",
-    "emoji": "🙌",
-    "title": "Playing With Both Hands",
-    "body": "The hardest part of piano isn't learning the notes — it's making both hands work independently. Start slow. The left hand holds the harmony while the right hand carries the melody."
-  },
-  {
-    "type": "notation_demo",
-    "title": "Grand Staff",
-    "caption": "When both hands are written together, it's called a grand staff. The top staff (treble clef) is the right hand; the bottom (bass clef) is the left. The brace on the left ties them together.",
-    "bars": [["C4", "E4", "G4", "C5"]],
-    "bass_bars": [["C3", "G3", "E3", "C3"]]
+    "type": "scene",
+    "title": {"en": "Both hands", "de": "Beide Hände"},
+    "beats": [
+      {
+        "title": {"en": "The grand staff", "de": "Das Klaviersystem"},
+        "say": {
+          "en": "For both hands, two staves are joined: the treble clef on top for the right hand, the bass clef below for the left. Middle C sits between them.",
+          "de": "Für beide Hände werden zwei Notensysteme verbunden: oben der Violinschlüssel für rechts, unten der Bassschlüssel für links. Das mittlere C liegt dazwischen."
+        },
+        "staff": {
+          "clef": "grand",
+          "notes": ["C3", "G3", "C4", "E4", "G4"],
+          "under": "names"
+        },
+        "labels": ["C3", "C4"],
+        "play": ["C3", "G3", "C4", "E4", "G4"],
+        "tempo": 84
+      },
+      {
+        "title": {"en": "A chord", "de": "Ein Akkord"},
+        "say": {
+          "en": "C, E and G pressed together make a C major chord. Fingers 1, 3 and 5, both hands alike.",
+          "de": "C, E und G zusammen gedrückt ergeben einen C-Dur-Akkord. Die Finger 1, 3 und 5, mit beiden Händen gleich."
+        },
+        "hand": {
+          "right": {"C4": 1, "E4": 3, "G4": 5},
+          "left": {"C3": 5, "E3": 3, "G3": 1}
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "grand",
+          "notes": ["C4+E4+G4", "C3+E3+G3"]
+        },
+        "play": ["C4+E4+G4", "C3+E3+G3"],
+        "tempo": 50
+      },
+      {
+        "title": {"en": "A broken chord", "de": "Ein gebrochener Akkord"},
+        "say": {
+          "en": "Play the notes of the chord one after another and add the C above: C E G C. The hand stretches with fingers 1 2 3 5.",
+          "de": "Spiel die Töne des Akkords nacheinander und nimm das obere C dazu: C E G C. Die Hand streckt sich mit den Fingern 1 2 3 5."
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["C4", "E4", "G4", "C5"],
+          "under": "names"
+        },
+        "play": ["C4", "E4", "G4", "C5"],
+        "fingers": [1, 2, 3, 5],
+        "tempo": 72,
+        "try": "play"
+      },
+      {
+        "title": {"en": "Both together", "de": "Beide zusammen"},
+        "say": {
+          "en": "Start slowly: the left hand holds the low C while the right hand plays the broken chord above it.",
+          "de": "Fang langsam an: Die linke Hand hält das tiefe C, während die rechte darüber den gebrochenen Akkord spielt."
+        },
+        "hand": {
+          "right": {"C4": 1, "E4": 2, "G4": 3, "C5": 5},
+          "left": {"C3": 5, "E3": 3, "G3": 1}
+        },
+        "staff": {
+          "clef": "grand",
+          "notes": ["C3+C4", "E4", "G4", "C5"]
+        },
+        "play": ["C3+C4", "E4", "G4", "C5"],
+        "tempo": 66,
+        "try": "play"
+      }
+    ]
   },
   {
     "type": "exercise",

@@ -1,17 +1,57 @@
 [
   {
-    "type": "text",
-    "emoji": "🥁",
-    "title": "Pentatonic Groove",
-    "body": "The pentatonic scale (5 notes: C D E G A) is used in blues, rock, folk, and jazz worldwide. Every note works over almost any chord — which makes improvising feel magical."
-  },
-  {
-    "type": "notation_demo",
-    "title": "Pentatonic Patterns",
-    "caption": "The opening jumps C→E→G→A — not stepwise but in leaps. Leaps create energy; steps create smoothness. This groove mixes both to build momentum.",
-    "bars": [
-      ["C4", "D4", "E4", "G4"],
-      ["A4", "G4", "E4", "D4"]
+    "type": "scene",
+    "title": {"en": "Pentatonic groove", "de": "Pentatonik-Groove"},
+    "beats": [
+      {
+        "title": {"en": "Notes that always fit", "de": "Töne, die immer passen"},
+        "say": {
+          "en": "C D E G A: in the pentatonic scale no two notes rub against each other. That's why it's loved in blues, rock and folk.",
+          "de": "C D E G A: In der Pentatonik reiben sich keine zwei Töne aneinander. Deshalb lieben sie Blues, Rock und Folk."
+        },
+        "labels": ["C4", "D4", "E4", "G4", "A4"],
+        "mark": ["C4", "D4", "E4", "G4", "A4"],
+        "play": ["C4+E4", "D4+G4", "E4+A4", "C4+G4"],
+        "tempo": 70
+      },
+      {
+        "title": {"en": "Steps and leaps", "de": "Schritte und Sprünge"},
+        "say": {
+          "en": "Steps sound smooth, leaps bring energy. This groove mixes both: C D E G, then down A G E D.",
+          "de": "Schritte klingen weich, Sprünge bringen Energie. Dieser Groove mischt beides: C D E G, dann hinab A G E D."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "G4": 4, "A4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [4, 4],
+          "notes": ["C4", "D4", "E4", "G4", "A4", "G4", "E4", "D4"]
+        },
+        "play": ["C4", "D4", "E4", "G4", "A4", "G4", "E4", "D4"],
+        "accent": 4,
+        "tempo": 104
+      },
+      {
+        "title": {"en": "Groove!", "de": "Groove!"},
+        "say": {
+          "en": "Keep a steady beat and let the ONE of each bar lead.",
+          "de": "Halte einen gleichmäßigen Takt und lass die EINS jedes Takts führen."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "G4": 4, "A4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [4, 4],
+          "notes": ["C4", "D4", "E4", "G4", "A4", "G4", "E4", "D4"],
+          "under": "count"
+        },
+        "play": ["C4", "D4", "E4", "G4", "A4", "G4", "E4", "D4"],
+        "accent": 4,
+        "tempo": 104,
+        "try": "play"
+      }
     ]
   },
   {

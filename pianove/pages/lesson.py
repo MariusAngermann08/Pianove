@@ -1800,7 +1800,8 @@ def build():
             song_key     = _song.get("key") if _song else None   # as written in the piece
         else:
             lesson_title = lesson.get("title", lesson_id)
-            song_time    = (4, 4)
+            ex = next((st for st in lesson.get("steps", []) if st.get("type") == "exercise"), {})
+            song_time    = tuple(ex.get("time", (4, 4)))   # the exercise's own time signature
             song_key     = None
 
     # Non-exercise steps (text, notation_demo) are handled before the full
@@ -1818,6 +1819,17 @@ def build():
             if stype == "notation_demo":
                 return _build_notation_demo_step(current_step, lesson_title,
                                                   step_idx, total_steps)
+            if stype == "scene":
+                from pianove.pages.theory import build_scene_step
+
+                def _scene_done(_next=step_idx + 1):
+                    ctx.lesson_step_idx    = _next
+                    ctx.lesson_current_idx = 0
+                    ctx.lesson_section_idx = 0
+                    ctx.lesson_phase       = "practice"
+                    ctx.router.refresh()
+                return build_scene_step(current_step, lesson_title, step_idx, total_steps,
+                                        _step_nav(lesson_title), _scene_done)
     else:
         step_idx    = ctx.lesson_step_idx
         steps       = lesson.get("steps", [])

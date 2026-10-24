@@ -1,15 +1,74 @@
 [
   {
-    "type": "text",
-    "emoji": "🎶",
-    "title": "Five-Note Melodies",
-    "body": "With just five notes — C D E G A — you can play hundreds of melodies. These are the notes of the C pentatonic scale: no half-steps, no tension, all sound good together."
-  },
-  {
-    "type": "notation_demo",
-    "title": "The Five Notes",
-    "caption": "C D E G A — notice there's no F or B. This gap between E and G (a skip) and between A and the next C gives pentatonic music its open, flowing feel.",
-    "bars": [["C4", "D4", "E4", "G4"]]
+    "type": "scene",
+    "title": {"en": "Five-note melodies", "de": "Melodien aus fünf Tönen"},
+    "beats": [
+      {
+        "title": {"en": "Five notes", "de": "Fünf Töne"},
+        "say": {
+          "en": "C D E G A: with just these five notes you can play hundreds of melodies. Together they are called the pentatonic scale.",
+          "de": "C D E G A: Mit nur diesen fünf Tönen kannst du Hunderte Melodien spielen. Zusammen heißen sie pentatonische Tonleiter."
+        },
+        "labels": ["C4", "D4", "E4", "G4", "A4"],
+        "mark": ["C4", "D4", "E4", "G4", "A4"],
+        "play": ["C4", "D4", "E4", "G4", "A4"],
+        "tempo": 84
+      },
+      {
+        "title": {"en": "The gap", "de": "Die Lücke"},
+        "say": {
+          "en": "F is left out. So between E and G the melody jumps over a key: a skip instead of a step.",
+          "de": "Das F fehlt. Zwischen E und G springt die Melodie deshalb über eine Taste: ein Sprung statt eines Schritts."
+        },
+        "labels": ["E4", "F4", "G4"],
+        "mark": ["E4", "G4"],
+        "play": ["E4", "G4", "E4", "G4"],
+        "tempo": 80
+      },
+      {
+        "title": {"en": "Skips on the staff", "de": "Sprünge im Notensystem"},
+        "say": {
+          "en": "On the staff a step goes from a line to the next space. A skip goes from a line to the next line: E to G.",
+          "de": "Im Notensystem geht ein Schritt von einer Linie zum nächsten Zwischenraum. Ein Sprung geht von Linie zu Linie: von E zu G."
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["D4", "E4", "G4", "A4"],
+          "under": "names"
+        },
+        "play": ["D4", "E4", "G4", "A4"],
+        "tempo": 70
+      },
+      {
+        "title": {"en": "The hand position", "de": "Die Handhaltung"},
+        "say": {
+          "en": "Thumb on C, then 2 on D, 3 on E. Fingers 4 and 5 spread a little to reach G and A.",
+          "de": "Daumen auf C, dann 2 auf D, 3 auf E. Die Finger 4 und 5 spreizen sich ein wenig bis zu G und A."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "G4": 4, "A4": 5}
+        },
+        "numbers": true
+      },
+      {
+        "title": {"en": "Your first tune", "de": "Deine erste Melodie"},
+        "say": {
+          "en": "Up and back down again: C D E G, G E D C.",
+          "de": "Hinauf und wieder hinunter: C D E G, G E D C."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "G4": 4, "A4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["C4", "D4", "E4", "G4", "G4", "E4", "D4", "C4"],
+          "time": [4, 4]
+        },
+        "play": ["C4", "D4", "E4", "G4", "G4", "E4", "D4", "C4"],
+        "tempo": 84,
+        "try": "play"
+      }
+    ]
   },
   {
     "type": "exercise",

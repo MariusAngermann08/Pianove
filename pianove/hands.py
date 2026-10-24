@@ -1273,10 +1273,11 @@ class HandsOverlay:
         return {}
 
     def update(self, dt: float, step: int, active: frozenset, lead: float = 0.0,
-               step_time: float = 0.0):
+               step_time: float = 0.0, glow: dict | None = None):
         """step: the step the player is on. In timed play, lead is how far through that step
         we are (0..1) and step_time how long it lasts (seconds): late in a step the hands
-        already move towards the next one."""
+        already move towards the next one. glow (side → fingers), if given: only these
+        fingers light up, though the others are placed on their keys too."""
         if self._memory is not None:
             _last_pose[self._memory] = {s: h.save() for s, h in self.hands.items() if h.placed}
         timed = step_time > 0
@@ -1295,6 +1296,11 @@ class HandsOverlay:
                 fingers = self._fingers(target, side)
             urgent = timed and (target == step or (target == step + 1 and remaining < _LEAP_TIME))
             hand.aim(fingers, glowing, active, target, self._black_depth, urgent)
+            if glow is not None:
+                for f in range(1, 6):
+                    if f not in glow.get(side, ()):
+                        hand.glow[f].target = 0.0
+                        hand.glow[f].snap_to(0.0)
             hand.update(dt)
         self._presolve(step)
 

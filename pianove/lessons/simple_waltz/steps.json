@@ -1,31 +1,84 @@
 [
   {
-    "type": "text",
-    "emoji": "💃",
-    "title": "The Waltz Feel",
-    "body": "A waltz is in 3/4 time — three beats per bar, with an emphasis on beat 1. Count: ONE two three ONE two three. The melody should breathe and flow; don't rush the phrasing."
-  },
-  {
-    "type": "notation_demo",
-    "title": "Waltz Opening",
-    "caption": "The melody starts on E, moves to G and A — a stepwise rise. Bar 2 descends back to C. This rise-and-fall shape is the heartbeat of waltz phrasing.",
-    "bars": [
-      ["E4", "G4", "A4", "G4"],
-      ["F4", "E4", "D4", "C4"]
+    "type": "scene",
+    "title": {"en": "The waltz", "de": "Der Walzer"},
+    "beats": [
+      {
+        "title": {"en": "Bars", "de": "Takte"},
+        "say": {
+          "en": "Music is divided into bars of equal length. The top number of the time signature says how many beats each bar has.",
+          "de": "Musik ist in gleich lange Takte eingeteilt. Die obere Zahl der Taktangabe sagt, wie viele Schläge jeder Takt hat."
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [3, 4],
+          "notes": ["E4", "G4", "G4", "F4", "A4", "A4"],
+          "under": "count"
+        }
+      },
+      {
+        "title": {"en": "ONE two three", "de": "EINS zwei drei"},
+        "say": {
+          "en": "A waltz counts three: ONE two three. The ONE is a little stronger, like a step in a dance.",
+          "de": "Ein Walzer zählt bis drei: EINS zwei drei. Die EINS ist etwas stärker, wie ein Schritt beim Tanzen."
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [3, 4],
+          "notes": ["E4", "G4", "G4", "F4", "A4", "A4"],
+          "under": "count"
+        },
+        "play": ["E4", "G4", "G4", "F4", "A4", "A4"],
+        "fingers": [1, 3, 3, 2, 4, 4],
+        "accent": 3,
+        "tempo": 100,
+        "side": "right"
+      },
+      {
+        "title": {"en": "Reaching for A", "de": "Zum A greifen"},
+        "say": {
+          "en": "The melody starts with the thumb on E, so finger 4 reaches A. Keep the hand loose and let it sway with the music.",
+          "de": "Die Melodie beginnt mit dem Daumen auf E, so erreicht Finger 4 das A. Halte die Hand locker und lass sie mit der Musik schwingen."
+        },
+        "hand": {
+          "right": {"E4": 1, "F4": 2, "G4": 3, "A4": 4, "B4": 5}
+        },
+        "numbers": true
+      },
+      {
+        "title": {"en": "Your turn", "de": "Du bist dran"},
+        "say": {
+          "en": "Count along: ONE two three, ONE two three.",
+          "de": "Zähl mit: EINS zwei drei, EINS zwei drei."
+        },
+        "hand": {
+          "right": {"E4": 1, "F4": 2, "G4": 3, "A4": 4, "B4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [3, 4],
+          "notes": ["E4", "G4", "G4", "F4", "A4", "A4"],
+          "under": "count"
+        },
+        "play": ["E4", "G4", "G4", "F4", "A4", "A4"],
+        "accent": 3,
+        "tempo": 100,
+        "try": "play"
+      }
     ]
   },
   {
     "type": "exercise",
-    "time": [4, 4],
+    "time": [3, 4],
     "bars": [
-      ["E4", "G4", "A4", "G4"],
-      ["F4", "E4", "D4", "C4"],
-      ["G4", "A4", "B4", "G4"],
-      ["C5", "B4", "A4", "G4"],
-      ["E4", "F4", "G4", "A4"],
-      ["B4", "G4", "E4", "D4"],
-      ["C4", "E4", "G4", "B4"],
-      ["C5", "G4", "E4", "C4"]
+      ["E4", "G4", "G4"],
+      ["F4", "A4", "A4"],
+      ["G4", "B4", "B4"],
+      ["A4", "G4", "F4"],
+      ["E4", "G4", "G4"],
+      ["F4", "A4", "A4"],
+      ["G4", "F4", "D4"],
+      ["C4", "E4", "C4"]
     ]
   }
 ]

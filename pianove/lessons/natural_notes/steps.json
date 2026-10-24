@@ -1,17 +1,61 @@
 [
   {
-    "type": "text",
-    "emoji": "🎼",
-    "title": "All the Natural Notes",
-    "body": "The white keys of the piano are called natural notes: A B C D E F G. They repeat in octaves. Once you know where all seven live on the staff, you can read any melody."
-  },
-  {
-    "type": "notation_demo",
-    "title": "Two Full Octaves",
-    "caption": "C to C covers one octave (8 notes). Here we travel two full octaves across both staves — watch how the notes climb steadily from C4 all the way up to D5.",
-    "bars": [
-      ["C4", "D4", "E4", "F4"],
-      ["G4", "A4", "B4", "C5"]
+    "type": "scene",
+    "title": {"en": "All the white keys", "de": "Alle weißen Tasten"},
+    "beats": [
+      {
+        "title": {"en": "Seven names", "de": "Sieben Namen"},
+        "say": {
+          "en": "The white keys have just seven names: C D E F G A B. After B it starts again with C, one octave higher.",
+          "de": "Die weißen Tasten haben nur sieben Namen: C D E F G A H. Nach dem H beginnt es wieder mit C, eine Oktave höher."
+        },
+        "labels": "white",
+        "play": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5"],
+        "tempo": 110
+      },
+      {
+        "title": {"en": "Signposts", "de": "Wegweiser"},
+        "say": {
+          "en": "C sits left of the two black keys, F left of the three. From these two you can find every other key.",
+          "de": "C liegt links von den zwei schwarzen Tasten, F links von den drei. Von diesen beiden aus findest du jede andere Taste."
+        },
+        "labels": ["C4", "F4", "C5"],
+        "mark": ["C#4", "D#4", "F#4", "G#4", "A#4", "C#5", "D#5"],
+        "play": ["C4", "F4", "C5"],
+        "tempo": 60
+      },
+      {
+        "title": {"en": "Lines and spaces", "de": "Linien und Zwischenräume"},
+        "say": {
+          "en": "On the staff the notes take turns: line, space, line, space. Each step up is the next white key.",
+          "de": "Im Notensystem wechseln sich die Noten ab: Linie, Zwischenraum, Linie, Zwischenraum. Jede Stufe höher ist die nächste weiße Taste."
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5"],
+          "under": "names"
+        },
+        "play": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5"],
+        "tempo": 96
+      },
+      {
+        "title": {"en": "Find them", "de": "Finde sie"},
+        "say": {
+          "en": "Find a few notes straight from the staff.",
+          "de": "Finde ein paar Töne direkt aus dem Notensystem."
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["G4", "C5", "E4", "A4"]
+        },
+        "play": ["G4", "C5", "E4", "A4"],
+        "tempo": 60,
+        "try": "play",
+        "try_say": {
+          "en": "Read the notes and play them: G C E A.",
+          "de": "Lies die Noten und spiel sie: G C E A."
+        }
+      }
     ]
   },
   {

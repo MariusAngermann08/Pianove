@@ -1,17 +1,67 @@
 [
   {
-    "type": "text",
-    "emoji": "🤚",
-    "title": "Left Hand Basics",
-    "body": "The left hand plays in the bass clef — lower notes that support the melody. The bass clef looks different from the treble clef but works the same way: higher on the staff = higher pitch."
-  },
-  {
-    "type": "notation_demo",
-    "title": "The Bass Clef",
-    "caption": "The curly symbol is the bass clef. Middle C (C4) sits just above the staff here. Practice locating C3, E3, G3 and C4 — these are your anchor points.",
-    "clef": "bass",
-    "bars": [
-      ["C3", "E3", "G3", "C4"]
+    "type": "scene",
+    "title": {"en": "The left hand", "de": "Die linke Hand"},
+    "beats": [
+      {
+        "title": {"en": "Low notes", "de": "Tiefe Töne"},
+        "say": {
+          "en": "Your left hand plays the low notes, on the left side of the piano: the C below middle C and the keys around it.",
+          "de": "Deine linke Hand spielt die tiefen Töne, auf der linken Seite des Klaviers: das C unter dem mittleren C und die Tasten drumherum."
+        },
+        "labels": ["C3", "C4"],
+        "mark": ["C3"],
+        "play": ["C4", "C3"],
+        "side": "left",
+        "tempo": 60
+      },
+      {
+        "title": {"en": "Mirrored numbers", "de": "Gespiegelte Nummern"},
+        "say": {
+          "en": "The left thumb is finger 1 too. So on the left hand the numbers run the other way: little finger 5 on C, thumb 1 on G.",
+          "de": "Auch links ist der Daumen Finger 1. Deshalb laufen die Nummern hier andersherum: kleiner Finger 5 auf C, Daumen 1 auf G."
+        },
+        "hand": {
+          "left": {"C3": 5, "D3": 4, "E3": 3, "F3": 2, "G3": 1}
+        },
+        "numbers": true
+      },
+      {
+        "title": {"en": "The bass clef", "de": "Der Bassschlüssel"},
+        "say": {
+          "en": "Low notes are written in the bass clef. Its two dots sit around the line of F.",
+          "de": "Tiefe Töne stehen im Bassschlüssel. Seine zwei Punkte liegen um die F-Linie herum."
+        },
+        "hand": {
+          "left": {"C3": 5, "D3": 4, "E3": 3, "F3": 2, "G3": 1}
+        },
+        "labels": "hand",
+        "staff": {
+          "clef": "bass",
+          "notes": ["C3", "D3", "E3", "F3", "G3"],
+          "under": "names"
+        },
+        "play": ["C3", "D3", "E3", "F3", "G3"],
+        "tempo": 80
+      },
+      {
+        "title": {"en": "Anchor notes", "de": "Ankertöne"},
+        "say": {
+          "en": "C, E and G all sit in spaces here: C in the second, E in the third, G in the fourth. Fingers 5, 3 and 1.",
+          "de": "C, E und G sitzen hier alle in Zwischenräumen: C im zweiten, E im dritten, G im vierten. Finger 5, 3 und 1."
+        },
+        "hand": {
+          "left": {"C3": 5, "D3": 4, "E3": 3, "F3": 2, "G3": 1}
+        },
+        "staff": {
+          "clef": "bass",
+          "notes": ["C3", "E3", "G3", "E3", "C3"],
+          "under": "names"
+        },
+        "play": ["C3", "E3", "G3", "E3", "C3"],
+        "tempo": 76,
+        "try": "play"
+      }
     ]
   },
   {

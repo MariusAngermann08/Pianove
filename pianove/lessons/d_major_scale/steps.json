@@ -1,17 +1,54 @@
 [
   {
-    "type": "text",
-    "emoji": "🎹",
-    "title": "D Major — Two Sharps",
-    "body": "D major has two sharps: F# and C#. Adding a second sharp always targets the 7th note of the new scale. The pattern: each new sharp key adds one more sharp to the 7th."
-  },
-  {
-    "type": "notation_demo",
-    "title": "F# and C# in Action",
-    "caption": "Compare F# here to the F natural you played in C major — it's one white key higher. C# is similarly raised from C. The rest of the notes are identical to C major.",
-    "bars": [
-      ["D4", "E4", "F#4", "G4"],
-      ["A4", "B4", "C#5", "D5"]
+    "type": "scene",
+    "title": {"en": "D major", "de": "D-Dur"},
+    "beats": [
+      {
+        "title": {"en": "Two sharps", "de": "Zwei Kreuze"},
+        "say": {
+          "en": "D major needs two black keys: F♯ and C♯. All the other notes stay white.",
+          "de": "D-Dur braucht zwei schwarze Tasten: Fis (F♯) und Cis (C♯). Alle anderen Töne bleiben weiß."
+        },
+        "labels": ["D4", "E4", "F#4", "G4", "A4", "B4", "C#5", "D5"],
+        "mark": ["F#4", "C#5"],
+        "play": ["D4", "E4", "F#4", "G4", "A4", "B4", "C#5", "D5"],
+        "fingers": [1, 2, 3, 1, 2, 3, 4, 5],
+        "side": "right",
+        "tempo": 76
+      },
+      {
+        "title": {"en": "Fingers on black keys", "de": "Finger auf schwarzen Tasten"},
+        "say": {
+          "en": "Black keys lie further back. Let the longer fingers 2, 3 and 4 play them and the thumb stay on white keys.",
+          "de": "Schwarze Tasten liegen weiter hinten. Lass die längeren Finger 2, 3 und 4 sie spielen, der Daumen bleibt auf den weißen."
+        },
+        "hand": {
+          "right": {"D4": 1, "E4": 2, "F#4": 3, "G4": 4, "A4": 5}
+        },
+        "numbers": true
+      },
+      {
+        "title": {"en": "The key signature", "de": "Die Vorzeichen"},
+        "say": {
+          "en": "Two sharps after the clef: every F and every C in the piece is played sharp.",
+          "de": "Zwei Kreuze nach dem Schlüssel: Jedes F und jedes C im Stück wird erhöht gespielt."
+        },
+        "staff": {
+          "clef": "treble",
+          "key": 2,
+          "notes": ["D4", "E4", "F#4", "G4", "A4", "B4", "C#5", "D5"],
+          "under": "names"
+        },
+        "play": ["D4", "E4", "F#4", "G4", "A4", "B4", "C#5", "D5"],
+        "fingers": [1, 2, 3, 1, 2, 3, 4, 5],
+        "side": "right",
+        "tempo": 76,
+        "try": "play",
+        "try_say": {
+          "en": "Play the D major scale, with the thumb under after F♯.",
+          "de": "Spiel die D-Dur-Tonleiter, mit dem Daumenuntersatz nach dem F♯."
+        }
+      }
     ]
   },
   {

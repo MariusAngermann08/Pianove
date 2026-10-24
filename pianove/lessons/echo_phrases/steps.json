@@ -1,17 +1,61 @@
 [
   {
-    "type": "text",
-    "emoji": "🔁",
-    "title": "Echo Phrases",
-    "body": "An echo phrase is when a musical idea is repeated — often at a different pitch or dynamic. It's one of the oldest tricks in music: play something, then answer it. Call and response."
-  },
-  {
-    "type": "notation_demo",
-    "title": "The Phrase and Its Echo",
-    "caption": "Bar 1 rises: E F G A. Bar 2 falls back: A G F E. The descent is the echo — same notes, reversed direction. This mirror shape appears everywhere in classical and folk music.",
-    "bars": [
-      ["E4", "F4", "G4", "A4"],
-      ["A4", "G4", "F4", "E4"]
+    "type": "scene",
+    "title": {"en": "Call and echo", "de": "Ruf und Echo"},
+    "beats": [
+      {
+        "title": {"en": "The call", "de": "Der Ruf"},
+        "say": {
+          "en": "A phrase is like a musical sentence. This one climbs: E F G A.",
+          "de": "Eine Phrase ist wie ein musikalischer Satz. Diese hier steigt: E F G A."
+        },
+        "hand": {
+          "right": {"E4": 1, "F4": 2, "G4": 3, "A4": 4, "B4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["E4", "F4", "G4", "A4"],
+          "under": "names"
+        },
+        "play": ["E4", "F4", "G4", "A4"],
+        "tempo": 88
+      },
+      {
+        "title": {"en": "The answer", "de": "Die Antwort"},
+        "say": {
+          "en": "The echo answers with the same notes the other way round: A G F E. Up, then back down, like a question and its answer.",
+          "de": "Das Echo antwortet mit denselben Tönen in umgekehrter Richtung: A G F E. Hinauf und zurück, wie eine Frage und ihre Antwort."
+        },
+        "hand": {
+          "right": {"E4": 1, "F4": 2, "G4": 3, "A4": 4, "B4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [4, 4],
+          "notes": ["E4", "F4", "G4", "A4", "A4", "G4", "F4", "E4"]
+        },
+        "play": ["E4", "F4", "G4", "A4", "A4", "G4", "F4", "E4"],
+        "tempo": 92
+      },
+      {
+        "title": {"en": "Loud and soft", "de": "Laut und leise"},
+        "say": {
+          "en": "An echo is often softer than the call. Press the keys more gently for the answer.",
+          "de": "Ein Echo ist oft leiser als der Ruf. Drück die Tasten bei der Antwort sanfter."
+        },
+        "hand": {
+          "right": {"E4": 1, "F4": 2, "G4": 3, "A4": 4, "B4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [4, 4],
+          "notes": ["E4", "F4", "G4", "A4", "A4", "G4", "F4", "E4"]
+        },
+        "play": ["E4", "F4", "G4", "A4", "A4", "G4", "F4", "E4"],
+        "tempo": 92,
+        "try": "play",
+        "velocities": [96, 96, 96, 96, 50, 50, 50, 50]
+      }
     ]
   },
   {

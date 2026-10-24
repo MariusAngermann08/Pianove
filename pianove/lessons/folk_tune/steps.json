@@ -1,17 +1,57 @@
 [
   {
-    "type": "text",
-    "emoji": "🏔️",
-    "title": "Folk Melody",
-    "body": "Folk melodies are meant to be memorable: strong opening note, clear shape, easy to sing. This one is in G major — watch for the leaps of a 4th and 5th that give it its open, outdoor feeling."
-  },
-  {
-    "type": "notation_demo",
-    "title": "The Opening Leap",
-    "caption": "The melody starts with G then leaps up to D — a perfect fifth. This interval sounds open and resolved. Bar 2 descends stepwise back to G, completing the first phrase.",
-    "bars": [
-      ["G4", "A4", "B4", "D5"],
-      ["E5", "D5", "B4", "A4"]
+    "type": "scene",
+    "title": {"en": "A folk tune", "de": "Ein Volkslied"},
+    "beats": [
+      {
+        "title": {"en": "In G major", "de": "In G-Dur"},
+        "say": {
+          "en": "This tune is in G major. Put your thumb on G; the hand covers G A B, and reaches up to D and E.",
+          "de": "Diese Melodie steht in G-Dur. Leg den Daumen auf G; die Hand deckt G A H ab und reicht bis D und E."
+        },
+        "hand": {
+          "right": {"G4": 1, "A4": 2, "B4": 3, "D5": 4, "E5": 5}
+        },
+        "numbers": true
+      },
+      {
+        "title": {"en": "The opening leap", "de": "Der Sprung am Anfang"},
+        "say": {
+          "en": "G A B, then a leap up to D. Leaps like this give folk songs their open, outdoor sound.",
+          "de": "G A H, dann ein Sprung hinauf zum D. Solche Sprünge geben Volksliedern ihren offenen Klang, wie draußen unter freiem Himmel."
+        },
+        "hand": {
+          "right": {"G4": 1, "A4": 2, "B4": 3, "D5": 4, "E5": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "key": 1,
+          "time": [4, 4],
+          "notes": ["G4", "A4", "B4", "D5", "E5", "D5", "B4", "A4"],
+          "under": "names"
+        },
+        "play": ["G4", "A4", "B4", "D5", "E5", "D5", "B4", "A4"],
+        "tempo": 96
+      },
+      {
+        "title": {"en": "Sing it", "de": "Sing mit"},
+        "say": {
+          "en": "Folk tunes are made to be sung. Hum along while you play: it helps the melody flow.",
+          "de": "Volkslieder sind zum Singen gemacht. Summ beim Spielen mit, das lässt die Melodie fließen."
+        },
+        "hand": {
+          "right": {"G4": 1, "A4": 2, "B4": 3, "D5": 4, "E5": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "key": 1,
+          "time": [4, 4],
+          "notes": ["G4", "A4", "B4", "D5", "E5", "D5", "B4", "A4"]
+        },
+        "play": ["G4", "A4", "B4", "D5", "E5", "D5", "B4", "A4"],
+        "tempo": 96,
+        "try": "play"
+      }
     ]
   },
   {

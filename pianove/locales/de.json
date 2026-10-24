@@ -226,6 +226,10 @@
   "ach_sharp_eye": "Scharfes Auge",
 
   "step_continue": "Weiter →",
+  "scene_your_turn": "Jetzt du! Spiel die leuchtenden Tasten.",
+  "scene_great": "Super!",
+  "scene_skip": "Überspringen",
+  "scene_start": "Los geht's!",
   "step_got_it": "Verstanden →",
   "step_of": "{n} von {total}"
 }

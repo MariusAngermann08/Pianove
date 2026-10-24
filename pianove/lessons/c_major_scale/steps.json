@@ -1,17 +1,83 @@
 [
   {
-    "type": "text",
-    "emoji": "🎵",
-    "title": "The C Major Scale",
-    "body": "A scale is a set of notes arranged in order of pitch. C major uses every white key from C to C — no sharps, no flats. It's the foundation of Western music."
-  },
-  {
-    "type": "notation_demo",
-    "title": "8 Notes, One Octave",
-    "caption": "C D E F G A B C — eight notes rising then returning. The last C is an octave higher than the first: same note, double the frequency.",
-    "bars": [
-      ["C4", "D4", "E4", "F4"],
-      ["G4", "A4", "B4", "C5"]
+    "type": "scene",
+    "title": {"en": "The C major scale", "de": "Die C-Dur-Tonleiter"},
+    "beats": [
+      {
+        "title": {"en": "A scale", "de": "Eine Tonleiter"},
+        "say": {
+          "en": "A scale is a ladder of notes, one step after another. C major uses only the white keys, from C up to the next C.",
+          "de": "Eine Tonleiter ist eine Leiter aus Tönen, Stufe für Stufe. C-Dur nutzt nur die weißen Tasten, von C bis zum nächsten C."
+        },
+        "labels": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"],
+        "staff": {
+          "clef": "treble",
+          "notes": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"],
+          "under": "names"
+        },
+        "play": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"],
+        "tempo": 100
+      },
+      {
+        "title": {"en": "The octave", "de": "Die Oktave"},
+        "say": {
+          "en": "The last C sounds like the first one, only higher. Eight white keys apart: that distance is called an octave.",
+          "de": "Das letzte C klingt wie das erste, nur höher. Acht weiße Tasten auseinander: Diesen Abstand nennt man Oktave."
+        },
+        "labels": ["C4", "C5"],
+        "mark": ["C4", "C5"],
+        "staff": {
+          "clef": "treble",
+          "notes": ["C4", "C5", "C4+C5"],
+          "under": "names"
+        },
+        "play": ["C4", "C5", "C4+C5"],
+        "tempo": 60
+      },
+      {
+        "title": {"en": "Five fingers, eight keys", "de": "Fünf Finger, acht Tasten"},
+        "say": {
+          "en": "Play C D E with fingers 1 2 3. Then the thumb passes under to F, and fingers 2 3 4 5 play G A B C.",
+          "de": "Spiel C D E mit den Fingern 1 2 3. Dann geht der Daumen unter der Hand hindurch zum F, und die Finger 2 3 4 5 spielen G A H C."
+        },
+        "labels": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"],
+        "play": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"],
+        "fingers": [1, 2, 3, 1, 2, 3, 4, 5],
+        "tempo": 66
+      },
+      {
+        "title": {"en": "The thumb passes under", "de": "Der Daumenuntersatz"},
+        "say": {
+          "en": "Watch the thumb: while finger 3 still holds E, the thumb is already on its way to F.",
+          "de": "Achte auf den Daumen: Während Finger 3 noch das E hält, ist der Daumen schon unterwegs zum F."
+        },
+        "labels": ["E4", "F4"],
+        "mark": ["F4"],
+        "play": ["C4", "D4", "E4", "F4", "G4"],
+        "fingers": [1, 2, 3, 1, 2],
+        "tempo": 54,
+        "try": "play",
+        "try_say": {"en": "Now you: C D E, thumb under, F G.", "de": "Jetzt du: C D E, Daumen drunter, F G."}
+      },
+      {
+        "title": {"en": "All the way up", "de": "Ganz hinauf"},
+        "say": {
+          "en": "Now the whole scale, with the thumb passing under after E.",
+          "de": "Jetzt die ganze Tonleiter, mit dem Daumenuntersatz nach dem E."
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"]
+        },
+        "play": ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"],
+        "fingers": [1, 2, 3, 1, 2, 3, 4, 5],
+        "tempo": 72,
+        "try": "play",
+        "try_say": {
+          "en": "Play the scale: 1 2 3, thumb under, 1 2 3 4 5.",
+          "de": "Spiel die Tonleiter: 1 2 3, Daumen drunter, 1 2 3 4 5."
+        }
+      }
     ]
   },
   {

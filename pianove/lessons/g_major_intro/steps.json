@@ -1,17 +1,70 @@
 [
   {
-    "type": "text",
-    "emoji": "♯",
-    "title": "G Major — One Sharp",
-    "body": "G major is like C major with one change: the 7th note F becomes F#. A sharp (♯) raises any note by one semitone — one key to the right on the piano."
-  },
-  {
-    "type": "notation_demo",
-    "title": "Spot the F#",
-    "caption": "Notice F# in the scale (bar 2). Every F in G major is sharp — the key signature at the start of a piece tells you this automatically so you don't need individual ♯ symbols on every note.",
-    "bars": [
-      ["G4", "A4", "B4", "C5"],
-      ["D5", "E5", "F#5", "G5"]
+    "type": "scene",
+    "title": {"en": "G major", "de": "G-Dur"},
+    "beats": [
+      {
+        "title": {"en": "The half step", "de": "Der Halbton"},
+        "say": {
+          "en": "From any key to its very next neighbour, black or white, is a half step. F to the black key just right of it: a half step.",
+          "de": "Von jeder Taste zu ihrer direkten Nachbarin, schwarz oder weiß, ist es ein Halbton. Vom F zur schwarzen Taste rechts daneben: ein Halbton."
+        },
+        "labels": ["F4", "F#4"],
+        "mark": ["F4", "F#4"],
+        "play": ["F4", "F#4", "F4", "F#4"],
+        "tempo": 70
+      },
+      {
+        "title": {"en": "The sharp ♯", "de": "Das Kreuz ♯"},
+        "say": {
+          "en": "A sharp raises a note by a half step. F♯ is the black key right after F.",
+          "de": "Ein Kreuz erhöht einen Ton um einen Halbton. Fis (F♯) ist die schwarze Taste direkt nach dem F."
+        },
+        "labels": ["F4", "F#4"],
+        "staff": {
+          "clef": "treble",
+          "notes": ["F4", "F#4"],
+          "under": "names"
+        },
+        "play": ["F4", "F#4"],
+        "tempo": 60,
+        "try": ["F#4"],
+        "try_say": {"en": "Play F♯.", "de": "Spiel F♯."}
+      },
+      {
+        "title": {"en": "The G major scale", "de": "Die G-Dur-Tonleiter"},
+        "say": {
+          "en": "G major is built like C major, starting on G. To keep the same pattern, F becomes F♯.",
+          "de": "G-Dur ist gebaut wie C-Dur, nur ab G. Damit das Muster gleich bleibt, wird aus dem F ein F♯."
+        },
+        "labels": ["G4", "A4", "B4", "C5", "D5", "E5", "F#5", "G5"],
+        "mark": ["F#5"],
+        "staff": {
+          "clef": "treble",
+          "notes": ["G4", "A4", "B4", "C5", "D5", "E5", "F#5", "G5"]
+        },
+        "play": ["G4", "A4", "B4", "C5", "D5", "E5", "F#5", "G5"],
+        "fingers": [1, 2, 3, 1, 2, 3, 4, 5],
+        "tempo": 72
+      },
+      {
+        "title": {"en": "The key signature", "de": "Die Vorzeichen"},
+        "say": {
+          "en": "In a piece in G major the ♯ is written once, right after the clef. It counts for every F in the piece.",
+          "de": "In einem Stück in G-Dur steht das ♯ nur einmal, direkt nach dem Schlüssel. Es gilt für jedes F im Stück."
+        },
+        "staff": {
+          "clef": "treble",
+          "key": 1,
+          "notes": ["D5", "E5", "F#5", "G5"],
+          "under": "names"
+        },
+        "play": ["D5", "E5", "F#5", "G5"],
+        "fingers": [2, 3, 4, 5],
+        "tempo": 72,
+        "try": "play",
+        "try_say": {"en": "Read and play: the F is an F♯.", "de": "Lies und spiel: Das F ist ein F♯."}
+      }
     ]
   },
   {

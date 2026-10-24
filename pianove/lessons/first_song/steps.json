@@ -1,17 +1,58 @@
 [
   {
-    "type": "text",
-    "emoji": "🌟",
-    "title": "Your First Real Song",
-    "body": "This is \"Mary Had a Little Lamb\" — one of the oldest piano teaching pieces. Simple, but it contains everything: stepwise motion, a repeated note, and a satisfying return to the tonic C."
-  },
-  {
-    "type": "notation_demo",
-    "title": "The Opening Phrase",
-    "caption": "E D C D — the melody descends from E to C, then bounces back to D. This is a pickup phrase: it creates gentle tension that the next bar resolves. Listen for the \"Mary had a...\" rhythm.",
-    "bars": [
-      ["E4", "D4", "C4", "D4"],
-      ["E4", "E4", "E4", "D4"]
+    "type": "scene",
+    "title": {"en": "Your first song", "de": "Dein erster Song"},
+    "beats": [
+      {
+        "title": {"en": "Mary Had a Little Lamb", "de": "Mary Had a Little Lamb"},
+        "say": {
+          "en": "One of the oldest piano pieces for beginners. It needs only three keys at first: E, D and C.",
+          "de": "Eines der ältesten Klavierstücke für Anfänger. Am Anfang braucht es nur drei Tasten: E, D und C."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "F4": 4, "G4": 5}
+        },
+        "labels": ["C4", "D4", "E4"],
+        "play": ["E4", "D4", "C4", "D4", "E4", "E4", "E4"],
+        "tempo": 110
+      },
+      {
+        "title": {"en": "Repeated notes", "de": "Wiederholte Töne"},
+        "say": {
+          "en": "When a note repeats, it stays in the same place on the staff. Play it again with the same finger.",
+          "de": "Wenn sich ein Ton wiederholt, bleibt er an derselben Stelle im Notensystem. Spiel ihn mit demselben Finger noch einmal."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "F4": 4, "G4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": ["E4", "E4", "E4"],
+          "under": "names"
+        },
+        "play": ["E4", "E4", "E4"],
+        "tempo": 100,
+        "try": "play"
+      },
+      {
+        "title": {"en": "The first line", "de": "Die erste Zeile"},
+        "say": {
+          "en": "Down, back up, then three times E. Fingers 3 2 1 2 3 3 3.",
+          "de": "Hinunter, wieder hinauf, dann dreimal E. Finger 3 2 1 2 3 3 3."
+        },
+        "hand": {
+          "right": {"C4": 1, "D4": 2, "E4": 3, "F4": 4, "G4": 5}
+        },
+        "staff": {
+          "clef": "treble",
+          "time": [4, 4],
+          "notes": ["E4", "D4", "C4", "D4", "E4", "E4", "E4"]
+        },
+        "play": ["E4", "D4", "C4", "D4", "E4", "E4", "E4"],
+        "tempo": 100,
+        "try": "play",
+        "try_say": {"en": "Your turn: E D C D E E E.", "de": "Du bist dran: E D C D E E E."}
+      }
     ]
   },
   {
