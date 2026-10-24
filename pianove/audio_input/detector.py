@@ -215,6 +215,9 @@ class PianoNoteDetector:
     off_ratio = 0.06       # let go when it fades to this share of its peak
     off_noise = 2.0        # … or sinks this close to the noise
     onset_shift = 0.045    # the analysis sees a strike this long after it happens
+    # knowing what comes next (a lesson waiting for its next notes, see expect())
+    expect_gain = 1.5      # the keys due count this much more readily
+    other_gain = 0.4       # … and every other key this much less readily
 
     def __init__(self, sample_rate: int = 44100, templates: np.ndarray | None = None,
                  sensitivity: float = 1.0, track_tuning: bool = True, **params):
@@ -280,6 +283,7 @@ class PianoNoteDetector:
         self.a4 = 440.0
         self.spec.set_tuning(self.a4)
         self._muted: dict[int, float] = {}                        # key → until (stream s)
+        self._gain: np.ndarray | None = None                      # per key, while expecting
 
     @property
     def active_notes(self) -> set[int]:
@@ -291,6 +295,19 @@ class PianoNoteDetector:
         sounds can be let go with a short tail once it stops."""
         if 0 <= note - LOW < N_KEYS:
             self._muted[note] = self._t / self.sr + seconds
+
+    def expect(self, notes):
+        """The keys that should come next (a lesson's next step), or None for free playing.
+        They are heard a little more readily, and any other key needs clearly more evidence:
+        a wrong note played properly still counts, a thump or a voice far less often."""
+        if notes is None:
+            self._gain = None
+            return
+        gain = np.full(N_KEYS, self.other_gain, dtype=np.float32)
+        for n in notes:
+            if 0 <= n - LOW < N_KEYS:
+                gain[n - LOW] = self.expect_gain
+        self._gain = gain
 
     # -- feeding --
 
@@ -364,11 +381,17 @@ class PianoNoteDetector:
 
     def _decide(self, now: float, a: np.ndarray, noise: np.ndarray, events: list[NoteEvent]):
         hist = self._hist
-        sens = self.sensitivity
+        sens = clear = self.sensitivity
+        if self._gain is not None:
+            # the keys due are heard more readily in every way; any other key only has to
+            # stand further above the noise: a wrong note played properly still does, a
+            # thump or a voice doesn't
+            clear = sens * self._gain
+            sens = sens * np.maximum(self._gain, 1.0)
         self._loud = max(float(a.max()), self._loud * (1 - HOP_S / 4.0))   # fades over ~4 s
         recent_min = hist[-6:].min(axis=0)
 
-        cand = ((a * sens > self._on_noise * noise) & (a * sens > self.on_rel * float(a.max()))
+        cand = ((a * clear > self._on_noise * noise) & (a * sens > self.on_rel * float(a.max()))
                 & (a * sens > self.on_peak * self._loud))
         if cand.any() and (self.shadow_part or self.shadow_near):
             spill = np.maximum(self.shadow_part * (a[:, None] * _S_PART).max(axis=0),
@@ -408,7 +431,7 @@ class PianoNoteDetector:
             events.append(NoteEvent(True, note, self._velocity(a[i]), self._pend_onset[i], now))
 
         # notes fading out
-        low = self.active & ((a < self.off_ratio * self._peak) | (a * sens < self.off_noise * noise))
+        low = self.active & ((a < self.off_ratio * self._peak) | (a * self.sensitivity < self.off_noise * noise))
         self._low_frames = np.where(low, self._low_frames + 1, 0).astype(np.int16)
         for i in np.nonzero(self._low_frames >= 3)[0]:
             self.active[i] = False

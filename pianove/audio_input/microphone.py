@@ -112,6 +112,8 @@ class Microphone:
         self._last_poll = 0.0
         self._last_attempt = -1e9
         self._mutes: list[tuple[int, float]] = []
+        self._expect: tuple[frozenset | None, float] = (None, 0.0)   # keys due, until when
+        self._expecting: frozenset | None = None                   # what the detector was told
         self.name = ""
         self.error = ""
         self.level = 0.0
@@ -145,6 +147,7 @@ class Microphone:
             return False
         with self._lock:
             self._detector = PianoNoteDetector(stream.sample_rate, sensitivity=self._sensitivity)
+            self._expecting = None
         self._stream = stream
         self._last_poll = time.monotonic()            # don't count as idle straight away
         self.name = stream.name
@@ -183,6 +186,13 @@ class Microphone:
         """Pianove is about to play this key through the speakers: don't hear it as played."""
         with self._lock:
             self._mutes.append((note, seconds))
+
+    def expect(self, notes, seconds: float = 0.5):
+        """The keys a lesson waits for next (None or empty: free playing). It lapses after
+        `seconds` unless said again, so a page that stops saying it leaves free playing."""
+        with self._lock:
+            notes = frozenset(notes) if notes else None
+            self._expect = (notes, time.monotonic() + seconds)
 
     @property
     def sensitivity(self) -> float:
@@ -229,6 +239,11 @@ class Microphone:
                     for note, secs in self._mutes:
                         det.mute(note, secs)
                     self._mutes.clear()
+                    notes, until = self._expect
+                    want = notes if time.monotonic() < until else None
+                    if want != self._expecting:
+                        det.expect(want)
+                        self._expecting = want
             if det is None:
                 continue
             try:

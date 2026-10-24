@@ -294,6 +294,9 @@ class Scene:
     def update(self, dt: float, rect: pygame.Rect):
         self._panel.update(dt, rect)
         b = self.beat
+        # the microphone listens for the keys asked for
+        self._panel.expect(b.tries[self.try_i] if self.waiting_for_player
+                           and self.try_i < len(b.tries) else None)
         self.t += dt
         beat_len = 60.0 / b.tempo
 

@@ -202,6 +202,13 @@ class MidiPanel:
         if self.mic is not None and self.input_mode == INPUT_MIC:
             self.mic.mute(note, 8.0 if playing else 0.7)
 
+    def expect(self, notes):
+        """The keys a lesson waits for next (None: free playing): the microphone hears them
+        more readily and other keys only well above the room's noise. Say it every frame;
+        it lapses on its own."""
+        if self.mic is not None and self.input_mode == INPUT_MIC:
+            self.mic.expect(notes)
+
     def _rebuild_keys(self):
         self._white_notes, self._black_notes, self._black_indices = _build_note_lists(
             self._display_low, self._display_high

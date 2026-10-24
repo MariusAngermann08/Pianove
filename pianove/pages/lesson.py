@@ -1166,6 +1166,8 @@ class _LessonPiano:
         self._panel.update(dt, rect)
         if self.fit_panel:
             self.fit_panel()
+        # the microphone listens for the notes due (not while Pianove plays them itself)
+        self._panel.expect(None if self._sv._phase == "listen" else self._sv.upcoming_midis())
         # every press counts, even a key let go and pressed again within one frame
         for note in self._panel.take_note_ons():
             self._handle_note(note)

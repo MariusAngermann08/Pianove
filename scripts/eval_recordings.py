@@ -11,6 +11,11 @@ in them is in tests/recordings/<name>.json, section by section:
 Run:  python scripts/eval_recordings.py
       python scripts/eval_recordings.py --show-errors
       python scripts/eval_recordings.py --param on_noise=1.5 --param rise=2.0
+      python scripts/eval_recordings.py --expect    (as in a lesson: the next notes are known)
+
+With --expect the detector is told what comes next, as a lesson does: in a notes section
+the next chord or note due, in a section without piano the first notes of the next one
+(a lesson waiting while someone talks); unlabelled sections are free playing.
 """
 import argparse
 import glob
@@ -44,6 +49,43 @@ def load_wav(path: str) -> tuple[np.ndarray, int]:
     return x.reshape(-1, ch).mean(axis=1), sr
 
 
+def expectations(rec: dict) -> list[tuple[float, frozenset | None]]:
+    """When the expectation changes and to what, as a lesson would set it."""
+    groups = []                                     # (onset, notes) per notes section, in order
+    for sec in rec["sections"]:
+        if sec["kind"] == "notes":
+            by_t: dict[float, set] = {}
+            for t, m in sec["notes"]:
+                by_t.setdefault(t, set()).add(m)
+            groups += sorted(by_t.items())
+    out: list[tuple[float, frozenset | None]] = []
+    for sec in rec["sections"]:
+        if sec["kind"] == "unlabelled":
+            out.append((sec["start"], None))
+        elif sec["kind"] == "no_piano":
+            nxt = [g for g in groups if g[0] >= sec["end"]]
+            out.append((sec["start"], frozenset(nxt[0][1]) if nxt else None))
+        else:
+            inside = [g for g in groups if sec["start"] <= g[0] < sec["end"]]
+            out.append((sec["start"], frozenset(inside[0][1])))
+            for (t, _), (_, notes) in zip(inside, inside[1:]):
+                out.append((t + 0.3, frozenset(notes)))   # a step counts as done just after it
+    return out
+
+
+def run(x: np.ndarray, sr: int, params: dict, plan=None, block: int = 512):
+    """The detector over a recording, fed as a microphone would; plan: expectations()."""
+    from pianove.audio_input.detector import PianoNoteDetector
+    det = PianoNoteDetector(sample_rate=sr, **params)
+    out, k = [], 0
+    for i in range(0, len(x), block):
+        while plan and k < len(plan) and plan[k][0] <= i / sr:
+            det.expect(plan[k][1])
+            k += 1
+        out += [(e.onset, e.note, e.time) for e in det.process(x[i:i + block]) if e.on]
+    return out
+
+
 def _value(s: str):
     try:
         return int(s)
@@ -56,6 +98,7 @@ def main():
     ap.add_argument("--show-errors", action="store_true")
     ap.add_argument("--param", action="append", default=[], help="detector parameter, name=value")
     ap.add_argument("--only", default="", help="recording names, comma separated")
+    ap.add_argument("--expect", action="store_true", help="tell the detector what comes next")
     args = ap.parse_args()
     params = {k: _value(v) for k, v in (p.split("=", 1) for p in args.param)}
 
@@ -73,7 +116,7 @@ def main():
             continue
         x, sr = load_wav(audio)
         t0 = time.perf_counter()
-        det = pa.run_detector(x, sr, **params)
+        det = run(x, sr, params, expectations(rec) if args.expect else None)
         t_cpu += time.perf_counter() - t0
         t_audio += len(x) / sr
 

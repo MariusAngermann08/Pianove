@@ -131,6 +131,20 @@ def test_muted_keys_are_not_reported():
     assert 64 not in heard and 62 in heard and 65 in heard
 
 
+@needs_synth
+def test_knowing_what_comes_next_still_hears_wrong_notes():
+    notes = _scale()
+    x = pa.room(pa.render(notes, pa.BUNDLED_SF2), SR, snr_db=30, rt60=0.3, mic=True, seed=4)
+    for expected in ({60, 62, 64, 65, 67, 69, 71, 72}, {30, 90}):   # the right keys, the wrong ones
+        det = PianoNoteDetector(SR)
+        det.expect(expected)
+        heard = []
+        for i in range(0, len(x), 512):
+            heard += [(e.onset, e.note, e.time) for e in det.process(x[i:i + 512]) if e.on]
+        s = pa.score(notes, heard)
+        assert s["r"] >= 0.99 and s["p"] >= 0.85, (expected, s)
+
+
 # --- the keyboard panel with the microphone as input ------------------------------------
 
 class _FakeMic:
