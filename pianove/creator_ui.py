@@ -12,6 +12,8 @@ from pylay.core.element import UIElement
 from pylay.core import font_loader, _dirty
 import pylay.core.scale as _scale
 
+CAPTURE = None          # an element holding the pointer (a note being dragged): lists don't scroll
+
 WHITE = pygame.Color(255, 255, 255)
 RED = pygame.Color(255, 69, 58)
 GREEN = pygame.Color(48, 209, 88)
@@ -46,8 +48,58 @@ def unpx(v: float) -> float:
     return v / max(0.05, _scale.UI_SCALE)
 
 
+_fonts: dict = {}
+
+
 def font(size: int, bold: bool = False) -> pygame.font.Font:
-    return font_loader.load_font(size, bold=bold)
+    key = (size, bold, _scale.UI_SCALE)
+    f = _fonts.get(key)
+    if f is None:
+        f = _fonts[key] = font_loader.load_font(size, bold=bold)
+    return f
+
+
+# ── a bigger layout on a phone or tablet ──────────────────────────────────────────────
+# Pianove scales its UI by min(w/1024, h/768): on a phone held upright that is a 1024-unit
+# wide desktop layout squeezed into a hand's width, with tiny text and tap targets. The
+# editors use their own scale on such screens: about 560 units across an upright screen,
+# and about 440 units high on a landscape phone (very wide for its height).
+
+_page_scaled = False
+
+
+def apply_page_scale() -> bool:
+    """Set the editors' scale for this window; True if it differs from the app's."""
+    global _page_scaled
+    import pianove.context as ctx
+    w = ctx.ui.width if ctx.ui else 1024
+    h = ctx.ui.height if ctx.ui else 768
+    _scale.set_window_size(w, h)
+    base = _scale.UI_SCALE
+    if h > w * 1.1:
+        mine = w / 560
+    elif w / max(1, h) >= 1.95:
+        mine = h / 440
+    else:
+        _page_scaled = False
+        return False
+    _scale.UI_SCALE = max(base, mine)
+    _page_scaled = _scale.UI_SCALE > base + 1e-6
+    return _page_scaled
+
+
+def restore_scale():
+    """Back to the app's own scale (before another page is built)."""
+    global _page_scaled
+    import pianove.context as ctx
+    if ctx.ui:
+        _scale.set_window_size(ctx.ui.width, ctx.ui.height)
+    _page_scaled = False
+
+
+def is_touch_layout() -> bool:
+    """The editors are laid out for a phone or tablet (bigger targets, no keyboard hints)."""
+    return _page_scaled
 
 
 def text_w(text: str, size: int, bold: bool = True) -> int:
@@ -131,6 +183,9 @@ class DragScroll(VStack):
     def handle_event(self, event: pygame.event.Event) -> bool:
         if not self.visible or not self.enabled:
             return False
+        if CAPTURE is not None:              # something else follows the pointer
+            self._down, self._dragging = None, False
+            return super().handle_event(event)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos):
             self._down = (event.pos[1], self.scroll_target)
             self._dragging = False

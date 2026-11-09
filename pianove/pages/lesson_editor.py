@@ -606,13 +606,16 @@ def _fill_scene(box, i: int):
 def _fill_exercise(box, i: int):
     """An exercise: its music in a score editor (see pianove/score_editor.py)."""
     from pianove.score_editor import ScoreCanvas, GlyphButton, TextToggle, VALUES
+    from pianove.creator_ui import is_touch_layout
     ed = _ED
     s = ed.step(i)
     w = ed.page["inner_w"]
+    touch = is_touch_layout()
     model = ed.score_model(s)
     box.add_child(heading(t("ed_exercise_n", n=i + 1)))
-    box.add_child(hint(t("ed_exercise_hint"), w))
+    box.add_child(hint(t("ed_exercise_hint_touch") if touch else t("ed_exercise_hint"), w))
 
+    # the piece: time, hands, clef, tempo
     box.add_child(field_label(t("ed_field_time")))
     tm = ef.time_of(s)
     times = [list(x) for x in _TIMES]
@@ -620,49 +623,73 @@ def _fill_exercise(box, i: int):
         times.append(list(tm))
     box.add_child(_seg([f"{a}/{b}" for a, b in times], times.index(tm),
                        lambda k: model.set_time(times[k])))
-    box.add_child(field_label(t("ed_field_clef")))
-    clefs = ["treble", "bass"]
+    box.add_child(field_label(t("ed_field_hands")))
+    box.add_child(_seg([t("ed_hands_one"), t("ed_hands_both")], model.n_staves - 1,
+                       lambda k: (model.set_hands(k == 1), rebuild())))
+    if model.n_staves == 1:
+        box.add_child(field_label(t("ed_field_clef")))
+        clefs = ["treble", "bass"]
 
-    def set_clef(k):
-        s["clef"] = clefs[k]
-        model.version += 1
-        ed.changed()
-    box.add_child(_seg([t("ed_clef_treble"), t("ed_clef_bass")],
-                       clefs.index(s.get("clef", "treble")) if s.get("clef", "treble") in clefs else 0,
-                       set_clef))
+        def set_clef(k):
+            s["clef"] = clefs[k]
+            model.version += 1
+            ed.changed()
+        box.add_child(_seg([t("ed_clef_treble"), t("ed_clef_bass")],
+                           clefs.index(s.get("clef", "treble")) if s.get("clef", "treble") in clefs else 0,
+                           set_clef))
+    box.add_child(field_label(t("ed_field_tempo")))
+    tempos = sorted(set(list(range(40, 209, 4)) + [ef.tempo_of(s)]))
+    box.add_child(left(Stepper(options=tempos, value=ef.tempo_of(s), fmt_fn=lambda v: f"{v} BPM",
+                               on_change=lambda v: (s.__setitem__("tempo", int(v)), ed.changed()),
+                               width=px(180), height=px(34))))
 
-    # the palette: note values, dot, rest, chord; then editing
+    # the palette: note values, dot, triplet, rest, tie, chord; then editing
     box.add_child(spacer(4))
     pal = Flow(gap=6)
     for v in VALUES:
         pal.add_child(GlyphButton(v, lambda v=v: model.set_value(v), active_fn=lambda v=v: model.value == v))
     pal.add_child(GlyphButton("dot", model.toggle_dot, active_fn=lambda: model.dot))
+    pal.add_child(TextToggle(lambda: "3", model.toggle_triplet, active_fn=lambda: model.triplet))
     pal.add_child(GlyphButton("rest", model.rest))
+
+    def tied():
+        cur = model.selected()
+        notes = ef.notes_of(cur) if cur is not None else []
+        return bool(notes) and all(tie for _, tie in notes)
+    pal.add_child(TextToggle(lambda: t("ed_tie"), model.tie, active_fn=tied))
     pal.add_child(TextToggle(lambda: t("ed_chord"), lambda: setattr(model, "chord", not model.chord),
                              active_fn=lambda: model.chord))
     box.add_child(pal)
+    if model.n_staves == 2:
+        srow = Flow(gap=6)
+        for k, key in enumerate(("ed_staff_right", "ed_staff_left")):
+            srow.add_child(TextToggle(lambda key=key: t(key), lambda k=k: model.set_staff(k),
+                                      active_fn=lambda k=k: model.staff == k))
+        box.add_child(srow)
     row = Flow(gap=6)
-    row.add_child(button("↑", lambda: model.transpose(1), min_w=40))
-    row.add_child(button("↓", lambda: model.transpose(-1), min_w=40))
-    row.add_child(button(t("ed_oct_up"), lambda: model.transpose(12)))
-    row.add_child(button(t("ed_oct_down"), lambda: model.transpose(-12)))
-    row.add_child(button(t("ed_delete_note"), model.delete))
-    row.add_child(button(t("ed_undo"), model.undo))
-    row.add_child(button(t("ed_redo"), model.redo))
+    row.add_child(button("↑", lambda: model.transpose(1), min_w=44, height=40))
+    row.add_child(button("↓", lambda: model.transpose(-1), min_w=44, height=40))
+    row.add_child(button(t("ed_oct_up"), lambda: model.transpose(12), height=40))
+    row.add_child(button(t("ed_oct_down"), lambda: model.transpose(-12), height=40))
+    row.add_child(button(t("ed_delete_note"), model.delete, height=40))
+    row.add_child(button(t("ed_undo"), model.undo, height=40))
+    row.add_child(button(t("ed_redo"), model.redo, height=40))
 
     def key():
         from pianove.pages.lesson import _guess_key
-        return _guess_key(ef.music(s)[0])
+        return _guess_key([b for st in range(model.n_staves) for b in ef.music(s, st)[0]])
 
     def bad_bars():
         return {where[2] for where, _, _ in ed.problems if where[0] == "bar" and where[1] == i}
-    canvas = ScoreCanvas(model, key_fn=key, problems_fn=bad_bars, height=px(160))
+    canvas = ScoreCanvas(model, key_fn=key, problems_fn=bad_bars, height=px(160),
+                         min_space=max(13, px(13)), touch=touch)
     row.add_child(TextToggle(lambda: ("■ " + t("ed_stop_play")) if canvas.is_playing else ("▶ " + t("ed_play")),
-                             canvas.toggle_play, active_fn=lambda: canvas.is_playing))
+                             canvas.toggle_play, active_fn=lambda: canvas.is_playing,
+                             alt_text="■ " + t("ed_stop_play")))
     box.add_child(row)
     box.add_child(canvas)
     ed.page["score"] = canvas
-    box.add_child(hint(t("ed_score_hint"), w))
+    box.add_child(hint(t("ed_score_hint_touch") if touch else t("ed_score_hint"), w))
 
     # entering notes by tapping keys
     box.add_child(field_label(t("ed_entry_keys")))
@@ -670,22 +697,24 @@ def _fill_exercise(box, i: int):
 
     def decor(m):
         cur = model.selected()
-        on = cur is not None and not ef.is_rest(cur) and m in (parse_chord(cur) or [])
+        on = cur is not None and m in [parse_chord(p)[0] for p in ef.pitches_of(cur) if parse_chord(p)]
         return (ColorPalette.BLUE if on else None, None)
     picker.on_key = lambda m: model.key_note(m)
     picker.decorate = decor
     whites = max(14, min(29, int(w / px(30))))
     picker.octaves = max(2, min(4, whites // 7))
-    if getattr(picker, "fitted_for", None) is not s:     # first time here: around its notes
-        picker.fitted_for = s
-        notes = [m for bar in ef.music(s)[0] for p in bar for m in (parse_chord(p) or [])]
-        picker.fit(notes or ([48] if s.get("clef") == "bass" else [60, 72]))
+    if getattr(picker, "fitted_for", None) is not (s, model.staff):     # around this staff's notes
+        picker.fitted_for = (s, model.staff)
+        notes = [m for bar in ef.music(s, model.staff)[0] for p in bar for m in (parse_chord(p) or [])]
+        bass = model.staff == 1 or s.get("clef") == "bass"
+        picker.fit(notes or ([43, 55] if bass else [60, 72]))
     box.add_child(PygameCanvas(target=picker, draw_border=False, width=1.0, height=px(110)))
     krow = Flow()
     krow.add_child(button("‹ " + t("ed_lower"), lambda: picker.shift(-1)))
     krow.add_child(button(t("ed_higher") + " ›", lambda: picker.shift(1)))
     box.add_child(krow)
-    box.add_child(hint(t("ed_score_keys"), w))
+    if not touch:
+        box.add_child(hint(t("ed_score_keys"), w))
 
     # bars
     box.add_child(spacer(4))
@@ -708,7 +737,7 @@ def _fill_exercise(box, i: int):
                           clear_bars, kind="danger" if confirming else "plain"))
     box.add_child(brow)
     box.add_child(field_label(t("ed_import_hand")))
-    box.add_child(_seg([t("ed_hand_right"), t("ed_hand_left")], ed.import_hand,
+    box.add_child(_seg([t("ed_hand_right"), t("ed_hand_left"), t("ed_hands_both")], ed.import_hand,
                        lambda k: setattr(ed, "import_hand", k)))
     box.add_child(spacer(6))
     _step_actions(box, "step_actions")
@@ -1012,7 +1041,7 @@ def _import_xml():
         if not path or _ED is not ed:
             return
         try:
-            ex = cs.exercise_from_musicxml(path, "left" if ed.import_hand else "right")
+            ex = cs.exercise_from_musicxml(path, ["right", "left", "both"][ed.import_hand])
         except Exception as e:
             _toast(t("ed_import_failed", error=str(e)[:80]), RED)
             return
@@ -1020,9 +1049,9 @@ def _import_xml():
             _toast(t("ed_import_empty"), RED)
             return
         s = ed.step(i)
-        if ed.import_hand:
+        if ed.import_hand == 1:
             s["clef"] = "bass"
-        ed.score_model(s).replace_all(ex["time"], ex["bars"], ex["types"])   # Undo brings it back
+        ed.score_model(s).replace_all(ex["time"], ex["bars"], ex["types"], lh=ex.get("lh"))  # Undo brings it back
         rebuild()
         _toast(t("ed_imported_bars", n=len(ex["bars"])), GREEN)
     picker.pick(got)
@@ -1143,9 +1172,11 @@ def _back():
 
 def _leave():
     global _ED
+    from pianove.creator_ui import restore_scale
     _ED = None
     if TextBox._focused is not None:
         TextBox._focused.focus(False)
+    restore_scale()
 
 
 def _test():
@@ -1169,6 +1200,8 @@ def _test():
     ctx.lesson_phase = "practice"
     ctx.lesson_completed = False
     ctx.lesson_test_return = "lesson_editor"
+    from pianove.creator_ui import restore_scale
+    restore_scale()                          # the lesson player at the app's own scale
     ctx.router.navigate("lesson", "right")
 
 
@@ -1221,6 +1254,8 @@ def build():
     ed.preview_dirty = True
     _PREVIEW.sel = None
 
+    from pianove.creator_ui import apply_page_scale
+    apply_page_scale()                       # bigger on a phone or tablet
     W = ctx.ui.width if ctx.ui else 1024
     H = ctx.ui.height if ctx.ui else 768
     narrow = is_narrow(W, H)

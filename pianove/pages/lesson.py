@@ -264,22 +264,24 @@ def _lesson_exercise(lesson: dict) -> dict | None:
 
 
 def _bars_from_lesson(lesson: dict) -> list[list[str]]:
-    ex = _lesson_exercise(lesson)
-    if ex is None:
-        return [["C4", "D4", "E4", "F4"]]
-    from pianove.exercise_format import music
-    return music(ex)[0]
+    st = _lesson_staves(lesson)
+    return st[0]["pitches"] if st is not None else [["C4", "D4", "E4", "F4"]]
 
 
-def _lesson_rhythm(lesson: dict):
-    """(types, onsets) per bar of the exercise being played: its written note values,
-    rests and chords (see pianove/exercise_format.py)."""
+def _lesson_staves(lesson: dict):
+    """The exercise being played, per staff, as the player reads music (see
+    pianove/exercise_format.py): (right hand, left hand or None), with as many bars each."""
     ex = _lesson_exercise(lesson)
     if ex is None:
         return None
-    from pianove.exercise_format import music
-    _, types, onsets = music(ex)
-    return types, onsets
+    from pianove.exercise_format import parts, staff_music
+    ps = parts(ex)
+    staves = [staff_music(*p) for p in ps]
+    n = max(len(st["pitches"]) for st in staves)
+    for st in staves:
+        for k in st:
+            st[k] = st[k] + [[] for _ in range(n - len(st[k]))]
+    return staves[0], (staves[1] if len(staves) > 1 else None)
 
 
 def _split_sections(bars: list[list[str]]) -> list[list[list[str]]]:
@@ -493,7 +495,9 @@ class _StaffView(PygameCanvas):
                  onsets: list[list[float]] | None = None,
                  bass_onsets: list[list[float]] | None = None,
                  bar_lens: list[float] | None = None, meta: dict | None = None,
-                 key=None, **kwargs):
+                 key=None, notation: bool = False, **kwargs):
+        # notation: draw ties and triplet brackets from meta["ties"] / meta["trip"] (a
+        # lesson's exercise; imported songs are drawn as before)
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
         self._bpm  = bpm
@@ -536,7 +540,7 @@ class _StaffView(PygameCanvas):
             if st1:
                 st1.bars[prep_i].events.append(_PluteRest(rtype="whole", staff=st1))
 
-        def _fill(staff, bar_obj, pitches, ntypes, positions, lengths, blen):
+        def _fill(staff, bar_obj, pitches, ntypes, positions, lengths, blen, trips=None):
             """Place notes at their positions, in time order across all voices: notes
             starting together become a chord. Each event takes the room up to the next one
             (_layout_dur), and rests fill only where nothing sounds."""
@@ -554,8 +558,25 @@ class _StaffView(PygameCanvas):
                     groups[-1][1].append(k)
                 else:
                     groups.append((positions[k], [k]))
+
+            def trip_rests(gap, near):
+                """Triplet rests that fill gap (quarters), of the value `near` if they can."""
+                for v in [near] + ["half", "quarter", "eighth", "sixteenth"]:
+                    unit = _dur(v) * 4 * 2 / 3
+                    n = round(gap / unit)
+                    if 1 <= n <= 2 and abs(n * unit - gap) < 1e-3:
+                        out = [_PluteRest(rtype=v, staff=staff) for _ in range(n)]
+                        for r in out:
+                            r._trip, r._layout_dur = True, unit / 4
+                        return out
+                return None
+
             placed, sounding = [], 0.0
-            if groups and groups[0][0] > 1e-6:                # silence at the start of the bar
+            lead_trip = (trip_rests(groups[0][0], ntypes[groups[0][1][0]])
+                         if trips and groups and groups[0][0] > 1e-6 and trips[groups[0][1][0]] else None)
+            if lead_trip:
+                bar_obj.events.extend(lead_trip)
+            elif groups and groups[0][0] > 1e-6:                # silence at the start of the bar
                 lead, left = rests(groups[0][0])
                 if not lead:
                     lead = [_PluteRest(rtype="thirty_second", staff=staff)]
@@ -573,14 +594,29 @@ class _StaffView(PygameCanvas):
                 sounding = max(sounding, max(pos + lengths[k] for k in ks))
                 nxt = groups[gi + 1][0] if gi + 1 < len(groups) else max(blen, pos)
                 quiet = max(pos, min(sounding, nxt))           # where silence begins before nxt
+                if trips and trips[ks[0]]:
+                    event._trip = True
+                nxt_trip = bool(trips and gi + 1 < len(groups) and trips[groups[gi + 1][1][0]])
+                if trips and (trips[ks[0]] or nxt_trip) and nxt - quiet > 1e-3:
+                    # silence next to a triplet note: triplet rests
+                    near = ntypes[ks[0]] if trips[ks[0]] else ntypes[groups[gi + 1][1][0]]
+                    tr = trip_rests(nxt - quiet, near)
+                    if tr is not None:
+                        event._layout_dur = max(1e-3, quiet - pos) / 4
+                        bar_obj.events.extend(tr)
+                        continue
                 fill, left = rests(nxt - quiet) if nxt - quiet > 0.124 else ([], nxt - quiet)
                 event._layout_dur = max(1e-3, quiet - pos + left) / 4
                 bar_obj.events.extend(fill)
+            if trips:
+                from pianove.notation import group_tuplets
+                group_tuplets(bar_obj, staff)
             return placed
 
         # Every note with its start position (quarter notes from the first real bar)
         timed: list[tuple[float, int, _PluteNote]] = []
         bar_start = 0.0
+        last_note: dict[int, dict] = {0: {}, 1: {}}     # staff → pitch → last note (for ties)
         for rel_i in range(len(bars)):
             blen = _bar_len_q(bar_lens, rel_i, time)
             for si, staff, staff_bars, tl, ol in ((0, st0, bars, types, onsets),
@@ -593,7 +629,17 @@ class _StaffView(PygameCanvas):
                     bar_obj.events.append(_PluteRest(rtype="whole", staff=staff))
                     continue
                 nt, positions, lengths, ties, vels = _bar_notes(tl, ol, meta, si, rel_i, pitches, time, blen)
-                for pos, note, k in _fill(staff, bar_obj, pitches, nt, positions, lengths, blen):
+                trips = None
+                if notation:
+                    tr = ((meta or {}).get("trip") or (None, None))[si]
+                    if tr is not None and rel_i < len(tr) and len(tr[rel_i]) == len(pitches):
+                        trips = tr[rel_i]
+                for pos, note, k in _fill(staff, bar_obj, pitches, nt, positions, lengths, blen, trips):
+                    if notation:
+                        if ties[k] and note.pitch in last_note[si]:
+                            from pianove.notation import link_tie
+                            link_tie(last_note[si][note.pitch], note)
+                        last_note[si][note.pitch] = note
                     note._si = si
                     note._bar = n_prep + rel_i
                     note._len_q = lengths[k]
@@ -605,7 +651,8 @@ class _StaffView(PygameCanvas):
 
         # Room per bar: enough for the busier bars of this piece to stay readable (every
         # bar of the strip gets the same width)
-        busy = sorted(max(len(st.bars[b].events) for st in self._score.staffs)
+        from pylute.score import _n_events
+        busy = sorted(max(_n_events(st.bars[b]) for st in self._score.staffs)
                       for b in range(n_prep, n_bars)) or [0]
         self._px_per_bar = max(_PX_PER_BAR, 24 * busy[int(len(busy) * 0.85)] + 70)
 
@@ -1867,6 +1914,8 @@ def build():
     # Real note values, positions and bar lengths for imported songs
     # (None for lessons and for songs imported before rhythms were stored)
     active_types = active_onsets = active_lens = None
+    lesson_lh = None                # a lesson's exercise for both hands: its left hand
+    lesson_notation = False         # draw ties and triplets (a lesson's exercise)
     _both_lh_types = _both_lh_onsets = None
     rhythm = {}
     meta = None                     # real lengths, ties, loudness and tempo changes, per staff
@@ -1889,15 +1938,28 @@ def build():
             meta["tempos"] = rhythm.get("tempos")
         active_lens = _for_view(rhythm.get("bar_lens"))
     elif not is_practice:
-        # a lesson's exercise: its written note values, rests and chords
-        lr = _lesson_rhythm(lesson)
-        if lr is not None and len(lr[0]) == len(all_bars):
+        # a lesson's exercise: its note values, rests, chords, ties, triplets, both hands
+        staves = _lesson_staves(lesson)
+        if staves is not None and len(staves[0]["pitches"]) == len(all_bars):
+            from pianove.exercise_format import tempo_of
+            rh, lh = staves
+            bpm = tempo_of(_lesson_exercise(lesson))
+
             def _lesson_view(lst):
                 return _split_sections(lst)[section_idx] if phase == "practice" else lst
-            active_types, active_onsets = _lesson_view(lr[0]), _lesson_view(lr[1])
+            active_types, active_onsets = _lesson_view(rh["types"]), _lesson_view(rh["onsets"])
+            meta = {k: (_lesson_view(rh[k]), _lesson_view(lh[k]) if lh else None)
+                    for k in ("durs", "ties", "trip")}
+            meta["vels"] = (None, None)
+            lesson_notation = True
+            if lh is not None:
+                lesson_lh = (_lesson_view(lh["pitches"]), _lesson_view(lh["types"]),
+                             _lesson_view(lh["onsets"]))
 
     # For "both hands" song mode, split into treble/bass for grand-staff display
     _both_lh_bars = None
+    if lesson_lh is not None:                         # a lesson's exercise for both hands
+        _both_lh_bars, _both_lh_types, _both_lh_onsets = lesson_lh
     if ctx.current_song_id and ctx.current_song_hand == "both":
         from pianove.song_store import get_song_bars_split
         rh_all, lh_all = get_song_bars_split(ctx.current_song_id)
@@ -2137,7 +2199,7 @@ def build():
         bpm=bpm, clef=clef, bass_bars=_both_lh_bars, time=song_time,
         types=active_types, bass_types=_both_lh_types,
         onsets=active_onsets, bass_onsets=_both_lh_onsets, bar_lens=active_lens, meta=meta,
-        key=song_key, width=1.0, height=staff_h,
+        key=song_key, notation=lesson_notation, width=1.0, height=staff_h,
     )
     _sv[0] = staff_view
     while _TRANSPORT_HOOKS:

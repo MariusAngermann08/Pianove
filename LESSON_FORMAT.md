@@ -96,10 +96,12 @@ A scene is a series of **beats**: short screens with text, the keyboard, animate
 ```json
 {
   "type": "exercise",
-  "time": [3, 4],
-  "clef": "treble",
-  "bars":  [["E4", "G4", "G4"], ["C4+E4", "r"]],
-  "types": [["quarter", "quarter", "quarter"], ["half", "quarter"]]
+  "time": [4, 4],
+  "tempo": 96,
+  "bars":  [["C4~", "C4", "E4", "D4", "C4", "G4"], ["C4+E4", "r"]],
+  "types": [["quarter", "quarter", "triplet_eighth", "triplet_eighth", "triplet_eighth", "quarter"],
+            ["half", "half"]],
+  "lh": {"bars": [["C3"], ["G2"]], "types": [["whole"], ["whole"]]}
 }
 ```
 
@@ -108,11 +110,13 @@ The learner plays the bars section by section, then all at once.
 | Field | Meaning |
 |-------|---------|
 | `time` | Time signature, e.g. `[4, 4]`, `[3, 4]`, `[6, 8]` |
-| `clef` | `"treble"` (default) or `"bass"` |
-| `bars` | Per bar: notes (`"C4"`), chords (`"C4+E4+G4"`) and rests (`"r"`) |
-| `types` | Optional. The length of every entry: `whole`, `half`, `quarter`, `eighth`, `sixteenth`, `thirty_second`, each also as `dotted_…`. Without it, a bar's entries share the bar evenly (how older lessons are written) |
+| `tempo` | Quarter notes per minute (default 80) |
+| `clef` | `"treble"` (default) or `"bass"`, for an exercise with one staff |
+| `bars` | Per bar: notes (`"C4"`), chords (`"C4+E4+G4"`) and rests (`"r"`). A note ending in `~` is tied to the same note in the next entry (`"C4~"`, or `"C4~+E4"` in a chord) |
+| `types` | Optional. The length of every entry: `whole`, `half`, `quarter`, `eighth`, `sixteenth`, `thirty_second`; `dotted_…` (1½ times as long) or `triplet_…` (two thirds: three triplet eighths take one quarter). Without it, a bar's entries share the bar evenly (how older lessons are written) |
+| `lh` | Optional. The left hand, `{"bars", "types"}` like the right: the exercise is then shown on a grand staff (treble and bass) and played with both hands |
 
-A bar whose entries don't fill it is silent for the rest. The lesson editor edits this as a score (click a note, type A–G, pick a value; see `pianove/score_editor.py`).
+A bar whose entries don't fill it is silent for the rest. The lesson editor edits all of this as a score (click or tap a note, type A–G or play it, pick a value, drag a note to move it; see `pianove/score_editor.py`).
 
 ### Notes
 

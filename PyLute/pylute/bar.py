@@ -132,9 +132,22 @@ class Bar:
         pos        = 0.0
         group_beat = -1
 
+        from .tuplet import Tuplet
         for event in self.events:
             dur  = _event_duration(event)
             beat = int(pos / beat_dur + 1e-9)
+            if isinstance(event, Tuplet):
+                # a tuplet's own notes are beamed together (when all of them can be)
+                if current:
+                    groups.append(current)
+                    current = []
+                group_beat = -1
+                members = event.notes
+                if len(members) > 1 and all(isinstance(n, (Note, Chord)) and n._base_type in BEAMABLE
+                                            for n in members):
+                    groups.append(list(members))
+                pos += dur
+                continue
             is_beamable = (
                 (isinstance(event, Note)  and event._base_type in BEAMABLE) or
                 (isinstance(event, Chord) and event._base_type in BEAMABLE)

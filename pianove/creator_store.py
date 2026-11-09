@@ -443,20 +443,29 @@ def validate(draft: dict) -> list[tuple]:
                 problems.append((w, "no_bars", {}))
             if step.get("clef", "treble") not in ("treble", "bass"):
                 problems.append((w, "bad_clef", {}))
-            typed = "types" in step
-            if typed and not ef.has_types(step):
-                problems.append((w, "bad_types", {}))
-                typed = False
-            types = ef.types_of(step)
-            for k, bar in enumerate(bars):
-                wb = ("bar", i, k)
-                if not bar:
-                    problems.append((wb, "empty_bar", {"bar": k + 1}))
-                elif ok_time and typed and ef.used(types[k]) > ef.bar_length(time) + 1e-6:
-                    problems.append((wb, "bar_too_full", {"bar": k + 1}))
-                elif ok_time and not typed and len(bar) > time[0] * 4:
-                    problems.append((wb, "bar_too_full", {"bar": k + 1}))
-                _check_notes(problems, wb, [e for e in bar if not ef.is_rest(e)])
+            tempo = step.get("tempo", ef.DEFAULT_TEMPO)
+            if not isinstance(tempo, (int, float)) or not 20 <= tempo <= 240:
+                problems.append((w, "bad_tempo", {}))
+            staves = [(bars, step.get("types"), "types" in step, "")]
+            if "lh" in step:
+                lh = step["lh"] if isinstance(step["lh"], dict) else {}
+                staves.append((lh.get("bars") or [], lh.get("types"), "types" in lh, "lh_"))
+            n_bars = max(len(st[0]) for st in staves)
+            for k in range(n_bars):                          # a bar silent in every staff
+                if all(k < len(st[0]) and not st[0][k] for st in staves):
+                    problems.append((("bar", i, k), "empty_bar", {"bar": k + 1}))
+            for sbars, stypes, typed, pre in staves:
+                if typed and not ef._types_valid(sbars, stypes):
+                    problems.append((w, pre + "bad_types", {}))
+                    typed = False
+                types = ef._types_for(sbars, stypes if typed else None, time[0] if ok_time else 4)
+                for k, bar in enumerate(sbars):
+                    wb = ("bar", i, k)
+                    if ok_time and typed and ef.used(types[k]) > ef.bar_length(time) + 1e-6:
+                        problems.append((wb, pre + "bar_too_full", {"bar": k + 1}))
+                    elif ok_time and not typed and len(bar) > time[0] * 4:
+                        problems.append((wb, pre + "bar_too_full", {"bar": k + 1}))
+                    _check_notes(problems, wb, ["+".join(ef.pitches_of(e)) for e in bar if not ef.is_rest(e)])
         else:
             problems.append((("step", i), "unknown_step", {"type": str(kind)}))
     return problems
@@ -580,60 +589,91 @@ def import_package(path) -> dict:
 
 # ── an exercise from a MusicXML file ──────────────────────────────────────────────────
 
-def exercise_from_musicxml(path, hand: str = "right") -> dict:
-    """{"time", "bars", "types"} of one hand of a piece, with its note values, rests and
-    chords. A tied note keeps its first part (an exercise has no ties)."""
-    from pianove.song_store import _parse_musicxml
-    parsed = _parse_musicxml(str(path))
-    h = "lh" if hand == "left" else "rh"
-    time = parsed.get("time") or [4, 4]
-    time = [int(time[0]), int(time[1])]
-    full = ef.bar_length(time)
+def _staff_from_parsed(parsed: dict, h: str, full: float):
+    """One staff of a parsed MusicXML piece as exercise bars and values: notes struck
+    together make a chord, silence becomes rests, a tie becomes "~", and a note lasting
+    two thirds of its written value is a triplet note."""
     pitch_bars = parsed.get(f"bars_{h}") or []
-    type_bars = parsed.get(f"types_{h}") or []
-    onset_bars = parsed.get(f"onsets_{h}") or []
-    tie_bars = parsed.get(f"ties_{h}") or []
+    get = lambda key, i, n, fill: (parsed.get(f"{key}_{h}") or [])[i] \
+        if i < len(parsed.get(f"{key}_{h}") or []) and len((parsed.get(f"{key}_{h}") or [])[i]) == n else fill
     bars, types = [], []
+    last_entry = None              # (bar, index) of the entry before, for ties
     for i, bar in enumerate(pitch_bars):
         n = len(bar)
-        tys = type_bars[i] if i < len(type_bars) and len(type_bars[i]) == n else ["quarter"] * n
-        ons = onset_bars[i] if i < len(onset_bars) and len(onset_bars[i]) == n else [float(k) for k in range(n)]
-        ties = tie_bars[i] if i < len(tie_bars) and len(tie_bars[i]) == n else [False] * n
-        groups: dict[float, tuple[list[str], str]] = {}
+        tys = get("types", i, n, ["quarter"] * n)
+        ons = get("onsets", i, n, [float(k) for k in range(n)])
+        ties = get("ties", i, n, [False] * n)
+        groups: dict[float, dict] = {}
         for p, t, o, tied in zip(bar, tys, ons, ties):
-            if tied:
-                continue                          # a tie's second half isn't struck again
-            t = t if ef.is_type(t) else "quarter"
-            ps, t0 = groups.setdefault(round(float(o), 4), ([], t))
-            if p not in ps:
-                ps.append(p)
+            g = groups.setdefault(round(float(o), 4), {"notes": [], "type": t if ef.is_type(t) else "quarter"})
+            if p not in [q for q, _, _ in g["notes"]]:
+                g["notes"].append((p, False, tied))
         entries, values, pos = [], [], 0.0
         starts = sorted(groups)
         for k, o in enumerate(starts):
-            if o > pos + 1e-6:                    # silence before this note: rests
+            if o > pos + 1e-3:                                    # silence: rests
                 for r in ef.fill_rests(o - pos):
-                    entries.append(ef.REST)
+                    entries.append([])
                     values.append(r)
-            ps, t = groups[o]
+                last_entry = None
+            g = groups[o]
+            t = g["type"]
             room = (starts[k + 1] if k + 1 < len(starts) else full) - o
-            if ef.quarters(t) > room + 1e-6:      # overlaps the next note (another voice)
+            if not ef.is_triplet(t) and abs(ef.quarters(t) * 2 / 3 - room) < 1e-3 and k + 1 < len(starts):
+                t = "triplet_" + t.replace("dotted_", "", 1)       # two thirds of its value: a triplet
+            elif ef.quarters(t) > room + 1e-3:                    # overlaps the next note (another voice)
                 fit = ef.fill_rests(room)
                 t = fit[0] if fit else t
-            entries.append("+".join(ps))
+            notes = [(p, False) for p, _, _ in g["notes"]]
+            if last_entry is not None:                             # notes continuing a tie
+                lb, li = last_entry
+                prev = bars[lb][li] if lb < len(bars) else entries[li]
+                for p, _, cont in g["notes"]:
+                    if cont:
+                        prev[:] = [(q, tq or q == p) for q, tq in prev]
+            entries.append(notes)
             values.append(t)
+            last_entry = (len(bars), len(entries) - 1)
             pos = o + ef.quarters(t)
-        if not entries and full:
-            entries, values = [ef.REST] * len(ef.fill_rests(full)), ef.fill_rests(full)
+        if pos < full - 1e-3:
+            last_entry = None
         bars.append(entries)
         types.append(values)
-    # no silent bars at the start or the end
-    def silent(b):
-        return all(ef.is_rest(e) for e in b)
-    while bars and silent(bars[0]):
-        bars.pop(0), types.pop(0)
-    while bars and silent(bars[-1]):
-        bars.pop(), types.pop()
-    return {"time": time, "bars": bars, "types": types}
+    out = [[ef.join_notes(e) if e else ef.REST for e in b] for b in bars]
+    return out, types
+
+
+def exercise_from_musicxml(path, hand: str = "right") -> dict:
+    """{"time", "bars", "types"} of a piece's right or left hand, or with hand="both" the
+    right hand plus "lh" for the left: note values, rests, chords, ties and triplets."""
+    from pianove.song_store import _parse_musicxml
+    parsed = _parse_musicxml(str(path))
+    time = parsed.get("time") or [4, 4]
+    time = [int(time[0]), int(time[1])]
+    full = ef.bar_length(time)
+    hands = {"right": ["rh"], "left": ["lh"], "both": ["rh", "lh"]}.get(hand, ["rh"])
+    staves = [_staff_from_parsed(parsed, h, full) for h in hands]
+    n = max(len(b) for b, _ in staves)
+    whole = ef.fill_rests(full)
+    for b, ty in staves:                                    # as many bars in each staff
+        while len(b) < n:
+            b.append([ef.REST] * len(whole))
+            ty.append(list(whole))
+
+    def silent(k):
+        return all(all(ef.is_rest(e) for e in b[k]) for b, _ in staves)
+    while n and silent(0):                                  # no silent bars at the start or end
+        for b, ty in staves:
+            b.pop(0), ty.pop(0)
+        n -= 1
+    while n and silent(n - 1):
+        for b, ty in staves:
+            b.pop(), ty.pop()
+        n -= 1
+    out = {"time": time, "bars": staves[0][0], "types": staves[0][1]}
+    if len(staves) > 1:
+        out["lh"] = {"bars": staves[1][0], "types": staves[1][1]}
+    return out
 
 
 def notes_from_text(text: str) -> list[str]:

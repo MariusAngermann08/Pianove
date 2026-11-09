@@ -21,6 +21,12 @@ _SYSG = 6    # gap between systems
 _FS   = 3.5  # font size
 
 _BPS_MAX   = 5
+
+
+def _n_events(bar) -> int:
+    """How many things a bar shows: a tuplet counts as its notes."""
+    return sum(len(e.notes) if hasattr(e, "actual") and hasattr(e, "notes") else 1
+               for e in bar.events)
 _BPS_MIN   = 2
 _MIN_SPACE = 13  # below this the staff becomes unreadable
 
@@ -34,6 +40,12 @@ class Score:
         self.key_accidentals = parse_key(key)
         self._bps_override   = bars_per_system  # None → auto each resize
         self.bars_per_system = bars_per_system or 5
+        # False: a last line with fewer bars than the others keeps their spacing instead of
+        # being stretched across the page
+        self.justify_last = True
+        # the smallest gap between staff lines auto layout accepts (fewer bars per line
+        # rather than smaller notes)
+        self.min_space = _MIN_SPACE
 
         self.title     = ""
         self.subtitle  = ""
@@ -95,7 +107,7 @@ class Score:
         beats = self.time[0]
         if not self.staffs or k >= len(self.staffs[0].bars):
             return beats * 3
-        n = max(len(s.bars[k].events) for s in self.staffs)
+        n = max(_n_events(s.bars[k]) for s in self.staffs)
         return max(beats * 3, n * 2)
 
     def _system_cost(self, bps):
@@ -113,10 +125,12 @@ class Score:
         return (w - 40) / denom if denom > 0 else 8.0
 
     def _auto_bps(self, w):
-        for bps in range(_BPS_MAX, _BPS_MIN - 1, -1):
-            if self._space_for_bps(w, bps) >= _MIN_SPACE:
+        # with a larger min_space than the default (a phone), a line may hold one bar
+        lowest = 1 if self.min_space > _MIN_SPACE else _BPS_MIN
+        for bps in range(_BPS_MAX, lowest - 1, -1):
+            if self._space_for_bps(w, bps) >= self.min_space:
                 return bps
-        return _BPS_MIN
+        return lowest
 
     def _compute_space(self, w):
         denom = 2 * _ML + 5.5 + self._system_cost(self.bars_per_system)
@@ -171,7 +185,7 @@ class Score:
         space = self._space()
         beats = self.time[0]
         beat_min   = beats * space * 3
-        max_events = max(len(s.bars[bar_index].events) for s in self.staffs)
+        max_events = max(_n_events(s.bars[bar_index]) for s in self.staffs)
         event_min  = max_events * space * 2.0
         return max(int(beat_min), int(event_min))
 
@@ -316,11 +330,17 @@ class Score:
         if meta_h:
             self._draw_metadata(space, ml, self.staffs[0].length)
 
+        full_lens = [st.length for st in self.staffs]
         for sys_idx, bar_indices in enumerate(system_groups):
             is_first = (sys_idx == 0)
             fo       = self._frontal_offset if is_first else self._frontal_offset_cont
             y_top    = meta_h + mt + sys_idx * (sys_height + sysg)
             n_in_sys = len(bar_indices)
+            short = (not self.justify_last and sys_idx == n_systems - 1 and n_systems > 1
+                     and n_in_sys < self.bars_per_system)
+            for st, full in zip(self.staffs, full_lens):
+                # a short last line keeps the spacing of a full one
+                st.length = (fo + int((full - fo) * n_in_sys / self.bars_per_system)) if short else full
 
             for i, staff in enumerate(self.staffs):
                 staff.position[0] = ml
@@ -353,6 +373,7 @@ class Score:
             min_ws    = [self._min_bar_width(j) for j in bar_indices]
             total_min = sum(min_ws)
             avail     = self.staffs[0].length - fo
+
             ml_pos    = self.staffs[0].position[0]
             bar_geom  = []
             cx = ml_pos + fo
@@ -388,6 +409,8 @@ class Score:
                     pg.draw.rect(self.surface, (0, 0, 0), (x, by, 3, ey - by))
                 else:
                     pg.draw.line(self.surface, (0, 0, 0), (x, by), (x, ey), 2)
+        for st, full in zip(self.staffs, full_lens):
+            st.length = full
 
     def addNote(self, ntype="whole", pitch="C4", staff_index=0):
         if not self.staffs:

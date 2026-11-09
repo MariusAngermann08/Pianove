@@ -45,7 +45,10 @@ def test_values_dots_and_rests():
     m.rest()                                 # 3 + 3 beats: the rest moves on to bar 2
     assert step["bars"] == [["C5"], ["r"]]           # C nearest the staff's middle G4
     assert step["types"] == [["dotted_half"], ["dotted_half"]]
-    m.set_value("quarter")                   # changes the selected rest (the dot stays)
+    m.set_value("quarter")                   # just entered: the value is for the next notes
+    assert step["types"][1] == ["dotted_half"]
+    m.select(1, 0)                           # picked: the value changes it (the dot stays)
+    m.set_value("quarter")
     assert step["types"][1] == ["dotted_quarter"]
 
 
@@ -94,8 +97,68 @@ def test_bars_and_playing():
     sched = m.schedule(bpm=60)
     # C4 at 0 s for 2 beats; the rest and the empty last beat of bar 1 are silent; E4 at 4 s
     assert [(round(s, 2), mids, where) for s, _, mids, where in sched] == [
-        (0.0, [60], (0, 0)), (4.0, [64], (1, 0))]
+        (0.0, [60], (0, 0, 0)), (4.0, [64], (0, 1, 0))]
     m.add_bar()
     assert step["bars"] == [["C4", "r"], [], ["E4"]]
     m.delete_bar()
     assert step["bars"] == [["C4", "r"], ["E4"]]
+
+
+
+def test_ties():
+    step, m = _model([["C4"]], [["half"]])
+    m.tie()                                  # no C4 after it: one is added, tied to
+    assert step["bars"][0] == ["C4~", "C4"] and step["types"][0] == ["half", "half"]
+    m.select(0, 0)
+    m.tie()                                  # tied already: untied
+    assert step["bars"][0] == ["C4", "C4"]
+    m.tie()                                  # the next entry has C4: just tied
+    assert step["bars"][0] == ["C4~", "C4"] and m.sel == (0, 1)
+    assert m.schedule(bpm=60) == []          # from the tie's second half: nothing is struck
+    m.select(0, -1)
+    sched = m.schedule(bpm=60)
+    assert [(s, round(e / 0.95, 2), mids) for s, e, mids, _ in sched] == [(0.0, 4.0, [60])]
+
+
+def test_triplets():
+    step, m = _model()
+    m.set_value("eighth")
+    m.toggle_triplet()
+    for ch in "cde":
+        m.letter(ch)
+    m.toggle_triplet()
+    m.set_value("half")
+    m.letter("g")
+    assert step["types"][0] == ["triplet_eighth"] * 3 + ["half"]
+    m.letter("a")                            # 1 + 2 + 2 > 4: the A goes on to bar 2
+    assert step["bars"] == [["C5", "D5", "E5", "G5"], ["A5"]]
+
+
+def test_two_hands_and_dragging():
+    step, m = _model([["C4", "E4"]], [["half", "half"]])
+    m.set_hands(True)
+    assert step["lh"] == {"bars": [[]], "types": [[]]}
+    m.set_staff(1)
+    m.set_value("whole")
+    m.letter("c")
+    assert step["lh"]["bars"] == [["C3"]]        # a bass staff starts near D3
+    m.letter("g")                                # a second whole: a new bar, on both staves
+    assert step["lh"]["bars"] == [["C3"], ["G2"]] and step["bars"] == [["C4", "E4"], []]
+    m.select(0, 1, staff=0)
+    m.drag_start()
+    m.drag_to(2, key=1)                          # E4 two staff steps up in G major: G4
+    m.drag_to(3, key=1)                          # one more: A4 (one undo step for the drag)
+    m.drag_end()
+    assert step["bars"][0] == ["C4", "A4"]
+    m.undo()
+    assert step["bars"][0] == ["C4", "E4"]
+    m.select(0, 0, staff=1)
+    m.drag_start()
+    m.drag_to(-4, key=1)                         # four steps down from C3, in G major: F#2
+    m.drag_end()
+    assert step["lh"]["bars"][0] == ["F#2"]
+    sched = m.schedule(bpm=60)
+    starts = sorted((round(s, 2), w[0]) for s, _, _, w in sched)
+    assert starts == [(0.0, 0), (0.0, 1), (2.0, 0), (4.0, 1)]
+    m.set_hands(False)
+    assert "lh" not in step

@@ -238,3 +238,34 @@ def test_exercise_from_musicxml(tmp_path):
     assert ex["bars"] == [["C4", "D4", "E4", "F4"], ["G4", "A4", "G4", "F4"], ["C4+E4"]]
     assert ex["types"][2] == ["whole"]
     assert ex["types"][0] == ["quarter"] * 4
+
+
+def _note(step, octave, dur, ntype, staff=1, chord=False, tie=None):
+    tie_el = f'<tie type="{tie}"/>' if tie else ""
+    return (f"<note>{'<chord/>' if chord else ''}<pitch><step>{step}</step><octave>{octave}</octave></pitch>"
+            f"<duration>{dur}</duration>{tie_el}<type>{ntype}</type><staff>{staff}</staff></note>")
+
+
+def test_musicxml_ties_triplets_and_both_hands(tmp_path):
+    # divisions 3: a quarter is 3, a triplet eighth 1
+    m1 = (_note("C", 4, 1, "eighth") + _note("D", 4, 1, "eighth") + _note("E", 4, 1, "eighth")
+          + _note("F", 4, 3, "quarter") + _note("G", 4, 6, "half", tie="start")
+          + "<backup><duration>12</duration></backup>" + _note("C", 3, 12, "whole", staff=2))
+    m2 = (_note("G", 4, 3, "quarter", tie="stop") + _note("A", 4, 9, "dotted_half")
+          + "<backup><duration>12</duration></backup>" + _note("G", 2, 12, "whole", staff=2))
+    xml = tmp_path / "both.musicxml"
+    xml.write_text(
+        '<?xml version="1.0"?><score-partwise version="3.1"><part-list><score-part id="P1">'
+        '<part-name>P</part-name></score-part></part-list><part id="P1">'
+        '<measure number="1"><attributes><divisions>3</divisions><time><beats>4</beats>'
+        '<beat-type>4</beat-type></time><staves>2</staves><clef number="1"><sign>G</sign><line>2</line></clef>'
+        '<clef number="2"><sign>F</sign><line>4</line></clef></attributes>'
+        + m1 + '</measure><measure number="2">' + m2 + "</measure></part></score-partwise>",
+        encoding="utf-8")
+    ex = cs.exercise_from_musicxml(xml, "both")
+    assert ex["bars"] == [["C4", "D4", "E4", "F4", "G4~"], ["G4", "A4"]]
+    assert ex["types"][0] == ["triplet_eighth"] * 3 + ["quarter", "half"]
+    assert ex["lh"]["bars"] == [["C3"], ["G2"]]
+    d = {"id": "x", "meta": {"locales": ["en"]}, "strings": {"en": {"title": "x"}},
+         "steps": [{"type": "exercise", **ex}]}
+    assert cs.validate(d) == []

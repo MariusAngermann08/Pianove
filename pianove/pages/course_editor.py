@@ -180,6 +180,8 @@ def _back():
     _CE = None
     if TextBox._focused is not None:
         TextBox._focused.focus(False)
+    from pianove.creator_ui import restore_scale
+    restore_scale()
     ctx.router.navigate("home", "left")
 
 
@@ -213,6 +215,8 @@ def build():
             return FloatLayout(width=1.0, height=1.0, background_color=iOSTheme.background)
     ce = _CE
     ce.page = {}
+    from pianove.creator_ui import apply_page_scale
+    apply_page_scale()                       # bigger on a phone or tablet
     W = ctx.ui.width if ctx.ui else 1024
     H = ctx.ui.height if ctx.ui else 768
     narrow = is_narrow(W, H)
