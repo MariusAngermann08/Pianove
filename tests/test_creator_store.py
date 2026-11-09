@@ -143,7 +143,21 @@ def test_check_finds_mistakes(home):
     d["strings"]["de"]["title"] = ""
     codes = _codes(d)
     assert {"bad_note", "out_of_range", "fingers_mismatch", "missing_say",
-            "chord_in_exercise", "empty_bar", "missing_title"} <= codes
+            "empty_bar", "missing_title"} <= codes
+    assert "chord_in_exercise" not in codes                 # exercises can hold chords now
+
+
+def test_check_reads_note_values(home):
+    d = cs.load_draft(cs.new_lesson("Rhythm"))
+    ex = d["steps"][1]
+    ex["time"] = [3, 4]
+    ex["bars"] = [["C4", "r", "E4+G4"], ["C4", "D4"]]
+    ex["types"] = [["quarter", "quarter", "quarter"], ["half", "half"]]
+    codes = {(w, c) for w, c, _ in cs.validate(d)}
+    assert (("bar", 1, 1), "bar_too_full") in codes
+    assert not any(w == ("bar", 1, 0) for w, _ in codes)
+    ex["types"] = [["quarter"]]
+    assert "bad_types" in _codes(d)
 
 
 def test_a_lesson_should_end_with_an_exercise(home):
@@ -221,4 +235,6 @@ def test_exercise_from_musicxml(tmp_path):
         encoding="utf-8")
     ex = cs.exercise_from_musicxml(xml)
     assert ex["time"] == [4, 4]
-    assert ex["bars"] == [["C4", "D4", "E4", "F4"], ["G4", "A4", "G4", "F4"], ["E4"]]
+    assert ex["bars"] == [["C4", "D4", "E4", "F4"], ["G4", "A4", "G4", "F4"], ["C4+E4"]]
+    assert ex["types"][2] == ["whole"]
+    assert ex["types"][0] == ["quarter"] * 4

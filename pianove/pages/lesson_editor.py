@@ -20,8 +20,8 @@ from pylay.core import _dirty
 import pianove.context as ctx
 from pianove.i18n import t, language_state
 from pianove import creator_store as cs
-from pianove.creator_notes import (parse_chord, chord_name, note_name, group_chords,
-                                   split_bars, split_words)
+from pianove import exercise_format as ef
+from pianove.creator_notes import parse_chord, chord_name, note_name, group_chords
 from pianove.creator_ui import (px, unpx, is_narrow, tn, left, font, text_w, button, Flow, DragScroll, TextBox, KeyPicker,
                                 heading, field_label, hint, spacer, Ticker, Toast,
                                 WHITE, RED, GREEN)
@@ -71,7 +71,16 @@ class _Editor:
         self.confirm: str | None = None      # a delete button waiting for its second tap
         self.confirm_t = 0.0
         self.picker = KeyPicker(self._picker_key, self._picker_decor)
+        self.entry_picker = KeyPicker(lambda m: None)     # entering notes into an exercise
+        self.models: dict = {}                            # id(step) → ScoreModel (with its undo)
         self.page: dict = {}
+
+    def score_model(self, step: dict):
+        from pianove.score_editor import ScoreModel
+        m = self.models.get(id(step))
+        if m is None or m.step is not step:
+            m = self.models[id(step)] = ScoreModel(step, on_change=self.changed)
+        return m
 
     # ── the draft ──
     @property
@@ -191,25 +200,20 @@ class _Editor:
         chords = group_chords(rec["events"])
         names = [chord_name(c) for c in chords]
         target = rec["target"]
-        if target == "bars":
-            st = self.step(self.sel[1])
-            per = (st.get("time") or [4, 4])[0]
-            st.setdefault("bars", []).extend(split_bars([note_name(max(c)) for c in chords], per))
-        else:
-            b = self.cur_beat()
-            if b is None:
-                rebuild()
-                return
-            if target == "play":
-                old = b.get("play", [])
-                b["play"] = names
-                if len(old) != len(names):
-                    b.pop("fingers", None)
-                    b.pop("velocities", None)
-            elif target == "try":
-                b["try"] = names
-            elif target == "staff":
-                b.setdefault("staff", {"clef": "treble"})["notes"] = names
+        b = self.cur_beat()
+        if b is None:
+            rebuild()
+            return
+        if target == "play":
+            old = b.get("play", [])
+            b["play"] = names
+            if len(old) != len(names):
+                b.pop("fingers", None)
+                b.pop("velocities", None)
+        elif target == "try":
+            b["try"] = names
+        elif target == "staff":
+            b.setdefault("staff", {"clef": "treble"})["notes"] = names
         self.changed(structure=True)
 
     def _picker_key(self, m: int):
@@ -600,74 +604,112 @@ def _fill_scene(box, i: int):
 
 
 def _fill_exercise(box, i: int):
+    """An exercise: its music in a score editor (see pianove/score_editor.py)."""
+    from pianove.score_editor import ScoreCanvas, GlyphButton, TextToggle, VALUES
     ed = _ED
     s = ed.step(i)
     w = ed.page["inner_w"]
+    model = ed.score_model(s)
     box.add_child(heading(t("ed_exercise_n", n=i + 1)))
     box.add_child(hint(t("ed_exercise_hint"), w))
-    _add_preview(box)
+
     box.add_child(field_label(t("ed_field_time")))
-    tm = s.get("time") or [4, 4]
+    tm = ef.time_of(s)
     times = [list(x) for x in _TIMES]
     if tm not in times:
         times.append(list(tm))
     box.add_child(_seg([f"{a}/{b}" for a, b in times], times.index(tm),
-                       lambda k: (s.__setitem__("time", list(times[k])), ed.changed())))
+                       lambda k: model.set_time(times[k])))
+    box.add_child(field_label(t("ed_field_clef")))
+    clefs = ["treble", "bass"]
 
+    def set_clef(k):
+        s["clef"] = clefs[k]
+        model.version += 1
+        ed.changed()
+    box.add_child(_seg([t("ed_clef_treble"), t("ed_clef_bass")],
+                       clefs.index(s.get("clef", "treble")) if s.get("clef", "treble") in clefs else 0,
+                       set_clef))
+
+    # the palette: note values, dot, rest, chord; then editing
+    box.add_child(spacer(4))
+    pal = Flow(gap=6)
+    for v in VALUES:
+        pal.add_child(GlyphButton(v, lambda v=v: model.set_value(v), active_fn=lambda v=v: model.value == v))
+    pal.add_child(GlyphButton("dot", model.toggle_dot, active_fn=lambda: model.dot))
+    pal.add_child(GlyphButton("rest", model.rest))
+    pal.add_child(TextToggle(lambda: t("ed_chord"), lambda: setattr(model, "chord", not model.chord),
+                             active_fn=lambda: model.chord))
+    box.add_child(pal)
+    row = Flow(gap=6)
+    row.add_child(button("↑", lambda: model.transpose(1), min_w=40))
+    row.add_child(button("↓", lambda: model.transpose(-1), min_w=40))
+    row.add_child(button(t("ed_oct_up"), lambda: model.transpose(12)))
+    row.add_child(button(t("ed_oct_down"), lambda: model.transpose(-12)))
+    row.add_child(button(t("ed_delete_note"), model.delete))
+    row.add_child(button(t("ed_undo"), model.undo))
+    row.add_child(button(t("ed_redo"), model.redo))
+
+    def key():
+        from pianove.pages.lesson import _guess_key
+        return _guess_key(ef.music(s)[0])
+
+    def bad_bars():
+        return {where[2] for where, _, _ in ed.problems if where[0] == "bar" and where[1] == i}
+    canvas = ScoreCanvas(model, key_fn=key, problems_fn=bad_bars, height=px(160))
+    row.add_child(TextToggle(lambda: ("■ " + t("ed_stop_play")) if canvas.is_playing else ("▶ " + t("ed_play")),
+                             canvas.toggle_play, active_fn=lambda: canvas.is_playing))
+    box.add_child(row)
+    box.add_child(canvas)
+    ed.page["score"] = canvas
+    box.add_child(hint(t("ed_score_hint"), w))
+
+    # entering notes by tapping keys
+    box.add_child(field_label(t("ed_entry_keys")))
+    picker = ed.entry_picker
+
+    def decor(m):
+        cur = model.selected()
+        on = cur is not None and not ef.is_rest(cur) and m in (parse_chord(cur) or [])
+        return (ColorPalette.BLUE if on else None, None)
+    picker.on_key = lambda m: model.key_note(m)
+    picker.decorate = decor
+    whites = max(14, min(29, int(w / px(30))))
+    picker.octaves = max(2, min(4, whites // 7))
+    if getattr(picker, "fitted_for", None) is not s:     # first time here: around its notes
+        picker.fitted_for = s
+        notes = [m for bar in ef.music(s)[0] for p in bar for m in (parse_chord(p) or [])]
+        picker.fit(notes or ([48] if s.get("clef") == "bass" else [60, 72]))
+    box.add_child(PygameCanvas(target=picker, draw_border=False, width=1.0, height=px(110)))
+    krow = Flow()
+    krow.add_child(button("‹ " + t("ed_lower"), lambda: picker.shift(-1)))
+    krow.add_child(button(t("ed_higher") + " ›", lambda: picker.shift(1)))
+    box.add_child(krow)
+    box.add_child(hint(t("ed_score_keys"), w))
+
+    # bars
     box.add_child(spacer(4))
     box.add_child(heading(t("ed_bars")))
-    bars = s.setdefault("bars", [])
-    problems = {where[2] for where, _, _ in ed.problems if where[0] == "bar" and where[1] == i}
-    for k, bar in enumerate(bars):
-        row = Flow(gap=6)
-        num = FloatLayout(width=px(26), height=px(38), border_radius=0)
-        num.add_child(Label(text=str(k + 1), font_size=13, bold=True, color=iOSTheme.secondary_label,
-                            anchor="left", x=0, y=0))
-        row.add_child(num)
-        field_w = max(px(80), w - px(26) - px(6) * 2 - px(40))
+    brow = Flow()
+    brow.add_child(button("+ " + t("ed_add_bar"), model.add_bar))
+    brow.add_child(button(t("ed_delete_bar"), model.delete_bar))
+    brow.add_child(button(t("ed_import_xml"), _import_xml))
 
-        def set_bar(v, k=k):
-            bars[k] = split_words(v)
-            ed.changed()
-            _sync_rows()
-        tb = TextBox(" ".join(bar), placeholder=t("ed_bar_ph"), on_change=set_bar, width=field_w)
-        tb.error = k in problems
-        ed.page.setdefault("bar_boxes", {})[k] = tb
-        row.add_child(tb)
-
-        def drop(k=k):
-            del bars[k]
-            ed.changed(structure=True)
-        row.add_child(button("×", drop, size=16, height=38, min_w=40))
-        box.add_child(row)
-    if not bars:
-        box.add_child(hint(t("ed_no_bars"), w))
-
-    if ed.rec is not None and ed.rec["target"] == "bars":
-        _notes_editor(box, t("ed_record_bars_label"), [], "bars", None)
-    else:
-        row = Flow()
-        row.add_child(button("+ " + t("ed_add_bar"),
-                             lambda: (bars.append([]), ed.changed(structure=True))))
-        row.add_child(button("● " + t("ed_record_bars"), lambda: ed.start_record("bars"), kind="primary"))
-        row.add_child(button(t("ed_import_xml"), _import_xml))
-        if bars:
-            def clear_bars():
-                key = "bars"
-                if ed.confirm != key:
-                    ed.confirm = key
-                    rebuild()
-                    return
-                ed.confirm = None
-                bars.clear()
-                ed.changed(structure=True)
-            row.add_child(button(t("ed_clear_bars_confirm") if ed.confirm == "bars" else t("ed_clear_bars"),
-                                 clear_bars, kind="danger" if ed.confirm == "bars" else "plain"))
-        box.add_child(row)
-        box.add_child(field_label(t("ed_import_hand")))
-        box.add_child(_seg([t("ed_hand_right"), t("ed_hand_left")], ed.import_hand,
-                           lambda k: setattr(ed, "import_hand", k)))
-        box.add_child(hint(t("ed_bars_hint", n=tm[0]), w))
+    def clear_bars():
+        if ed.confirm != "bars":
+            ed.confirm, ed.confirm_t = "bars", time.monotonic()
+            rebuild()
+            return
+        ed.confirm = None
+        model.clear()
+        rebuild()
+    confirming = ed.confirm == "bars"
+    brow.add_child(button(t("ed_clear_bars_confirm") if confirming else t("ed_clear_bars"),
+                          clear_bars, kind="danger" if confirming else "plain"))
+    box.add_child(brow)
+    box.add_child(field_label(t("ed_import_hand")))
+    box.add_child(_seg([t("ed_hand_right"), t("ed_hand_left")], ed.import_hand,
+                       lambda k: setattr(ed, "import_hand", k)))
     box.add_child(spacer(6))
     _step_actions(box, "step_actions")
 
@@ -851,20 +893,6 @@ class _Preview:
             _, i, j = ed.sel
             s = ed.step(i)
             return {"title": s.get("title"), "beats": [copy.deepcopy(ed.beat(i, j))]}
-        if ed.sel[0] == "step" and ed.step(ed.sel[1]).get("type") == "exercise":
-            s = ed.step(ed.sel[1])
-            notes = [n for bar in s.get("bars", []) for n in bar][:12]
-            if not notes:
-                return None
-            midis = [parse_chord(n) for n in notes]
-            if any(m is None for m in midis):
-                raise ValueError("bad note")
-            low = sum(m[0] for m in midis) / len(midis) < 57
-            return {"title": "", "beats": [{
-                "title": "", "say": "",
-                "staff": {"clef": "bass" if low else "treble", "time": s.get("time") or [4, 4],
-                          "notes": notes},
-                "play": notes, "tempo": 96}]}
         return None
 
     def stop(self):
@@ -992,8 +1020,10 @@ def _import_xml():
             _toast(t("ed_import_empty"), RED)
             return
         s = ed.step(i)
-        s["time"], s["bars"] = ex["time"], ex["bars"]
-        ed.changed(structure=True)
+        if ed.import_hand:
+            s["clef"] = "bass"
+        ed.score_model(s).replace_all(ex["time"], ex["bars"], ex["types"])   # Undo brings it back
+        rebuild()
         _toast(t("ed_imported_bars", n=len(ex["bars"])), GREEN)
     picker.pick(got)
 
@@ -1050,7 +1080,8 @@ def rebuild(scroll_top: bool = False):
         return
     p = ed.page
     p.pop("rec_label", None)
-    p.pop("bar_boxes", None)
+    if "score" in p:
+        p.pop("score").stop()
     if TextBox._focused is not None:
         TextBox._focused.focus(False)
     _fill_outline(p["outline"])
@@ -1163,10 +1194,15 @@ def _tick(dt: float):
             now = time.monotonic()
             ed.rec["events"].extend((now, m) for m in ons)
             _sync_rec()
+        elif ons and "score" in p and ed.sel[0] == "step":
+            model = p["score"].model                  # playing enters notes at the cursor
+            for m in ons:
+                model.key_note(m)
     live = set(midi_panel.active_notes)
-    if live != ed.picker.live:
-        ed.picker.live = live
-        _dirty.mark()
+    for picker in (ed.picker, ed.entry_picker):
+        if live != picker.live:
+            picker.live = live
+            _dirty.mark()
 
 
 def build():

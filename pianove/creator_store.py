@@ -18,6 +18,7 @@ import zipfile
 from pathlib import Path
 
 from pianove import lesson_loader as _ll
+from pianove import exercise_format as ef
 from pianove.creator_notes import parse_chord, parse_note, in_range, split_words
 
 LOCALES = ("en", "de")
@@ -364,11 +365,8 @@ def _text(v, lang: str) -> str:
 def _check_notes(problems, where, values, chords_ok=True):
     for v in values:
         midis = parse_chord(v) if chords_ok else ([parse_note(v)] if parse_note(v) is not None else None)
-        if midis is None:
-            if not chords_ok and parse_chord(v) is not None:
-                problems.append((where, "chord_in_exercise", {"note": str(v)}))
-            else:
-                problems.append((where, "bad_note", {"note": str(v)}))
+        if midis is None:                     # (a chord where one key belongs is a bad note too)
+            problems.append((where, "bad_note", {"note": str(v)}))
         elif any(not in_range(m) for m in midis):
             problems.append((where, "out_of_range", {"note": str(v)}))
 
@@ -443,13 +441,22 @@ def validate(draft: dict) -> list[tuple]:
             bars = step.get("bars", [])
             if not bars:
                 problems.append((w, "no_bars", {}))
+            if step.get("clef", "treble") not in ("treble", "bass"):
+                problems.append((w, "bad_clef", {}))
+            typed = "types" in step
+            if typed and not ef.has_types(step):
+                problems.append((w, "bad_types", {}))
+                typed = False
+            types = ef.types_of(step)
             for k, bar in enumerate(bars):
                 wb = ("bar", i, k)
                 if not bar:
                     problems.append((wb, "empty_bar", {"bar": k + 1}))
-                elif ok_time and len(bar) > time[0] * 4:
+                elif ok_time and typed and ef.used(types[k]) > ef.bar_length(time) + 1e-6:
                     problems.append((wb, "bar_too_full", {"bar": k + 1}))
-                _check_notes(problems, wb, bar, chords_ok=False)
+                elif ok_time and not typed and len(bar) > time[0] * 4:
+                    problems.append((wb, "bar_too_full", {"bar": k + 1}))
+                _check_notes(problems, wb, [e for e in bar if not ef.is_rest(e)])
         else:
             problems.append((("step", i), "unknown_step", {"type": str(kind)}))
     return problems
@@ -574,28 +581,59 @@ def import_package(path) -> dict:
 # ── an exercise from a MusicXML file ──────────────────────────────────────────────────
 
 def exercise_from_musicxml(path, hand: str = "right") -> dict:
-    """{"time", "bars"} of one hand of a piece. An exercise plays one note at a time, so a
-    chord keeps its top note (right hand) or its bottom note (left hand)."""
-    from pianove.song_store import _parse_musicxml, _pitch_to_midi
+    """{"time", "bars", "types"} of one hand of a piece, with its note values, rests and
+    chords. A tied note keeps its first part (an exercise has no ties)."""
+    from pianove.song_store import _parse_musicxml
     parsed = _parse_musicxml(str(path))
     h = "lh" if hand == "left" else "rh"
+    time = parsed.get("time") or [4, 4]
+    time = [int(time[0]), int(time[1])]
+    full = ef.bar_length(time)
     pitch_bars = parsed.get(f"bars_{h}") or []
+    type_bars = parsed.get(f"types_{h}") or []
     onset_bars = parsed.get(f"onsets_{h}") or []
     tie_bars = parsed.get(f"ties_{h}") or []
-    pick = max if h == "rh" else min
-    bars = []
+    bars, types = [], []
     for i, bar in enumerate(pitch_bars):
-        onsets = onset_bars[i] if i < len(onset_bars) else list(range(len(bar)))
-        ties = tie_bars[i] if i < len(tie_bars) else [False] * len(bar)
-        by_onset: dict[float, list[str]] = {}
-        for p, o, tied in zip(bar, onsets, ties):
-            if not tied:                         # a tie's second half isn't struck again
-                by_onset.setdefault(o, []).append(p)
-        notes = [pick(ps, key=_pitch_to_midi) for _, ps in sorted(by_onset.items())]
-        if notes:
-            bars.append(notes)
-    time = parsed.get("time") or [4, 4]
-    return {"time": [int(time[0]), int(time[1])], "bars": bars}
+        n = len(bar)
+        tys = type_bars[i] if i < len(type_bars) and len(type_bars[i]) == n else ["quarter"] * n
+        ons = onset_bars[i] if i < len(onset_bars) and len(onset_bars[i]) == n else [float(k) for k in range(n)]
+        ties = tie_bars[i] if i < len(tie_bars) and len(tie_bars[i]) == n else [False] * n
+        groups: dict[float, tuple[list[str], str]] = {}
+        for p, t, o, tied in zip(bar, tys, ons, ties):
+            if tied:
+                continue                          # a tie's second half isn't struck again
+            t = t if ef.is_type(t) else "quarter"
+            ps, t0 = groups.setdefault(round(float(o), 4), ([], t))
+            if p not in ps:
+                ps.append(p)
+        entries, values, pos = [], [], 0.0
+        starts = sorted(groups)
+        for k, o in enumerate(starts):
+            if o > pos + 1e-6:                    # silence before this note: rests
+                for r in ef.fill_rests(o - pos):
+                    entries.append(ef.REST)
+                    values.append(r)
+            ps, t = groups[o]
+            room = (starts[k + 1] if k + 1 < len(starts) else full) - o
+            if ef.quarters(t) > room + 1e-6:      # overlaps the next note (another voice)
+                fit = ef.fill_rests(room)
+                t = fit[0] if fit else t
+            entries.append("+".join(ps))
+            values.append(t)
+            pos = o + ef.quarters(t)
+        if not entries and full:
+            entries, values = [ef.REST] * len(ef.fill_rests(full)), ef.fill_rests(full)
+        bars.append(entries)
+        types.append(values)
+    # no silent bars at the start or the end
+    def silent(b):
+        return all(ef.is_rest(e) for e in b)
+    while bars and silent(bars[0]):
+        bars.pop(0), types.pop(0)
+    while bars and silent(bars[-1]):
+        bars.pop(), types.pop()
+    return {"time": time, "bars": bars, "types": types}
 
 
 def notes_from_text(text: str) -> list[str]:

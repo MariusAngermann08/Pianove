@@ -255,18 +255,31 @@ def _pitch_to_midi(pitch_str: str) -> int:
     return (int(rest) + 1) * 12 + _SEMITONES[name] + acc
 
 
-def _bars_from_lesson(lesson: dict) -> list[list[str]]:
+def _lesson_exercise(lesson: dict) -> dict | None:
+    """The exercise being played: the current step, or else the lesson's first one."""
     steps = lesson.get("steps", [])
-    # Try the current step first; fall back to first exercise found
-    candidates = []
-    if ctx.lesson_step_idx < len(steps):
-        candidates = [steps[ctx.lesson_step_idx]] + steps
-    else:
-        candidates = steps
-    for step in candidates:
-        if step.get("type") == "exercise":
-            return step.get("bars", [])
-    return [["C4", "D4", "E4", "F4"]]
+    candidates = ([steps[ctx.lesson_step_idx]] + steps
+                  if ctx.lesson_step_idx < len(steps) else steps)
+    return next((s for s in candidates if s.get("type") == "exercise"), None)
+
+
+def _bars_from_lesson(lesson: dict) -> list[list[str]]:
+    ex = _lesson_exercise(lesson)
+    if ex is None:
+        return [["C4", "D4", "E4", "F4"]]
+    from pianove.exercise_format import music
+    return music(ex)[0]
+
+
+def _lesson_rhythm(lesson: dict):
+    """(types, onsets) per bar of the exercise being played: its written note values,
+    rests and chords (see pianove/exercise_format.py)."""
+    ex = _lesson_exercise(lesson)
+    if ex is None:
+        return None
+    from pianove.exercise_format import music
+    _, types, onsets = music(ex)
+    return types, onsets
 
 
 def _split_sections(bars: list[list[str]]) -> list[list[list[str]]]:
@@ -1805,9 +1818,11 @@ def build():
             song_key     = _song.get("key") if _song else None   # as written in the piece
         else:
             lesson_title = lesson.get("title", lesson_id)
-            ex = next((st for st in lesson.get("steps", []) if st.get("type") == "exercise"), {})
+            ex = _lesson_exercise(lesson) or {}
             song_time    = tuple(ex.get("time", (4, 4)))   # the exercise's own time signature
             song_key     = None
+            if ex.get("clef") in ("treble", "bass"):
+                clef = ex["clef"]
 
     # Non-exercise steps (text, notation_demo) are handled before the full
     # exercise layout is built.  Songs and practice-go mode bypass step routing.
@@ -1873,6 +1888,13 @@ def build():
             meta = {k: (_for_view(rhythm.get(f"{k}_{hand_key}")), None) for k in ("durs", "ties", "vels")}
             meta["tempos"] = rhythm.get("tempos")
         active_lens = _for_view(rhythm.get("bar_lens"))
+    elif not is_practice:
+        # a lesson's exercise: its written note values, rests and chords
+        lr = _lesson_rhythm(lesson)
+        if lr is not None and len(lr[0]) == len(all_bars):
+            def _lesson_view(lst):
+                return _split_sections(lst)[section_idx] if phase == "practice" else lst
+            active_types, active_onsets = _lesson_view(lr[0]), _lesson_view(lr[1])
 
     # For "both hands" song mode, split into treble/bass for grand-staff display
     _both_lh_bars = None

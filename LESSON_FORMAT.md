@@ -97,11 +97,22 @@ A scene is a series of **beats**: short screens with text, the keyboard, animate
 {
   "type": "exercise",
   "time": [3, 4],
-  "bars": [["E4", "G4", "G4"], ["F4", "A4", "A4"]]
+  "clef": "treble",
+  "bars":  [["E4", "G4", "G4"], ["C4+E4", "r"]],
+  "types": [["quarter", "quarter", "quarter"], ["half", "quarter"]]
 }
 ```
 
-The learner plays the bars section by section, then all at once. One note at a time (no chords); a bar's notes share it evenly.
+The learner plays the bars section by section, then all at once.
+
+| Field | Meaning |
+|-------|---------|
+| `time` | Time signature, e.g. `[4, 4]`, `[3, 4]`, `[6, 8]` |
+| `clef` | `"treble"` (default) or `"bass"` |
+| `bars` | Per bar: notes (`"C4"`), chords (`"C4+E4+G4"`) and rests (`"r"`) |
+| `types` | Optional. The length of every entry: `whole`, `half`, `quarter`, `eighth`, `sixteenth`, `thirty_second`, each also as `dotted_…`. Without it, a bar's entries share the bar evenly (how older lessons are written) |
+
+A bar whose entries don't fill it is silent for the rest. The lesson editor edits this as a score (click a note, type A–G, pick a value; see `pianove/score_editor.py`).
 
 ### Notes
 
@@ -138,4 +149,4 @@ lessons/waltz_for_mia/…     your own lessons the course uses (built-in ones ar
 
 ## The editor's check
 
-The editor lists problems as you work (they never stop you saving): unknown notes, a missing translation, a fingering that doesn't match the notes, a bar with too many notes, a lesson that doesn't end with an exercise. Every built-in lesson passes this check (`tests/test_creator_store.py`).
+The editor lists problems as you work (they never stop you saving): unknown notes, a missing translation, a fingering that doesn't match the notes, a bar longer than its time signature allows, a lesson that doesn't end with an exercise. Every built-in lesson passes this check (`tests/test_creator_store.py`).
