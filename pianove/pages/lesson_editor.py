@@ -815,6 +815,8 @@ def _fill_screen(box, i: int, j: int):
         box.add_child(_seg([t("ed_staff_right"), t("ed_staff_left")], sides.index(ed.hand_side),
                            lambda k: (setattr(ed, "hand_side", sides[k]), rebuild())))
     box.add_child(hint(t(f"ed_tap_hint_{kind}" + ("_" + ed.tap_mode if kind == "explain" else "")), w))
+    if is_touch_layout():
+        _screen_keys(box, b, kind)            # keys big enough for a finger
     if kind == "find":
         notes = list(b.get("try") or [])
         box.add_child(Label(text="   ".join(notes) if notes else t("ed_no_notes"), font_size=14,
@@ -1245,6 +1247,50 @@ def _add_preview(box, kind: str):
 
 def _sync_screen_notes():
     _dirty.mark()
+
+
+def _screen_keys(box, b: dict, kind: str):
+    """A keyboard as wide as the page, doing what a tap on the preview's keys does (on a
+    phone the preview's keys are too small for a finger), showing the screen's keys."""
+    ed = _ED
+    w = ed.page["inner_w"]
+    picker = ed.entry_picker
+    same = lambda x, m: (parse_chord(x) or [None])[0] == m
+
+    def decor(m):
+        if kind == "explain":
+            marked = any(same(x, m) for x in b.get("mark", []))
+            labels = b.get("labels")
+            named = isinstance(labels, list) and any(same(x, m) for x in labels)
+            return (pygame.Color(94, 92, 230) if marked else None, note_name(m)[:-1] if named else None)
+        if kind == "hand":
+            for side, col in (("right", pygame.Color(10, 132, 255)), ("left", pygame.Color(255, 159, 10))):
+                for k, f in ((b.get("hand") or {}).get(side) or {}).items():
+                    if same(k, m):
+                        return (col, str(f))
+            return (None, None)
+        if kind == "find":
+            return (ColorPalette.BLUE if any(same(x, m) for x in b.get("try") or []) else None, None)
+        model = ed.current_model()
+        cur = model.selected() if model is not None else None
+        on = cur is not None and m in [parse_chord(p)[0] for p in ef.pitches_of(cur) if parse_chord(p)]
+        return (ColorPalette.BLUE if on else None, None)
+    picker.on_key = ed.preview_tap
+    picker.on_key_up = ed.preview_release
+    picker.decorate = decor
+    picker.octaves = 2
+    if getattr(picker, "fitted_for", None) is not b:
+        picker.fitted_for = b
+        names = list(b.get("mark", [])) + list(b.get("try") or []) + list(b.get("play") or [])
+        for fm in (b.get("hand") or {}).values():
+            names += list(fm)
+        picker.fit([m for x in names if isinstance(x, str) for m in (parse_chord(x) or [])] or [60, 67])
+    box.add_child(PygameCanvas(target=picker, draw_border=False, width=1.0,
+                               height=max(px(110), min(px(160), int(w * 0.16)))))
+    row = Flow()
+    row.add_child(button("‹ " + t("ed_lower"), lambda: picker.shift(-1)))
+    row.add_child(button(t("ed_higher") + " ›", lambda: picker.shift(1)))
+    box.add_child(row)
 
 
 # ── importing a piece from MusicXML ───────────────────────────────────────────────────
