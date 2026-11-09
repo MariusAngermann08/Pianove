@@ -267,14 +267,14 @@ class ScoreModel:
         cur = self.selected()
         if cur is None or ef.is_rest(cur):
             return False
-        notes = ef.notes_of(cur)
-        if any(parse_note(p) is None for p, _ in notes):
+        parts = ef.parts_of(cur)
+        if any(parse_note(p) is None for p, _, _ in parts):
             return False
-        if midi in [parse_note(p) for p, _ in notes]:
+        if midi in [parse_note(p) for p, _, _ in parts]:
             return True
         self._begin()
         k, j = self.sel
-        self.bars[k][j] = ef.join_notes(_sort_notes(notes + [(note_name(midi), False)]))
+        self.bars[k][j] = ef.join_parts(_sort_notes(parts + [(note_name(midi), None, False)]))
         self._last_entry = _time.monotonic()
         self._commit()
         return True
@@ -368,14 +368,15 @@ class ScoreModel:
         cur = self.selected()
         if cur is None or ef.is_rest(cur):
             return
-        notes = ef.notes_of(cur)
+        parts = ef.parts_of(cur)
+        notes = [(p, tied) for p, _, tied in parts]
         self._begin()
         k, j = self.sel
         if all(tied for _, tied in notes):
-            self.bars[k][j] = ef.join_notes([(p, False) for p, _ in notes])
+            self.bars[k][j] = ef.join_parts([(p, f, False) for p, f, _ in parts])
             self._commit()
             return
-        self.bars[k][j] = ef.join_notes([(p, True) for p, _ in notes])
+        self.bars[k][j] = ef.join_parts([(p, f, True) for p, f, _ in parts])
         nxt = self._next_pos()
         want = {parse_note(p) for p, _ in notes}
         has = {parse_note(p) for p in ef.pitches_of(self.bars[nxt[0]][nxt[1]])} if nxt else set()
@@ -392,14 +393,76 @@ class ScoreModel:
         cur = self.selected()
         if cur is None or ef.is_rest(cur):
             return
-        notes = ef.notes_of(cur)
-        midis = [parse_note(p) for p, _ in notes]
+        parts = ef.parts_of(cur)
+        midis = [parse_note(p) for p, _, _ in parts]
         if None in midis or not all(in_range(m + semis) for m in midis):
             return
         self._begin()
         k, j = self.sel
-        moved = [(note_name(m + semis, flats=semis < 0), tied) for m, (_, tied) in zip(midis, notes)]
-        self.bars[k][j] = ef.join_notes(_sort_notes(moved))
+        moved = [(note_name(m + semis, flats=semis < 0), f, tied) for m, (_, f, tied) in zip(midis, parts)]
+        self.bars[k][j] = ef.join_parts(_sort_notes(moved))
+        self._commit()
+
+    # ── fingers ──
+    def set_finger(self, f: int):
+        """Finger f for the selected note; in a chord, for its next note without one (low
+        to high), starting over once all have one."""
+        cur = self.selected()
+        if cur is None or ef.is_rest(cur):
+            return
+        parts = ef.parts_of(cur)
+        free = [i for i, (_, g, _) in enumerate(parts) if g is None]
+        if not free:
+            parts = [(p, None, t) for p, _, t in parts]
+            free = list(range(len(parts)))
+        i = free[0]
+        p, _, t = parts[i]
+        parts[i] = (p, f, t)
+        self._begin()
+        k, j = self.sel
+        self.bars[k][j] = ef.join_parts(parts)
+        self._commit()
+
+    def clear_fingers(self, everywhere: bool = False):
+        self._begin()
+        spots = ([(s, k, j) for s in range(self.n_staves) for k, b in enumerate(self.staff_bars(s))
+                  for j in range(len(b))] if everywhere else [(self.staff, *self.sel)])
+        for s, k, j in spots:
+            bars = self.staff_bars(s)
+            if 0 <= k < len(bars) and 0 <= j < len(bars[k]) and not ef.is_rest(bars[k][j]):
+                bars[k][j] = ef.join_parts([(p, None, t) for p, _, t in ef.parts_of(bars[k][j])])
+        self._commit()
+
+    def suggest_fingering(self):
+        """Fingers for every note, from Pianove's fingering planner (the right hand on the
+        treble staff, the left on the bass staff); fingers already written stay."""
+        from pianove.fingering import Step, finger_hand
+        self._begin()
+        sec = 60.0 / ef.tempo_of(self.step)
+        starts = self.bar_starts()
+        for s in range(self.n_staves):
+            bars, types = self.staff_bars(s), self._types[s]
+            sm = ef.staff_music(bars, types)
+            spots, steps = [], []
+            for k, (bar, tys) in enumerate(zip(bars, types)):
+                pos, ni = starts[k], 0
+                for j, (e, t) in enumerate(zip(bar, tys)):
+                    midis, length = [], ef.quarters(t)
+                    for p in ef.pitches_of(e):
+                        if not sm["ties"][k][ni] and parse_note(p) is not None:
+                            midis.append(parse_note(p))
+                            length = max(length, sm["durs"][k][ni])
+                        ni += 1
+                    if midis:
+                        spots.append((k, j))
+                        steps.append(Step(tuple(sorted(midis)), pos * sec, length * sec))
+                    pos += ef.quarters(t)
+            bass = s == 1 or (self.n_staves == 1 and self.step.get("clef") == "bass")
+            plan = finger_hand(steps, "left" if bass else "right") if steps else []
+            for (k, j), fingers in zip(spots, plan):
+                parts = ef.parts_of(bars[k][j])
+                bars[k][j] = ef.join_parts([(p, f if f is not None else fingers.get(parse_note(p)), t)
+                                            for p, f, t in parts])
         self._commit()
 
     # dragging a note along the staff: one undo step for the whole drag
@@ -412,16 +475,16 @@ class ScoreModel:
         if d is None or steps == d["steps"]:
             return
         moved = []
-        for p, tied in ef.notes_of(d["entry"]):
+        for p, f, tied in ef.parts_of(d["entry"]):
             q = shift_step(p, steps, key)
             if q is None:
                 return
-            moved.append((q, tied))
+            moved.append((q, f, tied))
         if not d["began"]:
             self._begin()
             d["began"] = True
         k, j = self.sel
-        self.bars[k][j] = ef.join_notes(_sort_notes(moved))
+        self.bars[k][j] = ef.join_parts(_sort_notes(moved))
         d["steps"] = steps
         self._commit()
 
@@ -524,6 +587,31 @@ class ScoreModel:
                     n -= len(b)
                 else:
                     self.sel = (len(nb) - 1, len(nb[-1]) - 1)
+        self._commit()
+
+    def insert_bars(self, staves: list[tuple[list, list]]):
+        """Bars written down from playing, one (bars, types) per staff: after the selected
+        bar (or in place of an empty piece)."""
+        staves = [(b, t) for b, t in staves][:self.n_staves]
+        n = max((len(b) for b, _ in staves), default=0)
+        if not n:
+            return
+        self._begin()
+        empty = all(not any(self.staff_bars(s)) for s in range(self.n_staves))
+        at = 0 if empty else min(self.sel[0], max(len(self.staff_bars(s)) for s in range(self.n_staves)) - 1) + 1
+        for s in range(self.n_staves):
+            bars, types = (staves[s] if s < len(staves) else ([], []))
+            bars = [list(b) for b in bars] + [[] for _ in range(n - len(bars))]
+            types = [list(t) for t in types] + [[] for _ in range(n - len(types))]
+            target_b, target_t = self.staff_bars(s), self._types[s]
+            if empty:
+                target_b[:] = bars
+                target_t[:] = types
+            else:
+                target_b[at:at] = bars
+                target_t[at:at] = types
+        last = (at + n - 1) if not empty else n - 1
+        self.sel = (last, len(self.bars[last]) - 1 if last < len(self.bars) else -1)
         self._commit()
 
     def replace_all(self, tm, bars, types, lh: dict | None = None):
@@ -695,14 +783,23 @@ class ScoreCanvas(PygameCanvas):
                     prev_tied = {}
                 group_tuplets(obj, staff)
         score._on_resize(width)
+        # a short phrase on a wide page would be drawn huge: keep the staff to a normal size
+        cap = max(self.min_space + 3, 17)
+        if score._space() > cap:
+            from pylute.score import _ML
+            cost = score._system_cost(score.bars_per_system)
+            score._on_resize(max(200, min(width, int(cap * (2 * _ML + 5.5 + cost) + 40))))
         line_of = {k: i for i, bars in enumerate(score._layout_systems()) for k in bars}
         bar_of = {id(n): k for (s, k, j), ev in self._map.items()
                   for n in (getattr(ev, "notes", None) or [ev])}
         for src, dst in ties:
             if line_of.get(bar_of.get(id(src))) == line_of.get(bar_of.get(id(dst))):
                 link_tie(src, dst)               # (a tie over a line break is left out)
-        h = score.total_content_height(width)
-        paper = pygame.Surface((width, max(1, h)))
+        h = score.total_content_height()             # (as laid out above: no new resize)
+        sp_ = score._space()                         # no empty paper under the last line
+        h = min(h, int(score.system_y_tops()[-1] + score.system_height() + sp_ * (5 if n_st == 1 else 6)))
+        # drawn at the width laid out (Score.draw would lay a wider surface out again)
+        paper = pygame.Surface((score._last_size or width, max(1, h)))
         paper.fill((255, 255, 255))
         score.surface = paper
         for st in score.staffs:
@@ -711,6 +808,7 @@ class ScoreCanvas(PygameCanvas):
             score.brace.surface = paper
         score.draw()
         self._score, self._paper = score, paper
+        self._draw_fingers(paper)
         self._built = (m.version, width, self.playing_at)
         if h != self.height_spec:
             self.height_spec = h
@@ -768,6 +866,61 @@ class ScoreCanvas(PygameCanvas):
                 return (s, k, min(evs, key=lambda e: abs(e[1] + sp * 0.6 - x))[0])
         return None
 
+    def place_at(self, pos):
+        """A note for a tap on an empty spot of the staff: (staff, bar, pitch), or None
+        when the tap is on or near a note (that selects it instead)."""
+        if self._score is None:
+            return None
+        x, y = pos
+        sp = self._space()
+        for tops, bars in self._lines():
+            if not (tops[0] - sp * 4 <= y <= tops[-1] + sp * 8):
+                continue
+            s = min(range(len(tops)), key=lambda i: abs(tops[i] + sp * 2 - y))
+            for k in bars:
+                b = self._score.staffs[0].bars[k]
+                if not (b.bar_start_x <= x < b.bar_start_x + b.barspace):
+                    continue
+                n = len(self.model.staff_bars(s)[k]) if k < len(self.model.staff_bars(s)) else 0
+                xs = [self._map[(s, k, j)].offset for j in range(n) if (s, k, j) in self._map]
+                if xs and x < max(xs) + sp * 2.2:
+                    return None                       # among the notes: a selection
+                clef = "bass" if (s == 1 or (self.model.n_staves == 1 and
+                                             self.model.step.get("clef") == "bass")) else "treble"
+                base = 2 * 7 + 4 if clef == "bass" else 4 * 7 + 2       # bottom line: G2 / E4
+                steps = int(round((tops[s] + 4 * sp - y) / (sp / 2)))
+                idx = base + steps
+                letter, octave = _LETTERS[idx % 7], idx // 7
+                pitch = f"{letter}{key_spelling(self.key_fn()).get(letter, '')}{octave}"
+                m = parse_note(pitch)
+                if m is None or not in_range(m):
+                    return None
+                return (s, k, pitch)
+        return None
+
+    def _draw_fingers(self, paper):
+        """Finger numbers over the notes of the right hand, under those of the left."""
+        sp = self._space()
+        f = pygame.font.Font(None, max(10, int(sp * 1.5)))
+        tops_of = {k: tops for tops, bars in self._lines() for k in bars}
+        m = self.model
+        for (s, k, j), ev in self._map.items():
+            bars = m.staff_bars(s)
+            if k >= len(bars) or j >= len(bars[k]):
+                continue
+            fingers = [g for g in ef.fingers_of(bars[k][j]) if g]
+            if not fingers or k not in tops_of:
+                continue
+            tops = tops_of[k]
+            x = ev.offset + sp * 0.6
+            for i, g in enumerate(reversed(fingers) if s == 0 else fingers):
+                ts = f.render(str(g), True, (40, 70, 150))
+                if s == 0:
+                    y = tops[0] - sp * 1.4 - i * sp * 1.1
+                else:
+                    y = tops[s] + 4 * sp + sp * 1.4 + i * sp * 1.1
+                paper.blit(ts, ts.get_rect(center=(int(x), int(y))))
+
     # ── drawing ──
     def draw_content(self, surface, rect):
         self._fresh()
@@ -802,7 +955,16 @@ class ScoreCanvas(PygameCanvas):
             _dirty.mark()
             if not inside:
                 return False
-            at = self.hit((event.pos[0] - self.rect.left, event.pos[1] - self.rect.top))
+            local = (event.pos[0] - self.rect.left, event.pos[1] - self.rect.top)
+            spot = self.place_at(local)
+            if spot is not None:                         # an empty spot: a note there
+                s, k, pitch = spot
+                m = self.model
+                m.select(k, len(m.staff_bars(s)[k]) - 1 if k < len(m.staff_bars(s)) else -1, staff=s)
+                m.insert(ef.join_notes([(pitch, False)]))
+                self._audition()
+                return True
+            at = self.hit(local)
             if at is not None:
                 s, k, j = at
                 self.model.select(k, j, staff=s)
@@ -1047,3 +1209,93 @@ class TextToggle(GlyphButton):
         fg = self._bg(surface)
         ts = font(13, bold=True).render(self.text_fn(), True, fg)
         surface.blit(ts, ts.get_rect(center=self.rect.center))
+
+
+# ── playing along with a metronome ────────────────────────────────────────────────────
+
+class Recorder:
+    """Records what is played into a ScoreModel: a bar of metronome clicks to count in,
+    then the clicks go on while you play; Done writes it down (see transcribe.py) after
+    the selected bar. With two staves, keys below middle C go to the left hand."""
+
+    def __init__(self, model: ScoreModel):
+        self.model = model
+        self.state = "idle"             # idle → count (the count-in bar) → rec
+        self.presses: list[list] = []
+        self.held: dict[int, int] = {}
+        self._clicks_off: list = []
+        self.beat = 0
+
+    @property
+    def active(self) -> bool:
+        return self.state != "idle"
+
+    def start(self, now: float | None = None):
+        now = _time.monotonic() if now is None else now
+        m = self.model
+        self.beat_s = 60.0 / ef.tempo_of(m.step)
+        self.beats_per_bar = m.time[0] * 4 / m.time[1]
+        self.t_count = now
+        self.t0 = now + self.beats_per_bar * self.beat_s      # the first beat of the music
+        self.presses, self.held = [], {}
+        self.state = "count"
+        self.beat = -1
+
+    def key_down(self, midi: int, now: float | None = None):
+        now = _time.monotonic() if now is None else now
+        if not self.active or now < self.t0 - self.beat_s * 0.5:
+            return                                             # too early for the music
+        self.held[midi] = len(self.presses)
+        self.presses.append([now, None, midi])
+
+    def key_up(self, midi: int, now: float | None = None):
+        now = _time.monotonic() if now is None else now
+        i = self.held.pop(midi, None)
+        if i is not None:
+            self.presses[i][1] = now
+
+    def tick(self, now: float | None = None):
+        from pianove.creator_ui import _sound
+        now = _time.monotonic() if now is None else now
+        for when, m in list(self._clicks_off):
+            if now >= when:
+                _sound(m, False)
+                self._clicks_off.remove((when, m))
+        if not self.active:
+            return
+        b = int((now - self.t_count) / self.beat_s)
+        if b != self.beat:
+            self.beat = b
+            down = (b % max(1, int(round(self.beats_per_bar)))) == 0
+            click = 96 if down else 89                         # a high key: the metronome
+            _sound(click, True)
+            self._clicks_off.append((now + 0.06, click))
+            _dirty.mark()
+        if self.state == "count" and now >= self.t0:
+            self.state = "rec"
+
+    def count_text(self) -> str:
+        """The beat being counted in ("1" … "4"), or "" once the music runs."""
+        if self.state != "count":
+            return ""
+        return str(max(0, self.beat) % max(1, int(round(self.beats_per_bar))) + 1)
+
+    def stop(self, now: float | None = None, keep: bool = True) -> bool:
+        """Done: the playing written down (keep) or thrown away. True if notes were added."""
+        from pianove.transcribe import quantize, split_hands
+        now = _time.monotonic() if now is None else now
+        for m in list(self.held):
+            self.key_up(m, now)
+        self.state = "idle"
+        if not keep or not self.presses:
+            return False
+        m = self.model
+        bpm = ef.tempo_of(m.step)
+        if m.n_staves == 2:
+            right, left = split_hands([tuple(p) for p in self.presses])
+            staves = [quantize(right, bpm, m.time, start=self.t0) if right else ([], []),
+                      quantize(left, bpm, m.time, start=self.t0) if left else ([], [])]
+        else:
+            staves = [quantize([tuple(p) for p in self.presses], bpm, m.time, start=self.t0)]
+        m.insert_bars(staves)
+        return True

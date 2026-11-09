@@ -6,7 +6,8 @@ both.
      "types": [["quarter", "quarter", "quarter"], ["half", "quarter"]],
      "lh":    {"bars": [["C3"], ["G2"]], "types": [["dotted_half"], ["dotted_half"]]}}
 
-- "r" is a rest, "C4+E4" a chord, "E4~" a note tied to the same note in the next entry.
+- "r" is a rest, "C4+E4" a chord, "E4~" a note tied to the same note in the next entry,
+  "E4@3" a note played with finger 3 ("C4@1+E4@3+G4@5~": fingers in a chord, G tied).
 - A value is whole … thirty_second, "dotted_…" (×1.5) or "triplet_…" (×2/3; three
   triplet eighths take one quarter).
 - `types` is optional: without it (lessons written before it existed) a bar's notes share
@@ -15,6 +16,8 @@ both.
 - `tempo` is in quarter notes per minute.
 """
 from __future__ import annotations
+
+import re
 
 from pianove.creator_notes import parse_note
 
@@ -34,25 +37,47 @@ def is_rest(entry) -> bool:
     return str(entry).strip().lower() in ("r", "rest")
 
 
-def notes_of(entry) -> list[tuple[str, bool]]:
-    """(pitch, tied to the next entry) for each note of an entry: "C4~+E4" → [("C4", True),
-    ("E4", False)]."""
+_PART = re.compile(r"^(.+?)(?:@([1-5]))?(~)?$")
+
+
+def parts_of(entry) -> list[tuple[str, int | None, bool]]:
+    """(pitch, finger or None, tied to the next entry) for each note of an entry:
+    "C4@1~+E4" → [("C4", 1, True), ("E4", None, False)]."""
     if is_rest(entry):
         return []
     out = []
     for p in str(entry).split("+"):
         p = p.strip()
-        if p:
-            out.append((p.rstrip(TIE).strip(), p.endswith(TIE)))
+        if not p:
+            continue
+        m = _PART.match(p)
+        pitch, finger, tied = m.group(1).strip(), m.group(2), bool(m.group(3))
+        out.append((pitch, int(finger) if finger else None, tied))
     return out
 
 
-def join_notes(notes) -> str:
-    return "+".join(p + (TIE if tied else "") for p, tied in notes)
+def notes_of(entry) -> list[tuple[str, bool]]:
+    """(pitch, tied to the next entry) for each note of an entry: "C4~+E4" → [("C4", True),
+    ("E4", False)]. Fingers are left out (see parts_of)."""
+    return [(p, tied) for p, _, tied in parts_of(entry)]
+
+
+def join_parts(parts) -> str:
+    return "+".join(p + (f"@{f}" if f else "") + (TIE if tied else "") for p, f, tied in parts)
+
+
+def join_notes(notes, fingers=None) -> str:
+    fingers = list(fingers or [])
+    return join_parts((p, fingers[i] if i < len(fingers) else None, tied)
+                      for i, (p, tied) in enumerate(notes))
+
+
+def fingers_of(entry) -> list[int | None]:
+    return [f for _, f, _ in parts_of(entry)]
 
 
 def pitches_of(entry) -> list[str]:
-    return [p for p, _ in notes_of(entry)]
+    return [p for p, _, _ in parts_of(entry)]
 
 
 # ── values ────────────────────────────────────────────────────────────────────────────

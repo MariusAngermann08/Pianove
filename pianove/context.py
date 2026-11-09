@@ -47,3 +47,4 @@ practice_last_total: int        = 0
 editor_lesson_id:   str | None = None
 editor_course_id:   str | None = None
 lesson_test_return: str | None = None
+lesson_beat_idx:    int        = 0      # a test run starts on this screen of the scene

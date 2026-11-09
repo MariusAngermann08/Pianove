@@ -123,6 +123,17 @@ class _Beat:
         if raw.get("fingers"):
             self.fingers = [dict(zip(ev, (int(f) for f in str(fs).split("+"))))
                             for ev, fs in zip(self.play, raw["fingers"])]
+        # when each played event starts and how long it lasts, in beats (a phrase written
+        # with rhythm); without it, one event per beat
+        self.rhythm = None
+        rh = raw.get("rhythm")
+        if isinstance(rh, list) and len(rh) == len(self.play):
+            try:
+                self.rhythm = [(float(st), max(0.05, float(ln))) for st, ln in rh]
+            except (TypeError, ValueError):
+                self.rhythm = None
+        # keys the left hand plays (a phrase for both hands); the rest are the right hand's
+        self.left = {_midi(p) for p in raw.get("left", [])}
         tr = raw.get("try")
         self.tries = self.play[:] if tr == "play" else [_chord(p) for p in (tr or [])]
         self.try_fingers = self.fingers if tr == "play" else None
@@ -141,6 +152,8 @@ class _Beat:
         for side, fm in self.hand.items():
             if m in fm:
                 return side
+        if self.left:
+            return "left" if m in self.left else "right"
         return self.side if self.fingers else None
 
     def finger_of(self, k: int, m: int, tries: bool = False) -> int | None:
@@ -314,15 +327,24 @@ class Scene:
 
         # the demo: the hand plays, the notes light up
         if self.phase == "demo":
-            k = int((self.t - _LEAD_IN) // beat_len) if self.t >= _LEAD_IN else -1
+            if b.rhythm:                      # written rhythm: events at their own times
+                pos = (self.t - _LEAD_IN) / beat_len
+                k = -1
+                if self.t >= _LEAD_IN:
+                    k = max((i for i, (st, _) in enumerate(b.rhythm) if st <= pos + 1e-9), default=-1)
+                    if pos >= max(st + ln for st, ln in b.rhythm):
+                        k = len(b.play)
+            else:
+                k = int((self.t - _LEAD_IN) // beat_len) if self.t >= _LEAD_IN else -1
             if k != self.playing and 0 <= k < len(b.play):
                 self.playing = k
                 vel = 80 if not b.accent else (104 if k % b.accent == 0 else 56)
                 if b.velocities and k < len(b.velocities):
                     vel = int(b.velocities[k])
+                hold = (b.rhythm[k][1] * 0.92) if b.rhythm else 0.85
                 for m in b.play[k]:
                     self._sound(m, True, vel)
-                    self.sounding[m] = beat_len * 0.85
+                    self.sounding[m] = beat_len * hold
                     self._tell_mic(m)
                 self.lit_staff = {k: ACCENT[b.side_of(b.play[k][0]) or "right"]}
             elif k >= len(b.play):
@@ -895,6 +917,10 @@ def build_scene_step(step: dict, lesson_title: str, step_idx: int, total_steps: 
     win_h = ctx.ui.height if ctx.ui else 768
     bar_h = 60 if win_h >= 560 else 50
     scene = Scene(step, on_finished=on_done)
+    first = getattr(ctx, "lesson_beat_idx", 0)          # a test run from the editor's screen
+    if first:
+        ctx.lesson_beat_idx = 0
+        scene._start_beat(min(first, len(scene.beats) - 1))
     canvas = PygameCanvas(target=scene, draw_border=False, width=1.0,
                           height=max(160, win_h - 53 - bar_h))
     main.add_child(canvas)

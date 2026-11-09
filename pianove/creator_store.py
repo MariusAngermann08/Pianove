@@ -145,25 +145,89 @@ def unique_id(base: str, taken) -> str:
 
 # ── lessons ───────────────────────────────────────────────────────────────────────────
 
-def _starter_steps(title: str) -> list:
-    return [
-        {
-            "type": "scene",
-            "title": {lang: title for lang in LOCALES},
-            "beats": [{
-                "title": {"en": "Listen", "de": "Hör zu"},
-                "say": {"en": "", "de": ""},
-                "play": ["C4", "D4", "E4"],
-                "tempo": 76,
-                "try": "play",
-            }],
-        },
-        {"type": "exercise", "time": [4, 4], "bars": [["C4", "D4", "E4", "F4"]]},
-    ]
+TEMPLATES = ("blank", "notes", "melody", "rhythm")
 
 
-def new_lesson(title: str, author: str = "") -> str:
-    """Create a lesson folder with a first scene and exercise; returns its id."""
+def _t(en: str, de: str) -> dict:
+    return {"en": en, "de": de}
+
+
+def _screen(kind: str, title: dict, say: dict, **fields) -> dict:
+    beat = {"kind": kind, "title": title, "say": say, **fields}
+    if "music" in beat:
+        from pianove.phrase import compile_beat
+        compile_beat(beat)
+    return beat
+
+
+def _piece(bars, types, time=(4, 4), tempo=80) -> dict:
+    return {"type": "exercise", "time": list(time), "tempo": tempo, "bars": bars, "types": types}
+
+
+def _starter_steps(title: str, template: str = "blank") -> list:
+    """The first chapter(s) and piece of a new lesson, ready to fill in."""
+    titled = {lang: title for lang in LOCALES}
+    q4 = [["quarter"] * 4]
+    if template == "notes":
+        hand = {"right": {"C4": 1, "D4": 2, "E4": 3, "F4": 4, "G4": 5}}
+        return [{"type": "scene", "title": titled, "beats": [
+            _screen("explain", _t("Where the notes are", "Wo die Noten liegen"),
+                    _t("These are the keys of this lesson. Look at where they lie on the keyboard.",
+                       "Das sind die Tasten dieser Lektion. Schau, wo sie auf der Tastatur liegen."),
+                    mark=["C4", "D4", "E4"], labels=["C4", "D4", "E4"]),
+            _screen("find", _t("Find it", "Finde sie"),
+                    _t("Find C on your piano.", "Finde das C auf deinem Klavier."),
+                    **{"try": ["C4"], "try_say": _t("Play C.", "Spiel das C.")}),
+            _screen("listen", _t("Listen and repeat", "Hör zu und spiel nach"),
+                    _t("Listen first, then play it yourself.", "Hör erst zu, dann spiel es selbst."),
+                    music={"time": [4, 4], "tempo": 76, "bars": [["C4@1", "D4@2", "E4@3", "r"]],
+                           "types": q4},
+                    staff={"clef": "treble", "notes": [], "under": "names"},
+                    **{"try": "play", "try_say": _t("Now you.", "Jetzt du.")}),
+            _screen("hand", _t("Your hand", "Deine Hand"),
+                    _t("Each finger rests on its own key.", "Jeder Finger liegt auf seiner eigenen Taste."),
+                    hand=hand, numbers=True),
+        ]}, _piece([["C4", "D4", "E4", "D4"], ["C4", "E4", "D4", "C4"]], [["quarter"] * 4] * 2)]
+    if template == "melody":
+        first = [["E4@3", "D4@2", "C4@1", "D4@2"], ["E4@3", "E4@3", "E4@3"]]
+        second = [["D4@2", "D4@2", "D4@2"], ["E4@3", "G4@5", "G4@5"]]
+        ty = [["quarter"] * 4, ["quarter", "quarter", "half"]]
+        ty2 = [["quarter", "quarter", "half"], ["quarter", "quarter", "half"]]
+        return [{"type": "scene", "title": titled, "beats": [
+            _screen("listen", _t("The first half", "Die erste Hälfte"),
+                    _t("Listen to the first half of the melody.", "Hör dir die erste Hälfte der Melodie an."),
+                    music={"time": [4, 4], "tempo": 84, "bars": first, "types": ty},
+                    staff={"clef": "treble", "notes": []},
+                    **{"try": "play", "try_say": _t("Now you.", "Jetzt du.")}),
+            _screen("listen", _t("The second half", "Die zweite Hälfte"),
+                    _t("And now the second half.", "Und jetzt die zweite Hälfte."),
+                    music={"time": [4, 4], "tempo": 84, "bars": second, "types": ty2},
+                    staff={"clef": "treble", "notes": []},
+                    **{"try": "play", "try_say": _t("Now you.", "Jetzt du.")}),
+        ]}, _piece([[e.split("@")[0] for e in b] for b in first + second], ty + ty2, tempo=84)]
+    if template == "rhythm":
+        return [{"type": "scene", "title": titled, "beats": [
+            _screen("explain", _t("Counting", "Zählen"),
+                    _t("Music has a steady beat. Count along: one, two, three, four.",
+                       "Musik hat einen gleichmäßigen Schlag. Zähl mit: eins, zwei, drei, vier.")),
+            _screen("listen", _t("Long and short", "Lang und kurz"),
+                    _t("A half note lasts two beats, a quarter note one.",
+                       "Eine halbe Note dauert zwei Schläge, eine Viertelnote einen."),
+                    music={"time": [4, 4], "tempo": 72, "bars": [["C4@1", "C4@1", "E4@3"], ["G4@5", "E4@3", "C4@1"]],
+                           "types": [["quarter", "quarter", "half"], ["half", "quarter", "quarter"]]},
+                    staff={"clef": "treble", "notes": [], "under": "count", "time": [4, 4]},
+                    **{"try": "play", "try_say": _t("Now you, and count along.", "Jetzt du, und zähl mit.")}),
+        ]}, _piece([["C4", "C4", "E4"], ["G4", "E4", "C4"], ["E4", "E4", "G4", "G4"], ["C5"]],
+                   [["quarter", "quarter", "half"], ["half", "quarter", "quarter"], ["quarter"] * 4, ["whole"]],
+                   tempo=72)]
+    return [{"type": "scene", "title": titled, "beats": [
+        _screen("explain", _t("What this lesson is about", "Worum es geht"),
+                _t("", ""))]},
+        _piece([["C4", "D4", "E4", "F4"]], q4)]
+
+
+def new_lesson(title: str, author: str = "", template: str = "blank") -> str:
+    """Create a lesson folder from a template (see TEMPLATES); returns its id."""
     title = str(title).strip() or "Untitled lesson"
     lesson_id = unique_id(slugify(title), _lesson_taken)
     draft = {
@@ -178,7 +242,7 @@ def new_lesson(title: str, author: str = "") -> str:
             "estimated_minutes": 5,
         },
         "strings": {lang: {"title": title, "description": ""} for lang in LOCALES},
-        "steps": _starter_steps(title),
+        "steps": _starter_steps(title, template if template in TEMPLATES else "blank"),
     }
     save_draft(draft)
     return lesson_id

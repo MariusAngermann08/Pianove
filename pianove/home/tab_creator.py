@@ -14,7 +14,7 @@ from pianove.creator_ui import (px, tn, button, Flow, DragScroll, TextBox, ItemR
 _HEADER_H = 64
 _page: dict = {}
 _confirm: dict = {"key": None, "t": 0.0}
-_drafts = {"lesson": "", "course": ""}      # what was typed into the "new" fields
+_drafts = {"lesson": "", "course": "", "template": 1}   # what was typed or picked for a new one
 
 
 def _author() -> str:
@@ -31,7 +31,7 @@ def _toast(text: str, color=None):
 
 def _new_lesson():
     title = _drafts["lesson"].strip() or t("cr_untitled_lesson")
-    lid = cs.new_lesson(title, author=_author())
+    lid = cs.new_lesson(title, author=_author(), template=cs.TEMPLATES[_drafts["template"]])
     _drafts["lesson"] = ""
     from pianove.pages.lesson_editor import open_lesson
     open_lesson(lid)
@@ -133,6 +133,12 @@ def _new_row(which: str, placeholder: str, label: str, on_create, w: int):
 def _fill(box):
     w = _page["inner_w"]
     box.add_child(heading(t("cr_new_lesson")))
+    box.add_child(hint(t("cr_template_hint"), w))
+    from pylay import SegmentedControl
+    box.add_child(SegmentedControl(segments=[t(f"cr_template_{x}") for x in cs.TEMPLATES],
+                                   selected_index=_drafts["template"],
+                                   on_change=lambda k: _drafts.__setitem__("template", k),
+                                   width=1.0, height=px(32)))
     box.add_child(_new_row("lesson", t("cr_lesson_title_ph"), t("cr_create"), _new_lesson, w))
     row = Flow()
     row.add_child(button(t("cr_import"), _import))

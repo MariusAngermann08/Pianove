@@ -162,3 +162,47 @@ def test_two_hands_and_dragging():
     assert starts == [(0.0, 0), (0.0, 1), (2.0, 0), (4.0, 1)]
     m.set_hands(False)
     assert "lh" not in step
+
+
+
+def test_fingers_stay_with_their_notes():
+    step, m = _model([["C4", "E4+G4"]], [["half", "half"]])
+    m.select(0, 1)
+    m.set_finger(3)
+    m.set_finger(5)                          # a chord: the next note without a finger
+    assert step["bars"][0][1] == "E4@3+G4@5"
+    m.transpose(2)                           # moved: the fingers go with it
+    assert step["bars"][0][1] == "F#4@3+A4@5"
+    m.tie()
+    assert step["bars"][0][1] == "F#4@3~+A4@5~"
+    m.clear_fingers(everywhere=True)
+    assert "@" not in "".join(step["bars"][0])
+
+
+def test_suggested_fingering_for_a_scale():
+    names = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"]
+    step, m = _model([names[:4], names[4:]], [["quarter"] * 4, ["quarter"] * 4])
+    m.suggest_fingering()
+    from pianove import exercise_format as ef
+    fingers = [ef.fingers_of(e)[0] for bar in step["bars"] for e in bar]
+    assert fingers[0] == 1 and fingers[-1] == 5 and all(fingers)
+    assert fingers.count(1) == 2                # the thumb passes under once
+
+
+def test_recording_with_a_metronome():
+    from pianove.score_editor import Recorder
+    step, m = _model([[]], [[]])
+    step["tempo"] = 60
+    r = Recorder(m)
+    r.start(now=100.0)                       # one bar of 4/4 to count in: the music at 104
+    assert r.state == "count"
+    r.tick(now=101.0)
+    assert r.count_text() == "2"
+    for i, midi in enumerate((60, 62, 64, 65)):
+        r.key_down(midi, now=104.0 + i + 0.02)
+        r.key_up(midi, now=104.0 + i + 0.9)
+    r.key_down(67, now=108.0)
+    r.tick(now=104.5)
+    assert r.state == "rec"
+    assert r.stop(now=110.2)
+    assert step["bars"][0] == ["C4", "D4", "E4", "F4"] and step["bars"][1][0] == "G4"

@@ -419,6 +419,7 @@ class KeyPicker:
 
     def __init__(self, on_key, decorate=None, lo: int = 48, octaves: int = 3, sound: bool = True):
         self.on_key = on_key
+        self.on_key_up = None             # (midi) when a tapped key is let go
         self.decorate = decorate or (lambda m: (None, None))
         self.lo = lo - lo % 12
         self.octaves = octaves
@@ -515,6 +516,8 @@ class KeyPicker:
             self.held.discard(m)
             if self.sound:
                 _sound(m, False)
+            if self.on_key_up:
+                self.on_key_up(m)
             _dirty.mark()
             return True
         return False
