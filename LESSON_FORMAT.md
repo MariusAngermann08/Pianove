@@ -91,6 +91,16 @@ A scene is a series of **beats**: short screens with text, the keyboard, animate
 | `side` | `"right"` or `"left"`: the hand that plays (default: from `hand`) |
 | `staff` | A staff: `{"clef": "treble"/"bass"/"grand", "key": 1, "time": [3, 4], "notes": […], "under": "names"/"count"}`. `key` counts sharps (positive) or flats (negative) |
 
+**A screen's phrase.** The lesson editor writes a screen's music once, as `music` (the same form as an exercise below, with rhythm, both hands and fingers), and fills in what the player reads from it: `play`, plus
+
+| Field | Meaning |
+|-------|---------|
+| `rhythm` | When each played event starts and how long it lasts, in beats: `[[0, 1], [1, 2]]`. Without it, one event per beat |
+| `left` | The keys the left hand plays (a phrase for both hands) |
+| `kind` | For the editor only: `explain`, `listen`, `find` or `hand` |
+
+`music`, `kind`, `repeat` and `staff_own` are the editor's own; the player ignores them.
+
 #### `exercise`: playing from sheet music
 
 ```json
@@ -112,7 +122,7 @@ The learner plays the bars section by section, then all at once.
 | `time` | Time signature, e.g. `[4, 4]`, `[3, 4]`, `[6, 8]` |
 | `tempo` | Quarter notes per minute (default 80) |
 | `clef` | `"treble"` (default) or `"bass"`, for an exercise with one staff |
-| `bars` | Per bar: notes (`"C4"`), chords (`"C4+E4+G4"`) and rests (`"r"`). A note ending in `~` is tied to the same note in the next entry (`"C4~"`, or `"C4~+E4"` in a chord) |
+| `bars` | Per bar: notes (`"C4"`), chords (`"C4+E4+G4"`) and rests (`"r"`). A note ending in `~` is tied to the same note in the next entry (`"C4~"`, or `"C4~+E4"` in a chord); `@` gives its finger (`"C4@1"`, `"C4@1+E4@3+G4@5"`, `"C4@1~"`) |
 | `types` | Optional. The length of every entry: `whole`, `half`, `quarter`, `eighth`, `sixteenth`, `thirty_second`; `dotted_…` (1½ times as long) or `triplet_…` (two thirds: three triplet eighths take one quarter). Without it, a bar's entries share the bar evenly (how older lessons are written) |
 | `lh` | Optional. The left hand, `{"bars", "types"}` like the right: the exercise is then shown on a grand staff (treble and bass) and played with both hands |
 
