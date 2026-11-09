@@ -24,7 +24,7 @@ def test_upright_window_gets_a_bigger_scale(monkeypatch):
 def test_a_desktop_window_keeps_the_app_scale(monkeypatch):
     monkeypatch.setattr(ctx, "ui", SimpleNamespace(width=1280, height=800))
     assert not ui.apply_page_scale()
-    assert abs(scale.UI_SCALE - 1.0) < 1e-6
+    assert abs(scale.UI_SCALE - min(1280 / 1024, 800 / 768)) < 1e-6     # the app's own
 
 
 def test_a_pinned_scale_is_left_alone(monkeypatch):
