@@ -375,7 +375,7 @@
   "ed_staff_right": "Right hand",
   "ed_staff_left": "Left hand",
   "ed_tie": "Tie",
-  "ed_exercise_hint_touch": "The learner plays this music from the staff, section by section, then all at once. Tap a note to select it, drag it up or down to change it, and tap keys below to add notes.",
+  "ed_exercise_hint_touch": "The learner plays this music from the staff, section by section, then all at once. Tap a note to select it, hold it and drag up or down to change it, and tap keys below to add notes.",
   "ed_score_hint_touch": "New notes go in after the selection (blue). A bar that gets too full passes its last notes on to the next bar.",
   "ed_problem_lh_bar_too_full": "left hand: bar {bar} has too many notes",
   "ed_problem_lh_bad_types": "left hand: the note values don't match the notes",

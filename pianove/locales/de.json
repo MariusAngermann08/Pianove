@@ -375,7 +375,7 @@
   "ed_staff_right": "Rechte Hand",
   "ed_staff_left": "Linke Hand",
   "ed_tie": "Bindebogen",
-  "ed_exercise_hint_touch": "Man spielt diese Musik nach Noten, Abschnitt für Abschnitt und dann am Stück. Tippe eine Note an, um sie auszuwählen, zieh sie hoch oder runter, um sie zu ändern, und tippe unten Tasten an, um Noten hinzuzufügen.",
+  "ed_exercise_hint_touch": "Man spielt diese Musik nach Noten, Abschnitt für Abschnitt und dann am Stück. Tippe eine Note an, um sie auszuwählen, halte sie und zieh hoch oder runter, um sie zu ändern, und tippe unten Tasten an, um Noten hinzuzufügen.",
   "ed_score_hint_touch": "Neue Noten kommen hinter die Auswahl (blau). Wird ein Takt zu voll, wandern seine letzten Noten in den nächsten.",
   "ed_problem_lh_bar_too_full": "linke Hand: Takt {bar} hat zu viele Noten",
   "ed_problem_lh_bad_types": "linke Hand: die Notenwerte passen nicht zu den Noten",

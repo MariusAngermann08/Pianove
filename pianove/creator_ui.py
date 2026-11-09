@@ -68,10 +68,19 @@ def font(size: int, bold: bool = False) -> pygame.font.Font:
 _page_scaled = False
 
 
+def _platform_scale() -> bool:
+    """The platform sizes the UI itself (PyLay's scale pinned by a phone or tablet build,
+    which draws at a size made for the device): the editors leave it alone."""
+    return getattr(_scale, "_FIXED_SCALE", None) is not None
+
+
 def apply_page_scale() -> bool:
     """Set the editors' scale for this window; True if it differs from the app's."""
     global _page_scaled
     import pianove.context as ctx
+    if _platform_scale():
+        _page_scaled = False
+        return False
     w = ctx.ui.width if ctx.ui else 1024
     h = ctx.ui.height if ctx.ui else 768
     _scale.set_window_size(w, h)
@@ -92,14 +101,14 @@ def restore_scale():
     """Back to the app's own scale (before another page is built)."""
     global _page_scaled
     import pianove.context as ctx
-    if ctx.ui:
+    if ctx.ui and not _platform_scale():
         _scale.set_window_size(ctx.ui.width, ctx.ui.height)
     _page_scaled = False
 
 
 def is_touch_layout() -> bool:
     """The editors are laid out for a phone or tablet (bigger targets, no keyboard hints)."""
-    return _page_scaled
+    return _page_scaled or _platform_scale()
 
 
 def text_w(text: str, size: int, bold: bool = True) -> int:
