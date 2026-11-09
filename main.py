@@ -11,6 +11,7 @@ import pianove.context as ctx
 from pianove.state import midi_panel, storage
 from pianove.i18n import language_state
 from pianove.pages import language, name, welcome, experience, midi, ready, home, lesson, midi_setup, song_setup, song_score, boot
+from pianove.pages import lesson_editor, course_editor
 
 WIDTH, HEIGHT = 1024, 768
 
@@ -62,6 +63,8 @@ router = PageRouter(
         "song_setup":  song_setup.build,
         "midi_setup":  midi_setup.build,
         "song_score":  song_score.build,
+        "lesson_editor": lesson_editor.build,
+        "course_editor": course_editor.build,
     },
     initial_page="boot",
     anchor="top_left",

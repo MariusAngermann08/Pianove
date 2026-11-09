@@ -1,140 +1,141 @@
 # Pianove Lesson & Course Format
 
-Pianove uses a folder-based bundle format for lessons and courses. The format is designed to be human-readable, diff-friendly, and Git-friendly so that the community can study, share, and improve content freely.
+Lessons and courses are plain folders of JSON files: readable, diff-friendly and easy to share. You can write them by hand, or make them in the app with **Creator Mode** (Settings → Content Creator → Creator Mode, then the **Create** tab).
 
 ---
 
-## Directory Layout
+## Where they live
 
 ```
-pianove/lessons/          ← built-in lessons, read-only, versioned with the app
-~/.pianove/packages/      ← user-installed packages (lessons & courses)
+pianove/lessons/<id>/                 built-in lessons (ship with the app, read-only)
+pianove/courses/<id>/                 built-in courses
+~/.pianove/packages/lessons/<id>/     your lessons: made in the editor or imported
+~/.pianove/packages/courses/<id>/     your courses
 ```
 
-A `.pianove-pkg` file is a renamed `.zip` of a lesson or course folder. It can be imported via the in-app package manager or the file picker.
+Both places are scanned every time the Lessons tab is shown, so a lesson saved in your folder appears straight away. A lesson in your folder with the same id as a built-in one replaces it ("patch"). Progress is stored by lesson id, which is why the editor never renames a lesson and duplicates a built-in lesson under a new id (`welcome_copy`).
 
 ---
 
-## Lesson Bundle
-
-Each lesson lives in its own folder:
+## Lesson folder
 
 ```
-lessons/welcome/
-  meta.json          ← identity, authorship, difficulty, tags
-  en.json            ← localized strings (title, descriptions, hints)
-  de.json            ← additional locale files follow the same pattern
-  steps.json         ← ordered list of step blocks
-  assets/
-    notation_1.xml   ← MusicXML snippets rendered by PyLute
-    audio_1.ogg      ← optional backing audio
+lessons/waltz_for_mia/
+  meta.json     identity, author, difficulty, tags
+  en.json       title and description in English
+  de.json       … in German (one file per language)
+  steps.json    what the lesson does, step by step
 ```
 
 ### meta.json
 
 ```json
 {
-  "id": "welcome",
+  "id": "waltz_for_mia",
   "version": "1.0.0",
-  "author": "Pianove",
+  "author": "Mia",
   "difficulty": "beginner",
-  "tags": ["intro", "basics"],
+  "tags": ["melody", "rhythm"],
   "locales": ["en", "de"],
-  "estimated_minutes": 5
+  "estimated_minutes": 5,
+  "based_on": "simple_waltz"
 }
+```
+
+`id` must match the folder name (lowercase letters, digits and `_`). `difficulty` is `beginner`, `intermediate` or `advanced`. `based_on` is written by **Duplicate** and is optional.
+
+### en.json / de.json
+
+```json
+{ "title": "Waltz for Mia", "description": "A gentle waltz in three-four time." }
 ```
 
 ### steps.json
 
-A step is a typed block. The renderer dispatches on `type`:
+A list of steps, played in order. Two types exist; a lesson should end with an exercise.
 
-```json
-[
-  {
-    "type": "text",
-    "content_key": "step1_text"
-  },
-  {
-    "type": "notation",
-    "file": "assets/notation_1.xml",
-    "caption_key": "step1_caption"
-  },
-  {
-    "type": "exercise",
-    "notes": ["C4", "E4", "G4"],
-    "caption_key": "step1_exercise"
-  },
-  {
-    "type": "quiz",
-    "question_key": "step1_question",
-    "options_keys": ["opt_a", "opt_b", "opt_c"],
-    "correct": 0
-  }
-]
-```
+#### `scene`: explaining something
 
-`content_key`, `caption_key`, etc. are looked up in the locale file for the active language, falling back to `en.json`.
-
-### Step types
-
-| Type | Description |
-|------|-------------|
-| `text` | Explanatory prose, supports inline bold/italic via simple markup |
-| `notation` | Sheet music rendered by PyLute from a MusicXML asset file |
-| `exercise` | Interactive play-along — user must play specified notes on MIDI keyboard |
-| `quiz` | Multiple-choice question with immediate feedback |
-
----
-
-## Course Bundle
-
-A course is an ordered collection of lessons:
-
-```
-courses/beginner_path/
-  meta.json          ← course identity and lesson order
-  en.json
-  de.json
-```
-
-### meta.json
+A scene is a series of **beats**: short screens with text, the keyboard, animated hands and a staff. Texts are written in every language right here.
 
 ```json
 {
-  "id": "beginner_path",
-  "version": "1.0.0",
-  "author": "Pianove",
-  "difficulty": "beginner",
-  "lessons": [
-    "welcome",
-    "c_major_scale",
-    "reading_notes",
-    "first_melody"
+  "type": "scene",
+  "title": {"en": "The waltz", "de": "Der Walzer"},
+  "beats": [
+    {
+      "title": {"en": "ONE two three", "de": "EINS zwei drei"},
+      "say": {"en": "A waltz counts three.", "de": "Ein Walzer zählt bis drei."},
+      "play": ["E4", "G4", "G4", "C4+E4+G4"],
+      "tempo": 100,
+      "try": "play",
+      "try_say": {"en": "Now you!", "de": "Jetzt du!"}
+    }
   ]
 }
 ```
 
-Lessons referenced here can be bundled inside the course zip or declared as dependencies resolved from already-installed packages.
+| Field | Meaning |
+|-------|---------|
+| `title`, `say`, `try_say` | Texts: `{"en": …, "de": …}` |
+| `play` | Notes Pianove plays, one after another. A chord is `"C4+E4+G4"` |
+| `tempo` | Beats per minute for `play` (default 76) |
+| `fingers` | A finger (1–5) for each note of `play`; `"1+3+5"` for a chord |
+| `accent` | Stress every n-th note (`3` for a waltz) |
+| `velocities` | Loudness (1–127) for each note of `play` |
+| `try` | What the learner plays afterwards: `"play"` (the same notes) or a list of notes |
+| `mark` | Keys to highlight |
+| `labels` | Key names to show: a list of keys, or `"C"` (every C), `"white"`, `"hand"` (keys under the fingers) |
+| `hand` | Where the hands rest: `{"right": {"C4": 1, "D4": 2}, "left": {…}}` |
+| `numbers` | `true`: show finger numbers on the hands |
+| `side` | `"right"` or `"left"`: the hand that plays (default: from `hand`) |
+| `staff` | A staff: `{"clef": "treble"/"bass"/"grand", "key": 1, "time": [3, 4], "notes": […], "under": "names"/"count"}`. `key` counts sharps (positive) or flats (negative) |
+
+#### `exercise`: playing from sheet music
+
+```json
+{
+  "type": "exercise",
+  "time": [3, 4],
+  "bars": [["E4", "G4", "G4"], ["F4", "A4", "A4"]]
+}
+```
+
+The learner plays the bars section by section, then all at once. One note at a time (no chords); a bar's notes share it evenly.
+
+### Notes
+
+A note is a letter, an optional `#` or `b`, and an octave: `C4` is middle C, `F#4`, `Bb3`. German *H* is written `B`.
 
 ---
 
-## Package Manager
+## Course folder
 
-- Import source: local file picker (`.pianove-pkg` zip) — v1
-- Future: registry index at a hosted `index.json` (GitHub releases or static hosting)
-- No server required for the registry — a community-maintained `index.json` in a public repo is sufficient
+```
+courses/my_course/
+  meta.json     {"id", "version", "author", "difficulty", "lessons": ["welcome", "waltz_for_mia"]}
+  en.json       {"title", "description"}
+  de.json
+```
 
-### Package resolution order
-
-1. Built-in (`pianove/lessons/`, `pianove/courses/`)
-2. User-installed (`~/.pianove/packages/`)
-3. User-installed packages shadow built-ins of the same `id` — allows community patches
+A course lists lessons by id, in order. They can be built-in or your own.
 
 ---
 
-## Design Principles
+## Packages (`.pianove-pkg`)
 
-- **Human-readable**: JSON + MusicXML are plain text — readable, diffable, Git-friendly
-- **Localizable**: Every user-facing string lives in locale files, following the same pattern as the rest of the app
-- **Forkable**: Anyone can copy a lesson folder, edit it, and share the zip or submit a PR
-- **Extensible**: New step types can be added without breaking existing lessons — unknown types are skipped with a fallback UI
+A package is a zip file:
+
+```
+pianove-package.json        {"format": 1, "kind": "course", "id": "my_course"}
+courses/my_course/…
+lessons/waltz_for_mia/…     your own lessons the course uses (built-in ones are left out)
+```
+
+**Export** in the Create tab writes one to your Downloads folder; **Import package…** installs one into `~/.pianove/packages/`. Import also accepts a zip of a single lesson folder. Packages larger than 20 MB, or with files outside their folders, are refused.
+
+---
+
+## The editor's check
+
+The editor lists problems as you work (they never stop you saving): unknown notes, a missing translation, a fingering that doesn't match the notes, a bar with too many notes, a lesson that doesn't end with an exercise. Every built-in lesson passes this check (`tests/test_creator_store.py`).

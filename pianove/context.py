@@ -41,3 +41,9 @@ practice_bpm:       int         = 80
 practice_clef:      str         = "treble"
 practice_last_hits:  int        = 0      # filled when session completes
 practice_last_total: int        = 0
+
+# Creator Mode: the lesson and course being edited, and where "Back" in the lesson player
+# goes while a lesson is being tested from the editor (None: not a test run)
+editor_lesson_id:   str | None = None
+editor_course_id:   str | None = None
+lesson_test_return: str | None = None

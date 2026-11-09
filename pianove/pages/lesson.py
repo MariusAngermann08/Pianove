@@ -447,7 +447,10 @@ def _nav_back():
     ctx.lesson_section_idx = 0
     ctx.lesson_completed   = False
     ctx.lesson_phase       = "practice"
-    if ctx.practice_mode:
+    if ctx.lesson_test_return:          # a test run from the lesson editor: back to it
+        page, ctx.lesson_test_return = ctx.lesson_test_return, None
+        ctx.router.navigate(page, "left")
+    elif ctx.practice_mode:
         ctx.practice_mode  = False
         ctx.practice_bars  = None
         ctx.router.navigate("home", "left")
@@ -1999,7 +2002,7 @@ def build():
             ctx.lesson_completed   = False
             ctx.router.refresh()
         else:
-            if not ctx.current_song_id:
+            if not ctx.current_song_id and not ctx.lesson_test_return:   # a test run isn't progress
                 mark_complete(lesson_id)
                 record_session(lesson_id)
             elif ctx.path_step:
