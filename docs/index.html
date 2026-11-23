@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
@@ -17,7 +17,7 @@
   <a class="nav-logo" href="index.html">Pianove</a>
   <div class="nav-links">
     <a href="story.html">Story</a>
-    <a href="docs.html">Pianove</a>
+    <a href="docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
         API Reference
@@ -62,10 +62,11 @@
       <p class="hero-eyebrow">FSFE · Youth Hacking For Freedom 2026</p>
       <h1 class="hero-title">Pianove</h1>
       <p class="hero-desc">
-        Free, open-source piano learning software. Practice any piece from a MusicXML file
-        on a MIDI keyboard — fully offline, no account required, no subscription.
+        Free, open-source piano learning software. Lessons that explain with animated hands,
+        any MusicXML piece turned into a step-by-step learning path, on a MIDI keyboard or
+        an acoustic piano through the microphone. Fully offline, no account, no subscription.
       </p>
-      <p class="hero-meta">Python 3.x · pygame · GPL v3</p>
+      <p class="hero-meta">Python 3.10+ · Windows · macOS · Linux · GPL v3</p>
       <div class="hero-cta">
         <a href="docs/quickstart.html" class="btn btn-primary">Get Started</a>
         <a href="story.html" class="btn btn-outline">Read the Story</a>
@@ -76,24 +77,32 @@
       <div class="ss-wheel" id="ss-wheel">
         <div class="ss-wheel-track">
           <figure class="ss-slide ss-slide--active">
-            <img src="img/ss-home.png" alt="Pianove — home dashboard">
-            <figcaption>Home dashboard</figcaption>
+            <img src="img/ss-home.png" alt="Pianove: Home: what's next, your streak and the week">
+            <figcaption>Home: what's next, your streak and the week</figcaption>
           </figure>
           <figure class="ss-slide">
-            <img src="img/ss-onboarding-language.png" alt="Pianove — language setup">
-            <figcaption>Onboarding — choose your language</figcaption>
+            <img src="img/ss-lesson-theory.png" alt="Pianove: Lessons explain with animated hands">
+            <figcaption>Lessons explain with animated hands</figcaption>
           </figure>
           <figure class="ss-slide">
-            <img src="img/ss-onboarding-midi.png" alt="Pianove — MIDI keyboard setup">
-            <figcaption>Onboarding — connect your MIDI keyboard</figcaption>
+            <img src="img/ss-lesson.png" alt="Pianove: Then you play: the music waits for the right key">
+            <figcaption>Then you play: the music waits for the right key</figcaption>
           </figure>
           <figure class="ss-slide">
-            <img src="img/ss-lesson.png" alt="Pianove — lesson in progress">
-            <figcaption>Interactive lesson view</figcaption>
+            <img src="img/ss-song-path.png" alt="Pianove: Any MusicXML file becomes a learning path">
+            <figcaption>Any MusicXML file becomes a learning path</figcaption>
           </figure>
           <figure class="ss-slide">
-            <img src="img/ss-song-score.png" alt="Pianove — imported score view">
-            <figcaption>Score viewer — Für Elise</figcaption>
+            <img src="img/ss-song-play.png" alt="Pianove: Both hands, with the fingering worked out">
+            <figcaption>Both hands, with the fingering worked out</figcaption>
+          </figure>
+          <figure class="ss-slide">
+            <img src="img/ss-song-score.png" alt="Pianove: The full score, typeset by PyLute">
+            <figcaption>The full score, typeset by PyLute</figcaption>
+          </figure>
+          <figure class="ss-slide">
+            <img src="img/ss-lesson-editor.png" alt="Pianove: Creator Mode: write your own lessons">
+            <figcaption>Creator Mode: write your own lessons</figcaption>
           </figure>
         </div>
         <div class="ss-wheel-dots" id="ss-dots">
@@ -102,6 +111,8 @@
           <button class="ss-dot" aria-label="Slide 3"></button>
           <button class="ss-dot" aria-label="Slide 4"></button>
           <button class="ss-dot" aria-label="Slide 5"></button>
+          <button class="ss-dot" aria-label="Slide 6"></button>
+          <button class="ss-dot" aria-label="Slide 7"></button>
         </div>
       </div>
     </div>
@@ -116,17 +127,69 @@
   </div>
   <div class="landing-highlight">
     <div class="landing-highlight-value">Any piece</div>
-    <div class="landing-highlight-label">Import any MusicXML file and practice immediately</div>
+    <div class="landing-highlight-label">Import any MusicXML file and learn it step by step</div>
   </div>
   <div class="landing-highlight">
-    <div class="landing-highlight-value">Offline</div>
-    <div class="landing-highlight-label">No internet required after installation</div>
+    <div class="landing-highlight-value">Any piano</div>
+    <div class="landing-highlight-label">USB MIDI keyboard, or an acoustic piano through the microphone</div>
   </div>
   <div class="landing-highlight">
     <div class="landing-highlight-value">GPL v3</div>
     <div class="landing-highlight-label">Fully open source — read, modify, redistribute</div>
   </div>
 </div>
+
+<!-- ── Feature tour ───────────────────────────────────────────────────────── -->
+<section class="tour">
+  <div class="tour-inner">
+    <p class="landing-projects-label">What it does</p>
+    <div class="tour-row">
+      <div class="tour-text">
+        <p class="tour-eyebrow">Lessons</p>
+        <h2>Understand it first, then play it.</h2>
+        <p>Each lesson starts with a short animated scene: a sentence, the keyboard, a staff and a hand that shows how it's played. Then you play the piece from the staff, section by section, until the final performance in tempo.</p>
+        <a href="docs/lessons.html" class="story-link">Lessons &amp; Courses →</a>
+      </div>
+      <figure class="tour-shot"><img src="img/ss-lesson-theory.png" alt="Understand it first, then play it." loading="lazy"></figure>
+    </div>
+    <div class="tour-row tour-row--flip">
+      <div class="tour-text">
+        <p class="tour-eyebrow">Songs</p>
+        <h2>Your piece, in steps you can manage.</h2>
+        <p>Import any MusicXML file. Pianove cuts it into parts, tells you what's new in each (chords, leaps, black keys, hands together) and takes you through right hand, left hand and both, up to the whole piece, with up to three stars per step.</p>
+        <a href="docs/songs.html" class="story-link">Songs &amp; Learning Path →</a>
+      </div>
+      <figure class="tour-shot"><img src="img/ss-song-path.png" alt="Your piece, in steps you can manage." loading="lazy"></figure>
+    </div>
+    <div class="tour-row">
+      <div class="tour-text">
+        <p class="tour-eyebrow">Hands</p>
+        <h2>Fingering, worked out for you.</h2>
+        <p>Animated hands show which finger plays every note. The fingering is computed for each passage with the ergonomic rules piano teachers use: thumb under, long fingers on black keys, no needless stretches.</p>
+        <a href="docs/lessons.html#hands" class="story-link">Hands and fingering →</a>
+      </div>
+      <figure class="tour-shot"><img src="img/ss-song-play.png" alt="Fingering, worked out for you." loading="lazy"></figure>
+    </div>
+    <div class="tour-row tour-row--flip">
+      <div class="tour-text">
+        <p class="tour-eyebrow">Any piano</p>
+        <h2>A MIDI keyboard, or the piano you already have.</h2>
+        <p>Plug in a USB keyboard and Pianove finds it and its range. No cable? Hear My Piano listens to an acoustic piano through the microphone and works out the keys you play, on your own computer.</p>
+        <a href="docs/midi-setup.html" class="story-link">Keyboard &amp; Microphone →</a>
+      </div>
+      <figure class="tour-shot"><img src="img/ss-onboarding-midi.png" alt="A MIDI keyboard, or the piano you already have." loading="lazy"></figure>
+    </div>
+    <div class="tour-row">
+      <div class="tour-text">
+        <p class="tour-eyebrow">Creator Mode</p>
+        <h2>Write lessons. Share them as one file.</h2>
+        <p>A full lesson editor with live preview, a score editor, MusicXML import, translations and a course editor. Export a lesson or a whole course as a .pianove-pkg and anyone can import it.</p>
+        <a href="docs/creator.html" class="story-link">Creator Mode →</a>
+      </div>
+      <figure class="tour-shot"><img src="img/ss-lesson-editor.png" alt="Write lessons. Share them as one file." loading="lazy"></figure>
+    </div>
+  </div>
+</section>
 
 <!-- ── Projects ───────────────────────────────────────────────────────────── -->
 <section class="landing-projects-section">
@@ -152,7 +215,7 @@
           <span class="landing-project-type">Library</span>
         </div>
         <p class="landing-project-desc">
-          A complete UI framework for pygame — 21 widgets, spring-based physics animations,
+          A complete UI framework for pygame — 29 widgets, spring-based physics animations,
           reactive state, and a theming system with dark and light mode.
         </p>
         <a href="pylay.html" class="story-link">API Reference →</a>
@@ -164,10 +227,11 @@
           <span class="landing-project-type">Application</span>
         </div>
         <p class="landing-project-desc">
-          The application built on top of both libraries. MIDI keyboard input, real-time note
-          detection, 16 built-in lessons, and a built-in synthesiser — entirely offline.
+          The application built on both libraries: 16 lessons in two courses, learning paths for
+          your own songs, sight-reading practice, a lesson editor, MIDI or microphone input and a
+          sampled grand piano — entirely offline.
         </p>
-        <a href="docs.html" class="story-link">Documentation →</a>
+        <a href="docs.html" class="story-link">User Guide →</a>
       </div>
 
     </div>
@@ -179,8 +243,8 @@
   <div class="cta-inner">
     <h2>Start playing in five minutes.</h2>
     <p>
-      Clone the repository, install pygame, and run <code>python main.py</code>.
-      No account, no setup beyond Python and a MIDI keyboard.
+      Clone the repository, run <code>pip install -r requirements.txt</code> and
+      <code>python main.py</code>. No account, nothing to sign up for.
     </p>
     <div class="cta-buttons">
       <a href="docs/quickstart.html" class="btn btn-primary">Get Started</a>

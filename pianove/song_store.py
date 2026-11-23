@@ -156,7 +156,7 @@ def _parse_musicxml(filepath: str) -> dict:
     work_el  = _find(root, "work")
     id_el    = _find(root, "identification")
     _fallback_title = os.path.splitext(os.path.basename(filepath))[0]
-    title    = (_text(work_el, "work-title") or _text(root, "movement-title") or _fallback_title)
+    title    = _text(work_el, "work-title") or _text(root, "movement-title") or ""
     composer = ""
     if id_el is not None:
         for c in _findall(id_el, "creator"):
@@ -164,8 +164,8 @@ def _parse_musicxml(filepath: str) -> dict:
                 composer = c.text.strip()
                 break
     credit_title, credit_composer = _credit_meta(root)
-    if title == "Untitled" and credit_title:
-        title = credit_title
+    if not title or title == "Untitled":       # MuseScore often keeps the title only in a credit
+        title = credit_title or title or _fallback_title
     composer = composer or credit_composer
 
     # First part only

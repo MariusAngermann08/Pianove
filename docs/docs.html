@@ -1,14 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pianove — Documentation</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/docs.css">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pianove Guide — Documentation</title>
+  <meta name="description" content="How to install, set up and use Pianove: lessons, songs, the learning path, the microphone, Creator Mode and the lesson format.">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -16,7 +15,7 @@
   <a class="nav-logo" href="index.html">Pianove</a>
   <div class="nav-links">
     <a href="story.html">Story</a>
-    <a href="docs.html" class="active">Pianove</a>
+    <a href="docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -39,76 +38,99 @@
 <div class="overview-content">
   <div class="overview-header">
     <div>
-      <p class="overview-eyebrow">Reference · v1.0</p>
-      <h1>Pianove Documentation</h1>
-      <p class="overview-desc">Everything you need to install, configure, and use Pianove — a free, fully offline piano learning application. No account, no subscription, no internet required.</p>
+      <p class="overview-eyebrow">The Pianove Guide</p>
+      <h1>Learn piano with Pianove</h1>
+      <p class="overview-desc">How to install it, connect a keyboard or an acoustic piano, and get the most out of the lessons, your own songs and the sight-reading practice, plus how to write lessons of your own.</p>
       <div class="overview-btn-group">
         <a href="docs/quickstart.html" class="btn btn-primary">Quick Start →</a>
-        <a href="docs/installation.html" class="btn btn-outline">Full Installation Guide</a>
+        <a href="docs/installation.html" class="btn btn-outline">Installation</a>
       </div>
     </div>
     <div class="overview-meta-box">
-      <div class="overview-meta-box-label">Specification</div>
+      <div class="overview-meta-box-label">At a glance</div>
       <div class="overview-meta">
-        <div class="overview-meta-row"><span>Platform</span><span>Windows · macOS · Linux</span></div>
+        <div class="overview-meta-row"><span>Platforms</span><span>Windows · macOS · Linux</span></div>
         <div class="overview-meta-row"><span>Python</span><span>3.10 +</span></div>
-        <div class="overview-meta-row"><span>Dependencies</span><span>pygame, pygame.freetype</span></div>
-        <div class="overview-meta-row"><span>MIDI</span><span>Any class-compliant USB keyboard</span></div>
-        <div class="overview-meta-row"><span>License</span><span>GPL v3</span></div>
-        <div class="overview-meta-row"><span>Network</span><span>Fully offline</span></div>
+        <div class="overview-meta-row"><span>Input</span><span>USB MIDI · microphone (beta)</span></div>
+        <div class="overview-meta-row"><span>Content</span><span>16 lessons · any MusicXML</span></div>
+        <div class="overview-meta-row"><span>Languages</span><span>English · Deutsch</span></div>
+        <div class="overview-meta-row"><span>License</span><span>GPL v3 · fully offline</span></div>
       </div>
     </div>
   </div>
 
-  <div class="start-here-banner">
-    <div>
-      <h3>New to Pianove?</h3>
-      <p>The Quick Start gets you installed and playing in under five minutes — no account, no subscription, fully offline.</p>
-    </div>
-    <a href="docs/quickstart.html" class="btn btn-primary" style="white-space:nowrap">Quick Start →</a>
+  <div class="guide-cards">
+    <a class="guide-card" href="docs/lessons.html">
+      <div class="guide-card-img"><img src="img/ss-lesson-theory.png" alt="" loading="lazy"></div>
+      <div class="guide-card-body"><h3>Lessons &amp; Courses</h3><p>Animated theory, then a piece to play, section by section.</p></div>
+    </a>
+    <a class="guide-card" href="docs/songs.html">
+      <div class="guide-card-img"><img src="img/ss-song-path.png" alt="" loading="lazy"></div>
+      <div class="guide-card-body"><h3>Songs &amp; Learning Path</h3><p>Any MusicXML file, cut into small steps up to the whole piece.</p></div>
+    </a>
+    <a class="guide-card" href="docs/midi-setup.html">
+      <div class="guide-card-img"><img src="img/ss-onboarding-midi.png" alt="" loading="lazy"></div>
+      <div class="guide-card-body"><h3>Keyboard &amp; Microphone</h3><p>USB MIDI, or an acoustic piano through the microphone.</p></div>
+    </a>
+    <a class="guide-card" href="docs/practice.html">
+      <div class="guide-card-img"><img src="img/ss-practice.png" alt="" loading="lazy"></div>
+      <div class="guide-card-body"><h3>Sight-Reading Practice</h3><p>Fresh exercises for your clef, key, level and tempo.</p></div>
+    </a>
+    <a class="guide-card" href="docs/progress.html">
+      <div class="guide-card-img"><img src="img/ss-home.png" alt="" loading="lazy"></div>
+      <div class="guide-card-body"><h3>Progress &amp; Achievements</h3><p>Streaks, practice time and achievements, offline.</p></div>
+    </a>
+    <a class="guide-card" href="docs/creator.html">
+      <div class="guide-card-img"><img src="img/ss-lesson-editor.png" alt="" loading="lazy"></div>
+      <div class="guide-card-body"><h3>Creator Mode</h3><p>Write lessons and courses and share them as one file.</p></div>
+    </a>
   </div>
 
   <div class="category-grid">
     <div class="category-group">
       <div class="category-group-header">Getting Started</div>
       <ul class="category-link-list">
-        <li><a href="docs/quickstart.html">Quick Start <span>Install and launch Pianove</span></a></li>
-        <li><a href="docs/requirements.html">System Requirements <span>Python, pygame, MIDI hardware</span></a></li>
-        <li><a href="docs/installation.html">Installation <span>Full step-by-step guide</span></a></li>
+        <li><a href="docs/quickstart.html">Quick Start</a></li>
+        <li><a href="docs/requirements.html">System Requirements</a></li>
+        <li><a href="docs/installation.html">Installation</a></li>
       </ul>
     </div>
     <div class="category-group">
-      <div class="category-group-header">Using Pianove</div>
+      <div class="category-group-header">Playing</div>
       <ul class="category-link-list">
-        <li><a href="docs/midi-setup.html">MIDI Setup <span>Connect and configure your keyboard</span></a></li>
-        <li><a href="docs/lessons.html">Built-in Lessons <span>16 lessons, beginner to intermediate</span></a></li>
-        <li><a href="docs/musicxml.html">Importing MusicXML <span>Practice any piece you find</span></a></li>
+        <li><a href="docs/midi-setup.html">Keyboard &amp; Microphone</a></li>
+        <li><a href="docs/lessons.html">Lessons &amp; Courses</a></li>
+        <li><a href="docs/songs.html">Songs &amp; Learning Path</a></li>
+        <li><a href="docs/musicxml.html">Importing MusicXML</a></li>
+        <li><a href="docs/practice.html">Sight-Reading Practice</a></li>
       </ul>
     </div>
     <div class="category-group">
-      <div class="category-group-header">Features</div>
+      <div class="category-group-header">Your App</div>
       <ul class="category-link-list">
-        <li><a href="docs/progress.html">Progress &amp; Statistics <span>Streaks, accuracy, weekly view</span></a></li>
-        <li><a href="docs/synthesiser.html">Built-in Synthesiser <span>FluidSynth · soundfont bundled</span></a></li>
-        <li><a href="docs/settings.html">Settings &amp; Language <span>English / German, theme, device</span></a></li>
+        <li><a href="docs/progress.html">Progress &amp; Achievements</a></li>
+        <li><a href="docs/synthesiser.html">Piano Sound</a></li>
+        <li><a href="docs/settings.html">Settings</a></li>
+      </ul>
+    </div>
+    <div class="category-group">
+      <div class="category-group-header">Making Lessons</div>
+      <ul class="category-link-list">
+        <li><a href="docs/creator.html">Creator Mode</a></li>
+        <li><a href="docs/lesson-format.html">Lesson &amp; Course Format</a></li>
       </ul>
     </div>
     <div class="category-group category-group--dev">
-      <div class="category-group-header">For Developers</div>
+      <div class="category-group-header">Libraries</div>
       <ul class="category-link-list">
-        <li><a href="docs/lesson-format.html">Lesson File Format <span>Write your own lesson courses</span></a></li>
-        <li><a href="pylute.html">PyLute Library Reference <span>Notation renderer API ↗</span></a></li>
-        <li><a href="pylay.html">PyLay Library Reference <span>UI framework API ↗</span></a></li>
+        <li><a href="pylute.html">PyLute API Reference <span>Notation renderer ↗</span></a></li>
+        <li><a href="pylay.html">PyLay API Reference <span>UI framework ↗</span></a></li>
       </ul>
     </div>
   </div>
 </div>
 </div>
-
-<footer>
-  <span>Marius Angermann · 2026</span>
-  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span>
-</footer>
-<script src="js/landing.js"></script>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="js/landing.js"></script><script src="js/docs.js"></script>
 </body>
 </html>
