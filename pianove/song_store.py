@@ -9,8 +9,8 @@ _FILES_DIR  = os.path.join(_STORE_DIR, "files")
 _INDEX_FILE = os.path.join(_STORE_DIR, "index.json")
 
 # Difficulty heuristic thresholds (avg notes/bar after range weighting)
-_DIFF_EASY   = 3.5
-_DIFF_MEDIUM = 6.0
+_DIFF_EASY   = 2.0
+_DIFF_MEDIUM = 3.6
 
 # MusicXML type name → beat duration (in quarter-note units)
 _TYPE_BEATS = {
@@ -429,24 +429,67 @@ def _bar_pitches(bar) -> list[str]:
     return out
 
 
-def _compute_difficulty(bars_rh: list[list[str]], bars_lh: list[list[str]]) -> str:
-    all_notes = [p for bar in bars_rh + bars_lh for p in _bar_pitches(bar)]
-    if not all_notes:
+def _compute_difficulty(parsed: dict) -> str:
+    """Beginner, intermediate or advanced, from what makes a piece hard to play: how many
+    keys per beat, whether both hands play, chords, black keys, the range the hands cover
+    and how far they jump. (Notes per bar alone would rate "Twinkle, Twinkle" intermediate.)"""
+    bars_rh, bars_lh = parsed.get("bars_rh") or [], parsed.get("bars_lh") or []
+    pitches_rh = [p for bar in bars_rh for p in _bar_pitches(bar)]
+    pitches_lh = [p for bar in bars_lh for p in _bar_pitches(bar)]
+    notes = pitches_rh + pitches_lh
+    if not notes:
         return "beginner"
-    avg_per_bar = len(all_notes) / max(1, len(bars_rh))
-    midis = [_pitch_to_midi(p) for p in all_notes]
-    pitch_range = (max(midis) - min(midis)) / 12.0
-    score = avg_per_bar * (1 + pitch_range * 0.15)
+    time = parsed.get("time") or [4, 4]
+    bar_q = time[0] * 4.0 / max(1, time[1])
+    lens = parsed.get("bar_lens") or []
+    total_q = sum(float(x) for x in lens if x) if lens else bar_q * max(len(bars_rh), len(bars_lh), 1)
+    density = len(notes) / max(1.0, total_q)                       # keys per quarter note
+
+    lh_bars = sum(1 for bar in bars_lh if _bar_pitches(bar))
+    both_hands = lh_bars / max(1, len(bars_rh))                    # 0 … 1
+
+    def _chord_share(onsets):
+        starts = struck = 0
+        for bar in onsets or []:
+            seen: dict = {}
+            for o in bar:
+                seen[round(float(o), 3)] = seen.get(round(float(o), 3), 0) + 1
+            starts += len(seen)
+            struck += sum(1 for c in seen.values() if c > 1)
+        return struck / starts if starts else 0.0
+    chords = max(_chord_share(parsed.get("onsets_rh")), _chord_share(parsed.get("onsets_lh")))
+
+    accidentals = sum(1 for p in notes if "#" in p[1:] or "b" in p[1:]) / len(notes)
+
+    def _range(ps):
+        m = [_pitch_to_midi(p) for p in ps]
+        return (max(m) - min(m)) / 12.0 if m else 0.0
+    span = max(_range(pitches_rh), _range(pitches_lh))               # octaves, per hand
+
+    mr = [_pitch_to_midi(p) for p in pitches_rh]
+    leaps = (sum(1 for a, b in zip(mr, mr[1:]) if abs(a - b) > 7) / max(1, len(mr) - 1))
+
+    score = (density + both_hands + 1.5 * chords + 2.0 * accidentals
+             + 0.6 * max(0.0, span - 1.0) + 2.0 * leaps)
     if score < _DIFF_EASY:
         return "beginner"
-    elif score < _DIFF_MEDIUM:
+    if score < _DIFF_MEDIUM:
         return "intermediate"
     return "advanced"
 
 
+_RATING_VERSION = 2       # bump when _compute_difficulty changes: songs are rated again
+
 
 def list_songs() -> list[dict]:
-    return _load_index()
+    index = _load_index()
+    stale = [e for e in index if e.get("rating", 1) < _RATING_VERSION and e.get("bars_rh")]
+    for entry in stale:
+        entry["difficulty"] = _compute_difficulty(entry)
+        entry["rating"] = _RATING_VERSION
+    if stale:
+        _save_index(index)
+    return index
 
 
 _MUSIC_KEYS = tuple(f"{k}_{h}" for k in ("bars", "types", "onsets", "durs", "ties", "vels")
@@ -466,7 +509,7 @@ def import_song(filepath: str) -> dict:
     dest     = os.path.join(_FILES_DIR, f"{song_id}{dest_ext}")
     shutil.copy2(filepath, dest)
 
-    difficulty = _compute_difficulty(parsed["bars_rh"], parsed["bars_lh"])
+    difficulty = _compute_difficulty(parsed)
     n_bars     = len(parsed["bars_rh"])
 
     entry = {
@@ -476,6 +519,7 @@ def import_song(filepath: str) -> dict:
         "key":        parsed["key"],
         "time":       parsed["time"],
         "difficulty": difficulty,
+        "rating":     _RATING_VERSION,
         "n_bars":     n_bars,
         "filepath":   dest,
         **_music_of(parsed),
@@ -543,7 +587,7 @@ def _reimport(song: dict) -> dict:
         return song
     new = {**song, **_music_of(parsed),
            "n_bars": len(parsed["bars_rh"]),
-           "difficulty": _compute_difficulty(parsed["bars_rh"], parsed["bars_lh"])}
+           "difficulty": _compute_difficulty(parsed)}
     index = _load_index()
     for i, s in enumerate(index):
         if s["id"] == song["id"]:

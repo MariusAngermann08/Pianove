@@ -20,6 +20,8 @@ if storage.get("language"):
     language_state.value = storage.get("language")
 iOSTheme.dark = bool(storage.get("dark_mode", True))
 iOSTheme.update_theme()
+from pianove.ui_utils import apply_score_colors
+apply_score_colors()
 
 ui = App(
     title="Pianove",
@@ -46,6 +48,10 @@ def _on_resize(w: int, h: int):
 
 
 ui.on_resize = _on_resize
+
+# The computer keyboard plays notes wherever notes are played (pianove/keyboard_input.py)
+from pianove import keyboard_input
+ui.event_filter = keyboard_input.handle
 
 _after_boot = "home" if storage.get("onboarding_complete") else "language"
 

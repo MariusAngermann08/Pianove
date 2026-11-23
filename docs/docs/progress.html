@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Progress & Achievements — Pianove Guide</title>
-  <meta name="description" content="Streaks, practice time and achievements, all kept on your computer.">
+  <meta name="description" content="Practice time, streaks and achievements, counted from what you actually play.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
@@ -49,6 +49,7 @@
     <span class="sidebar-group-label">Your App</span>
     <a href="progress.html" class="active" aria-current="page">Progress &amp; Achievements</a>
     <div class="sidebar-toc">
+      <a href="#time">How practice is counted</a>
       <a href="#home">The Home dashboard</a>
       <a href="#achievements">Achievements</a>
       <a href="#songs">Songs</a>
@@ -64,19 +65,23 @@
     <div class="docs-page-header">
       <p class="page-eyebrow">Your App</p>
       <h1>Progress &amp; Achievements</h1>
-      <p class="page-subtitle">Streaks, practice time and achievements, all kept on your computer.</p>
+      <p class="page-subtitle">Practice time, streaks and achievements, counted from what you actually play.</p>
       <div class="page-meta"><span class="meta-item">Offline</span><span class="meta-item">No account</span></div>
     </div>
-<section class="doc-section" id="home">
+<section class="doc-section" id="time">
+      <h2>How practice is counted</h2>
+      <p>Pianove measures practice from the keys you play while a lesson, a song or a sight-reading session is open. The time between two notes counts when it is under 20 seconds, so a pause to read or think counts, a screen left open while you make tea does not. Lessons, songs and sight-reading all count the same.</p>
+      <p>A day keeps your <strong>streak</strong> when you finish a lesson, a song step or a sight-reading session, or practise for at least a minute.</p>
+    </section>
+    <section class="doc-section" id="home">
       <h2>The Home dashboard</h2>
-      <p>Home greets you and shows, from top to bottom:</p>
       <ul>
-        <li><strong>Day streak</strong> (top right): days in a row with at least one lesson.</li>
-        <li><strong>Continue where you left off:</strong> the next lesson of your current course and the course's progress.</li>
-        <li><strong>Today's goal:</strong> one lesson a day.</li>
-        <li><strong>Lessons:</strong> streak, lessons done and total practice time.</li>
-        <li><strong>This week:</strong> practice per day, Monday to Sunday.</li>
-        <li><strong>Achievements</strong> and your <strong>sight-reading</strong> results: sessions, accuracy and this week's practice.</li>
+        <li><strong>Day streak</strong> (top right): days in a row you practised.</li>
+        <li><strong>Continue where you left off:</strong> the next lesson of your course.</li>
+        <li><strong>Today's goal:</strong> minutes practised today against your daily goal (10 minutes unless you change it in <strong>Settings → Profile → Daily Goal</strong>, 5 to 60). Reached, the ring turns into a tick.</li>
+        <li><strong>Your progress:</strong> streak, lessons done and total practice time.</li>
+        <li><strong>Last 7 days:</strong> minutes per day as bars, today highlighted, with the goal as a dashed line.</li>
+        <li><strong>Sight reading</strong> (once you've done some): sessions, accuracy and sessions this week, then the <strong>achievements</strong>.</li>
       </ul>
       <div class="shot-pair"><figure class="shot "><img src="../img/ss-home.png" alt="Home in dark mode" loading="lazy"><figcaption>Home in dark mode</figcaption></figure><figure class="shot "><img src="../img/ss-home-light.png" alt="…and in light mode" loading="lazy"><figcaption>…and in light mode</figcaption></figure></div>
     </section>
@@ -86,9 +91,9 @@
         <thead><tr><th>Achievement</th><th>How to get it</th></tr></thead>
         <tbody>
           <tr><td class="col-name">First Lesson</td><td>Finish any lesson</td></tr>
-          <tr><td class="col-name">Course Complete</td><td>Finish every lesson of a course</td></tr>
-          <tr><td class="col-name">3-Day Streak</td><td>Play on three days in a row</td></tr>
-          <tr><td class="col-name">Dedicated</td><td>Play lessons on seven different days</td></tr>
+          <tr><td class="col-name">Course Complete</td><td>Finish every lesson of the Beginner Path</td></tr>
+          <tr><td class="col-name">3-Day Streak</td><td>Practise on three days in a row</td></tr>
+          <tr><td class="col-name">Dedicated</td><td>Practise on seven different days</td></tr>
           <tr><td class="col-name">Sight Reader</td><td>Finish five sight-reading sessions</td></tr>
           <tr><td class="col-name">Sharp Eye</td><td>Average 80 % accuracy over at least three sight-reading sessions</td></tr>
         </tbody>
@@ -96,11 +101,11 @@
     </section>
     <section class="doc-section" id="songs">
       <h2>Songs</h2>
-      <p>Every song keeps its own learning-path progress: the stars of each step and where you stopped. It is shown on the song's page as <em>n / m steps</em>.</p>
+      <p>Every song keeps its own learning-path progress: the stars of each step and where you stopped, shown on the song's page as <em>n / m steps</em>.</p>
     </section>
     <section class="doc-section" id="privacy">
       <h2>Privacy</h2>
-      <p>Nothing is uploaded. Progress lives in <code>~/.pianove/storage.json</code>; delete it to start from zero.</p>
+      <p>Nothing is uploaded. Progress lives in <code>~/.pianove/storage.json</code> (practice time per day under <code>practice_log</code>); delete the file to start from zero.</p>
     </section>
     <div class="doc-nav-footer"><a href="practice.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Sight-Reading Practice</div></a><a href="synthesiser.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Piano Sound →</div></a></div>
   </main>

@@ -47,10 +47,10 @@ def build():
         on_click=lambda: setattr(midi_skip_state, "value", True),
         width=0.98,
         height=U["field_h_frac"] * 0.75,
-        font_size=U["option_font"] - 1,
-        background_color=iOSTheme.secondary_background,
-        text_color=ColorPalette.BLUE,
-        border_radius=8,
+        font_size=U["option_font"],
+        background_color=iOSTheme.fill,
+        text_color=iOSTheme.label,
+        border_radius=10,
     ))
     if not mic_input_state.value:
         # an acoustic piano: hear it instead (the keyboard above starts listening)
@@ -60,9 +60,9 @@ def build():
             width=0.98,
             height=U["field_h_frac"] * 0.75,
             font_size=U["option_font"] - 1,
-            background_color=iOSTheme.secondary_background,
-            text_color=ColorPalette.BLUE,
-            border_radius=8,
+            background_color=iOSTheme.fill,
+            text_color=iOSTheme.label,
+            border_radius=10,
         ))
 
     _continue_btn = next_btn

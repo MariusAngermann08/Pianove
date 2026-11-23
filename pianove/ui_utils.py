@@ -69,12 +69,11 @@ def set_continue_enabled(btn: Button, ok: bool):
         btn.background_color = ColorPalette.BLUE
         btn.text_color = pygame.Color(255, 255, 255)
     else:
+        # still readable as a button, just clearly not ready yet
         btn.background_color = (
-            ColorPalette.LIGHT_GRAY_3 if not iOSTheme.dark else ColorPalette.DARK_GRAY_3
+            ColorPalette.LIGHT_GRAY_4 if not iOSTheme.dark else ColorPalette.DARK_GRAY_4
         )
-        btn.text_color = (
-            ColorPalette.LIGHT_GRAY_1 if not iOSTheme.dark else ColorPalette.DARK_GRAY_2
-        )
+        btn.text_color = iOSTheme.secondary_label
     btn._cached_surf = None
     btn._cache_key = None
 
@@ -154,3 +153,14 @@ def page_shell(
         nav.add_child(next_btn)
     card.add_child(nav)
     return root, card, content, next_btn
+
+
+def apply_score_colors():
+    """Scores follow the theme: black on white in light mode, a dark sheet in dark mode
+    (the long lesson screens are easier on the eyes without a white page)."""
+    from pylay import iOSTheme
+    from pylute import colors
+    if iOSTheme.dark:
+        colors.set_colors(ink=(226, 226, 232), paper=(30, 30, 32))
+    else:
+        colors.set_colors()

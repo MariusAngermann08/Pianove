@@ -9,6 +9,7 @@ from .time_signature import TimeSignature
 from .brace import Brace
 from .durations import get_value
 from . import font as _font_mod
+from . import colors
 
 _SHARP_NAMES = ["F", "C", "G", "D", "A", "E", "B"]
 _FLAT_NAMES  = ["B", "E", "A", "D", "G", "C", "F"]
@@ -226,7 +227,7 @@ class Score:
                     self.lyricist, self.copyright]):
             return
         tf, sf, xf = self._meta_fonts(space)
-        BLACK = (0, 0, 0)
+        BLACK = colors.INK
         cx    = ml + staff_length // 2
         y     = int(space * 2)
 
@@ -354,7 +355,7 @@ class Score:
                 lx    = self.staffs[0].position[0]
                 top_y = self.staffs[0].position[1]
                 bot_y = self.staffs[-1].position[1] + staff_span
-                pg.draw.line(self.surface, (0, 0, 0), (lx, top_y), (lx, bot_y), 2)
+                pg.draw.line(self.surface, colors.INK, (lx, top_y), (lx, bot_y), 2)
 
             # time sig only on first system
             for staff, clef, ks, ts in zip(self.staffs, self.clefs,
@@ -405,10 +406,10 @@ class Score:
                 is_last = is_last_sys and (local_idx == n_in_sys - 1)
 
                 if is_last:
-                    pg.draw.line(self.surface, (0, 0, 0), (x - 4, by), (x - 4, ey), 1)
-                    pg.draw.rect(self.surface, (0, 0, 0), (x, by, 3, ey - by))
+                    pg.draw.line(self.surface, colors.INK, (x - 4, by), (x - 4, ey), 1)
+                    pg.draw.rect(self.surface, colors.INK, (x, by, 3, ey - by))
                 else:
-                    pg.draw.line(self.surface, (0, 0, 0), (x, by), (x, ey), 2)
+                    pg.draw.line(self.surface, colors.INK, (x, by), (x, ey), 2)
         for st, full in zip(self.staffs, full_lens):
             st.length = full
 

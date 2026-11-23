@@ -1,4 +1,5 @@
 import pygame as pg
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -23,7 +24,7 @@ class Staff:
             for line in self.lines:
                 pg.draw.line(
                     surface=self.surface,
-                    color=(0, 0, 0),
+                    color=colors.INK,
                     start_pos=(line[0], line[1]),
                     end_pos=(line[0] + self.length, line[1])
                 )

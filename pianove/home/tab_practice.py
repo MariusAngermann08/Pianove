@@ -8,7 +8,7 @@ from pylay.core.scale import scaled_px
 from pianove.i18n import t
 from pianove.ui_utils import ui_dims
 from pianove.state import storage
-from pianove.components import ORANGE, GREEN, RED, PURPLE
+from pianove.components import ORANGE, GREEN, RED
 import pianove.context as ctx
 
 _BLUE = ColorPalette.BLUE
@@ -33,6 +33,8 @@ _DEFAULTS = {
 def _load_cfg() -> dict:
     saved = storage.get(_CFG_KEY, {})
     cfg = dict(_DEFAULTS)
+    from pianove import recommend
+    cfg["difficulty"] = recommend.practice_level()     # until you choose one yourself
     cfg.update({k: v for k, v in saved.items() if k in _DEFAULTS})
     return cfg
 
@@ -151,16 +153,18 @@ def build():
     if total_done > 0:
         header_row.add_child(Badge(
             text=f"{total_done} {t('practice_sessions_badge')}",
-            color=PURPLE,
+            color=ColorPalette.BLUE,
             font_size=12, height=34, width=110,
             anchor="right", x=0, y=0,
         ))
     scroll.add_child(header_row)
-    scroll.add_child(Label(
+    sub_row = FloatLayout(width=1.0, height=20)
+    sub_row.add_child(Label(
         text=t("practice_tab_subtitle"),
         font_size=13, color=iOSTheme.secondary_label,
-        wrap_width=700, height=18,
+        anchor="left", x=0, y=0,
     ))
+    scroll.add_child(sub_row)
 
     # Heights: title=20, section_label=16, control=36, inline_row=44
     # Rows: 2×(16+6+36) + (16+6+36) + 2×44 + button=44
@@ -209,7 +213,7 @@ def build():
         options=_NOTE_OPTIONS,
         value=cfg["notes"],
         label_suffix=f" {t('practice_notes')}",
-        active_color=PURPLE,
+        active_color=ColorPalette.BLUE,
         anchor="right", x=0, y=0,
         width=0.45, height=36,
         on_change=lambda v: (cfg.update({"notes": v}), _save_cfg(cfg)),
@@ -221,7 +225,7 @@ def build():
         options=_BPM_OPTIONS,
         value=cfg["bpm"],
         label_suffix=" BPM",
-        active_color=PURPLE,
+        active_color=ColorPalette.BLUE,
         anchor="right", x=0, y=0,
         width=0.45, height=36,
         on_change=lambda v: (cfg.update({"bpm": v}), _save_cfg(cfg)),
@@ -251,7 +255,7 @@ def build():
         text=t("practice_start"),
         on_click=_start,
         width=1.0, height=44, font_size=15,
-        background_color=PURPLE,
+        background_color=ColorPalette.BLUE,
         text_color=pygame.Color(255, 255, 255),
         border_radius=12,
     ))

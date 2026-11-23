@@ -3,7 +3,7 @@ import pygame
 import pianove.context as ctx
 from pylay import (
     FloatLayout, VStack, Card, Label, Button,
-    ProgressBar, Badge, ProgressRing, LineChart,
+    ProgressBar, Badge, ProgressRing, BarChart,
     ColorPalette, iOSTheme, EmojiIcon,
 )
 from pylay.widgets.icon import Icon
@@ -11,15 +11,17 @@ from pianove.i18n import t
 from pianove.state import name_state, storage
 from pianove.ui_utils import ui_dims
 from pianove.progress import (
-    streak, is_complete, weekly_lessons,
+    streak, is_complete, active_days,
     lessons_completed_count, course_complete,
     practice_sessions_total, practice_accuracy_avg,
-    weekly_practice_sessions,
+    weekly_practice_sessions, recent_minutes, minutes_today,
+    total_practice_minutes, daily_goal_minutes,
 )
 from pianove.lesson_loader import list_courses, load_lesson
 from pianove.components import ORANGE, GREEN, RED, PURPLE, GOLD, GRAY, section_header
 
-_WEEK_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+def _week_labels() -> list[str]:
+    return [t(f"week_{d}") for d in ("mon", "tue", "wed", "thu", "fri", "sat", "sun")]
 
 
 def _greeting_key() -> str:
@@ -72,7 +74,7 @@ def _achievement(icon_name, label, color, x_frac, earned):
         background_color=bg,
     )
     badge.add_child(Icon(icon_name, size=22, color=icon_color, anchor="center", x=0, y=0))
-    badge.add_child(Label(text=label, font_size=10, bold=True, color=text_color))
+    badge.add_child(Label(text=label, font_size=12, bold=True, color=text_color))
     return badge
 
 
@@ -84,22 +86,27 @@ def build():
     courses    = list_courses()
     cur_streak = streak()
 
-    next_lesson, next_course, next_idx = _find_next(courses)
+    from pianove import recommend
+    next_lesson, next_course, next_idx = _find_next(recommend.ordered_courses(courses))
 
-    today_idx   = datetime.date.today().weekday()
-    today_count = weekly_lessons()[today_idx]
+    today_idx    = datetime.date.today().weekday()
+    goal_mins    = daily_goal_minutes()
+    today_mins   = minutes_today()
 
     lessons_done = lessons_completed_count()
-    total_mins   = storage.get("total_minutes", 0)
+    total_mins   = total_practice_minutes()
     pr_total     = practice_sessions_total()
     pr_avg_acc   = practice_accuracy_avg()
-    week_data    = weekly_lessons()
+    recent       = recent_minutes(7)
+    week_data    = [m for _, m in recent]
+    week_names   = _week_labels()
+    recent_lbls  = [week_names[d.weekday()] for d, _ in recent]
     pr_week_data = weekly_practice_sessions()
 
     ach_first   = lessons_done >= 1
     ach_course  = course_complete("beginner_path")
     ach_streak3 = cur_streak >= 3
-    ach_ded     = len(storage.get("lesson_dates", [])) >= 7
+    ach_ded     = len(active_days()) >= 7
     ach_reader  = pr_total >= 5
     ach_sharp   = pr_avg_acc >= 0.80 and pr_total >= 3
 
@@ -121,7 +128,7 @@ def build():
         icon_fn=Icon.as_icon_fn("local_fire_department", base_size=18),
         icon_size=18,
         text_color=pygame.Color(255, 255, 255) if on_streak else iOSTheme.secondary_label,
-        height=36, width=120,
+        height=36, width=150,
         anchor="right", x=0, y=0,
     ))
     scroll.add_child(greeting_row)
@@ -172,24 +179,53 @@ def build():
         ))
         scroll.add_child(done_card)
 
+    from pianove.song_store import list_songs
+    if recommend.suggests_songs() and not list_songs():
+        def _to_songs():
+            from pianove.home import container
+            container._active_tab.value = 1
+            ctx.home_page = "songs"
+            ctx.router.reload_current_page()
+        own = FloatLayout(width=1.0, height=72, background_color=iOSTheme.secondary_background,
+                          border_radius=16)
+        own.add_child(Icon("library_music", size=26, color=ColorPalette.BLUE,
+                           anchor="left", x=18, y=0))
+        own.add_child(Label(text=t("home_own_piece"), font_size=15, bold=True,
+                            color=iOSTheme.label, anchor="left", x=58, y=-10))
+        own.add_child(Label(text=t("home_own_piece_desc"), font_size=12,
+                            color=iOSTheme.secondary_label, anchor="left", x=58, y=11))
+        own.add_child(Button(text=t("home_open_songs"), on_click=_to_songs,
+                             anchor="right", x=-16, y=0, width=130, height=34, font_size=13,
+                             background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                             border_radius=10))
+        scroll.add_child(own)
+
     scroll.add_child(section_header(t("daily_goal"), U))
-    goal_progress = min(today_count, 1.0)
-    goal     = Card(width=1.0, height=72)
-    goal_row = FloatLayout(width=1.0, height=44)
+    reached  = today_mins >= goal_mins
+    goal     = Card(width=1.0, height=80)
+    goal_row = FloatLayout(width=1.0, height=52)
     goal_row.add_child(ProgressRing(
-        progress=goal_progress, size=44, stroke=5,
+        progress=min(1.0, today_mins / max(1, goal_mins)), size=48, stroke=6,
         active_color=GREEN,
         anchor="left", x=0, y=0,
     ))
+    if reached:
+        goal_row.add_child(Icon("check", size=24, color=GREEN, anchor="left", x=12, y=0))
     goal_row.add_child(Label(
-        text=t("home_today_progress", n=int(today_count)),
-        font_size=14, bold=True, color=iOSTheme.label,
-        anchor="left", x=56, y=0,
+        text=t("home_goal_reached", done=today_mins) if reached
+        else t("home_goal_today", done=today_mins, total=goal_mins),
+        font_size=15, bold=True, color=GREEN if reached else iOSTheme.label,
+        anchor="left", x=64, y=-10,
+    ))
+    goal_row.add_child(Label(
+        text=t("home_goal_hint", total=goal_mins),
+        font_size=12, color=iOSTheme.secondary_label,
+        anchor="left", x=64, y=12,
     ))
     goal.add_child(goal_row)
     scroll.add_child(goal)
 
-    scroll.add_child(section_header(t("stats_lessons_section"), U))
+    scroll.add_child(section_header(t("home_overview"), U))
     stats_row = FloatLayout(width=1.0, height=scaled_px(104))
     for card in [
         _stat_card(str(cur_streak),             t("stats_streak"),  ORANGE,            "local_fire_department", 0.0),
@@ -199,30 +235,33 @@ def build():
         stats_row.add_child(card)
     scroll.add_child(stats_row)
 
-    scroll.add_child(section_header(t("stats_week"), U))
-    scroll.add_child(LineChart(
+    scroll.add_child(section_header(t("home_last_7_days"), U))
+    scroll.add_child(BarChart(
         data=week_data,
-        labels=_WEEK_LABELS,
+        labels=recent_lbls,
         active_color=ColorPalette.BLUE,
-        title=t("stats_week"),
-        width=1.0, height=scaled_px(160),
+        title=t("home_week_minutes") if any(week_data) else t("home_week_empty"),
+        highlight=len(week_data) - 1,
+        target=goal_mins if any(week_data) else None,
+        unit="min",
+        width=1.0, height=scaled_px(180),
     ))
 
     if pr_total > 0:
         scroll.add_child(section_header(t("stats_practice_section"), U))
         pr_row = FloatLayout(width=1.0, height=scaled_px(104))
-        pr_row.add_child(_stat_card(str(pr_total),          t("stats_pr_sessions"), PURPLE, "auto_stories",        0.0,  w_frac=0.47))
+        pr_row.add_child(_stat_card(str(pr_total),          t("stats_pr_sessions"), ColorPalette.BLUE, "auto_stories",        0.0,  w_frac=0.47))
         pr_row.add_child(_stat_card(_acc_to_str(pr_avg_acc), t("stats_pr_accuracy"), GREEN,  "center_focus_strong", 0.53, w_frac=0.47))
         scroll.add_child(pr_row)
 
         if any(v > 0 for v in pr_week_data):
-            scroll.add_child(section_header(t("stats_pr_week"), U))
-            scroll.add_child(LineChart(
+            scroll.add_child(BarChart(
                 data=pr_week_data,
-                labels=_WEEK_LABELS,
-                active_color=PURPLE,
-                title=t("stats_pr_week"),
-                width=1.0, height=scaled_px(140),
+                labels=_week_labels(),
+                active_color=ColorPalette.BLUE,
+                title=t("stats_pr_week_sessions"),
+                highlight=today_idx,
+                width=1.0, height=scaled_px(150),
             ))
 
     scroll.add_child(section_header(t("stats_achievements"), U))

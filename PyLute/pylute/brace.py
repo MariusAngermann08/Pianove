@@ -1,4 +1,5 @@
 from .font import get_font, get_font_size, make_font
+from . import colors
 
 class Brace:
     GLYPH = ""
@@ -35,4 +36,4 @@ class Brace:
             self._build()
         if self._font is None:
             return
-        self._font.render_to(self.surface, (int(self._pos_x), int(self._pos_y)), self.GLYPH, "Black")
+        self._font.render_to(self.surface, (int(self._pos_x), int(self._pos_y)), self.GLYPH, colors.INK)

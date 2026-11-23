@@ -30,6 +30,8 @@ def _on_dark_mode_change(val):
     import pianove.context as ctx
     iOSTheme.dark = bool(val)
     iOSTheme.update_theme()
+    from pianove.ui_utils import apply_score_colors
+    apply_score_colors()
     storage.set("dark_mode", bool(val))
     if ctx.router:
         ctx.router.reload_current_page(delay=0.20)

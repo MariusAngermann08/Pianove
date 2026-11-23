@@ -46,6 +46,9 @@ class Theme:
         self.fill_tertiary = pygame.Color(0, 0, 0, 0)
         
         self.accent = pygame.Color(0, 0, 0)
+        # the highlight behind a selected item (e.g. the side navigation) and the text on it
+        self.selection = pygame.Color(0, 0, 0)
+        self.on_selection = pygame.Color(255, 255, 255)
         self.success = pygame.Color(0, 0, 0)
         self.warning = pygame.Color(0, 0, 0)
         self.danger = pygame.Color(0, 0, 0)
@@ -121,6 +124,15 @@ class PianoveTheme(Theme):
             self.fill_tertiary.update(208, 208, 208, 70)
 
             self.accent.update(176, 125, 10)                # #b07d0a gold
+
+        # Selected item: the gold itself on dark; on light a pale gold with dark-gold text
+        # (white on the deep gold read as brown and was hard to read)
+        if self.dark:
+            self.selection.update(self.accent)
+            self.on_selection.update(255, 255, 255)
+        else:
+            self.selection.update(250, 235, 194)
+            self.on_selection.update(122, 82, 0)
 
         self.success.update(52, 199, 89)
         self.warning.update(255, 149, 0)

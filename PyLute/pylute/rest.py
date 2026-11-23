@@ -1,4 +1,5 @@
 from .font import get_font
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -52,7 +53,7 @@ class Rest:
         gw = font.get_rect(glyph).width if glyph else int(self.staff.space * 1.2)
         dot_x = int(self.offset + gw + 3)
         dot_y = int(rest_y - dr.height / 2)
-        font.render_to(self.staff.surface, (dot_x, dot_y), AUG_DOT, "Black")
+        font.render_to(self.staff.surface, (dot_x, dot_y), AUG_DOT, colors.INK)
 
     def draw(self):
         if not self.staff:
@@ -73,7 +74,7 @@ class Rest:
         else:
             pos_y = int(self._line_y(4) - glyph_h / 2)
 
-        font.render_to(self.staff.surface, (int(self.offset), pos_y), glyph, "Black")
+        font.render_to(self.staff.surface, (int(self.offset), pos_y), glyph, colors.INK)
 
         if self._is_dotted:
             self._draw_dot(font, pos_y + glyph_h / 2)

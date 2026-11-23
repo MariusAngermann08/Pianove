@@ -12,7 +12,7 @@ from pianove.i18n import t
 
 _TOOLBAR_H  = 52
 _NAV_H      = 36
-_STATUS_H   = 20
+_STATUS_H   = 0
 _CONTENT_Y  = _TOOLBAR_H + _NAV_H + _STATUS_H
 
 
@@ -56,14 +56,22 @@ def build():
         color=iOSTheme.label,
         anchor="center", x=0, y=0,
     ))
+    if song:
+        def _practice(_id=song["id"]):
+            ctx.score_song_id   = None
+            ctx.current_song_id = _id
+            ctx.router.navigate("song_setup", "right")
+        toolbar.add_child(Button(
+            text=t("song_start"),
+            on_click=_practice,
+            anchor="right", x=-12, y=0,
+            width=96, height=34, font_size=14,
+            background_color=ColorPalette.BLUE,
+            text_color=pygame.Color(255, 255, 255),
+            border_radius=8,
+        ))
     root.add_child(toolbar)
 
-    page_lbl = Label(
-        text="—", font_size=13,
-        color=iOSTheme.secondary_label,
-        anchor="top_left", x=0, y=_TOOLBAR_H,
-        width=1.0, height=_NAV_H,
-    )
     nav_bar = FloatLayout(
         anchor="top_left", x=0, y=_TOOLBAR_H,
         width=1.0, height=_NAV_H,
@@ -83,15 +91,20 @@ def build():
         text_color=iOSTheme.label,
         border_radius=8,
     )
-    page_state = State("—")
+    page_state = State(t("score_loading") if filepath else t("score_no_file"))
+    info = {"bars": 0}
     page_label = Label(
         text=page_state, font_size=13,
         color=iOSTheme.secondary_label,
         anchor="center", x=0, y=0,
         width=0.5, height=_NAV_H,
     )
-    pager.on_page_change = lambda p, n: setattr(page_state, "value",
-                                                 f"Page {p + 1} / {n}")
+    def _page_text(p, n):
+        text = t("score_page", page=p + 1, pages=n)
+        if info["bars"]:
+            text += "  ·  " + t("score_loaded_info", n=info["bars"])
+        page_state.value = text
+    pager.on_page_change = _page_text
     prev_btn.on_click = pager.go_prev
     next_btn.on_click = pager.go_next
     nav_bar.add_child(prev_btn)
@@ -99,15 +112,6 @@ def build():
     nav_bar.add_child(next_btn)
     root.add_child(nav_bar)
 
-    status_state = State(t("score_loading") if filepath else t("score_no_file"))
-    status_lbl = Label(
-        text=status_state,
-        font_size=12,
-        color=iOSTheme.secondary_label,
-        anchor="top_left", x=16, y=_TOOLBAR_H + _NAV_H,
-        width=1.0, height=_STATUS_H,
-    )
-    root.add_child(status_lbl)
 
     score_h    = max(200, win_h - _CONTENT_Y)
     score_view = pager.build_view(y_offset=_CONTENT_Y)
@@ -136,14 +140,12 @@ def build():
             try:
                 score, err = _q.get_nowait()
                 if err:
-                    status_state.value = f"✗  {err}"
+                    page_state.value = f"✗  {err}"
                     pager.score_canvas.error = err
                 else:
+                    info["bars"] = (len(score.staffs[0].bars)
+                                    if score and score.staffs else 0)
                     pager.score = score
-                    n_bars = (len(score.staffs[0].bars)
-                              if score and score.staffs else 0)
-                    status_state.value = t("score_loaded_info",
-                                           n=n_bars)
             except _queue_mod.Empty:
                 pass
 

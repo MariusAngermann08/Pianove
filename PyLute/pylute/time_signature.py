@@ -1,4 +1,5 @@
 from .font import get_font
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -42,5 +43,5 @@ class TimeSignature:
             cx     = x + (total - num_w) / 2
             for d in digits:
                 glyph = DIGITS[d]
-                font.render_to(self.staff.surface, (int(cx), int(top_y)), glyph, "Black")
+                font.render_to(self.staff.surface, (int(cx), int(top_y)), glyph, colors.INK)
                 cx += font.get_rect(glyph).width

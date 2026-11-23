@@ -4,7 +4,9 @@
 
 **Free, open-source piano learning: no account, no subscription, entirely offline.**
 
-Lessons that explain with animated hands · any MusicXML piece turned into a step-by-step learning path · a MIDI keyboard or an acoustic piano through the microphone
+Lessons that explain with animated hands · any MusicXML piece turned into a step-by-step learning path · a MIDI keyboard, an acoustic piano through the microphone, or just your computer keyboard
+
+**[⬇ Download for Windows, macOS and Linux](https://github.com/MariusAngermann08/Pianove/releases)**
 
 [Website](https://mariusangermann08.github.io/Pianove/) ·
 [User Guide](https://mariusangermann08.github.io/Pianove/docs.html) ·
@@ -40,14 +42,14 @@ Pianove is built in Python on pygame, together with two libraries of its own, fo
 <td valign="top">
 
 ### Any piece, as a learning path
-Import a MusicXML file and Pianove cuts it into parts, names what is new in each (chords, leaps, black keys, hands together) and takes you through right hand, left hand and both, up to the whole piece, with up to three stars per step.
+Import a MusicXML file and Pianove cuts it into parts, names what is new in each (chords, leaps, black keys, hands together) and takes you through right hand, left hand and both, up to the whole piece, with up to three stars per step. Slow it down, switch on the metronome, or loop the bars you're stuck on.
 
 </td>
 </tr>
 <tr>
 <td valign="top">
 
-### Hands and fingering *(beta)*
+### Hands and fingering
 Animated hands show which finger plays every note. The fingering is computed for each passage with the ergonomic rules piano teachers use.
 
 </td>
@@ -66,18 +68,21 @@ Write your own lessons and courses in the app, with a live preview, a score edit
 
 ## Features
 
-- **16 built-in lessons** in two courses (*Beginner Path*, *Melody Explorer*), in English and German
-- **Songs:** import any MusicXML file (`.musicxml`, `.xml`, `.mxl`), read the full score, and learn it on a **learning path** or in free practice (one hand or both, waiting for you or in tempo)
+- **16 built-in lessons** in two courses (*Beginner Path*, *Melody Explorer*), in English and German; the setup asks how much you've played and suggests where to start
+- **Songs:** import any MusicXML file (`.musicxml`, `.xml`, `.mxl`), read the full score, and learn it on a **learning path** or in free practice: one hand or both, any range of bars, 50–100 % tempo, with a metronome
 - **Sight-reading practice:** endless generated exercises by clef, key, level and tempo
-- **MIDI keyboards:** detected automatically, range calibrated once, reconnected when re-plugged
-- **Hear My Piano** *(beta)*: play an acoustic piano through the microphone; a local, numpy-only note detector works out the keys
-- **Built-in grand piano sound** (FluidSynth + Salamander C5 SoundFont) for silent keyboards and demos
-- **Animated hands with automatic fingering** *(beta)*
-- **Progress:** day streak, daily goal, weekly chart, achievements
+- **Play on anything:** a USB MIDI keyboard (found and calibrated automatically), an acoustic piano through the microphone *(beta, local numpy note detector)*, or the computer keyboard and mouse
+- **Animated hands with automatic fingering** in lessons and songs
+- **Honest progress:** practice time measured from what you play, a daily goal in minutes, streaks that count lessons, songs and sight-reading, the last 7 days as a chart, achievements
+- **Built-in grand piano sound** (FluidSynth + Salamander C5 SoundFont); without it Pianove runs silently and says why
 - **Creator Mode:** lesson editor, course editor, packages to share
-- Dark and light mode, onboarding wizard, everything stored locally in `~/.pianove/`
+- Dark and light mode (the score included), everything stored locally in `~/.pianove/`
 
 ## Quick start
+
+**Ready-made app:** download it from the [Releases page](https://github.com/MariusAngermann08/Pianove/releases) (Windows `.zip`, macOS `.zip`, Linux `.tar.gz`), unpack and start *Pianove*. No Python needed.
+
+**From source:**
 
 ```bash
 git clone https://github.com/MariusAngermann08/Pianove.git
@@ -86,22 +91,24 @@ pip install -r requirements.txt
 python main.py
 ```
 
-The piano sound needs the native **FluidSynth** library. It ships for Windows in `bin/`; on other systems install it first:
+The piano sound needs the native **FluidSynth** library. It ships for Windows in `bin/`; elsewhere install it first (without it Pianove runs, silently):
 
 | macOS | Debian / Ubuntu | Fedora | Arch |
 |---|---|---|---|
 | `brew install fluid-synth` | `sudo apt install libfluidsynth3` | `sudo dnf install fluidsynth-libs` | `sudo pacman -S fluidsynth` |
 
-A MIDI keyboard is found automatically. No keyboard? Choose *Use the microphone instead* during setup, or turn on **Settings → Hear My Piano**. The full walkthrough is in the [Installation guide](https://mariusangermann08.github.io/Pianove/docs/installation.html).
+No keyboard? Choose *Use the microphone* during setup for an acoustic piano, or simply play with your computer keys: <kbd>A</kbd>–<kbd>L</kbd> are the white keys, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> the black ones, <kbd>Z</kbd>/<kbd>X</kbd> change the octave. The full walkthrough is in the [Installation guide](https://mariusangermann08.github.io/Pianove/docs/installation.html).
 
 ## Screenshots
 
 | Home | Lessons | Songs |
 |---|---|---|
-| ![Home](docs/img/ss-home.png) | ![Lessons](docs/img/ss-course.png) | ![Songs](docs/img/ss-songs.png) |
-| **Score viewer** | **Sight-reading practice** | **Settings** |
-| ![Score viewer](docs/img/ss-song-score.png) | ![Practice](docs/img/ss-practice.png) | ![Settings](docs/img/ss-settings.png) |
-| **Light mode** | **Setup** | **Creator Mode** |
+| ![Home](docs/img/ss-home.png) | ![Lessons](docs/img/ss-lessons.png) | ![Songs](docs/img/ss-songs.png) |
+| **Free practice** | **Score viewer** | **Sight-reading practice** |
+| ![Free practice](docs/img/ss-song-free.png) | ![Score viewer](docs/img/ss-song-score.png) | ![Practice](docs/img/ss-practice.png) |
+| **Settings** | **First-start setup** | **Course** |
+| ![Settings](docs/img/ss-settings.png) | ![Setup](docs/img/ss-onboarding-ready.png) | ![Course](docs/img/ss-course.png) |
+| **Light mode** | **Keyboard setup** | **Creator Mode** |
 | ![Home in light mode](docs/img/ss-home-light.png) | ![Onboarding](docs/img/ss-onboarding-midi.png) | ![Create tab](docs/img/ss-creator.png) |
 
 ## What's inside
@@ -110,7 +117,7 @@ A MIDI keyboard is found automatically. No keyboard? Choose *Use the microphone 
 |---------|------|-------------|
 | **Pianove** | Application | The app: lessons, songs and learning paths, MIDI and microphone input, built-in synthesiser, editors |
 | **PyLute** | Library (`PyLute/`) | Music notation renderer on pygame with the Bravura SMuFL font |
-| **PyLay** | Library (`PyLay/`) | iOS-inspired pygame UI framework: 29 widgets, spring animations, theming |
+| **PyLay** | Library (`PyLay/`) | iOS-inspired pygame UI framework: 30 widgets, spring animations, theming |
 
 PyLute and PyLay are independent libraries; Pianove uses both.
 
@@ -125,12 +132,17 @@ Pianove/
 │   ├── midi/               MIDI keyboard input and the on-screen keyboard
 │   ├── song_path.py        learning paths for imported songs
 │   ├── fingering.py        automatic fingering
-│   └── hands.py            animated hands
+│   ├── hands.py            animated hands
+│   ├── progress.py         practice time, streaks, daily goal
+│   ├── keyboard_input.py   the computer keyboard as a piano
+│   └── metronome.py        the metronome click
 ├── PyLute/                 notation renderer library
 ├── PyLay/                  UI framework library
 ├── docs/                   website and user guide (static HTML)
 ├── scripts/                screenshots, detector evaluation, piano templates
-└── tests/                  pytest suite
+├── tests/                  pytest suite
+├── pianove.spec            PyInstaller build of the stand-alone app
+└── .github/workflows/      builds the apps for Windows, macOS and Linux
 ```
 
 ## Documentation
@@ -180,7 +192,10 @@ See [`PyLay/README.md`](PyLay/README.md).
 pip install pytest
 python -m pytest tests -q                    # runs headless: no window, sound card or keyboard
 python scripts/screenshot_pianove.py         # regenerate the app screenshots in docs/img/
+pip install pyinstaller && pyinstaller pianove.spec   # build the stand-alone app into dist/
 ```
+
+Pushing a tag like `v1.1.0` runs `.github/workflows/build.yml`, which builds the app on Windows, macOS and Linux and attaches the three downloads to a GitHub release.
 
 The screenshot script runs the real app off-screen with a throw-away home folder and demo data, so your own progress is never touched.
 

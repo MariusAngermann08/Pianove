@@ -117,8 +117,12 @@ class OptionSelector(UIElement):
             row_rect = pygame.Rect(self.rect.left, row_top, self.rect.width, self.row_height)
             selected = (i == self._selected_idx)
 
-            pygame.draw.rect(surface, iOSTheme.secondary_background,
-                             row_rect, border_radius=_RADIUS)
+            bg = iOSTheme.secondary_background
+            if selected:     # the chosen row is tinted with the accent, the bar marks it
+                bg = pygame.Color(int(bg.r * 0.84 + accent.r * 0.16),
+                                  int(bg.g * 0.84 + accent.g * 0.16),
+                                  int(bg.b * 0.84 + accent.b * 0.16))
+            pygame.draw.rect(surface, bg, row_rect, border_radius=_RADIUS)
 
             font      = font_bold if selected else font_normal
             col       = iOSTheme.label if selected else iOSTheme.secondary_label
@@ -127,10 +131,6 @@ class OptionSelector(UIElement):
             surface.blit(text_surf,
                          text_surf.get_rect(midleft=(text_x, row_rect.centery)))
 
-            if selected:
-                pygame.draw.circle(surface, accent,
-                                   (row_rect.right - _PAD_X, row_rect.centery),
-                                   _DOT_R)
 
         # Pass 2 — animated accent bar drawn on top of all backgrounds
         bar_y = self.rect.top + int(self.pill_y) + bar_pad

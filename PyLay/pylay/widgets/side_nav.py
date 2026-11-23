@@ -109,10 +109,10 @@ class SideNav(FloatLayout):
         blend = max(0.0, 1.0 - abs(dist_px) / max(item_h, 1))
         if blend < 0.01:
             return iOSTheme.secondary_label
-        base = iOSTheme.secondary_label
-        r = int(base.r + blend * (255 - base.r))
-        g = int(base.g + blend * (255 - base.g))
-        b = int(base.b + blend * (255 - base.b))
+        base, on = iOSTheme.secondary_label, iOSTheme.on_selection
+        r = int(base.r + blend * (on.r - base.r))
+        g = int(base.g + blend * (on.g - base.g))
+        b = int(base.b + blend * (on.b - base.b))
         return pygame.Color(r, g, b)
 
     def render(self, surface: pygame.Surface):
@@ -142,7 +142,7 @@ class SideNav(FloatLayout):
 
         if self._marker_y > 0:
             pygame.draw.rect(
-                surface, iOSTheme.accent,
+                surface, iOSTheme.selection,
                 pygame.Rect(rx + item_pad,
                             int(self._marker_y) - marker_h // 2,
                             marker_w, marker_h),
@@ -153,7 +153,7 @@ class SideNav(FloatLayout):
             ir       = self._item_rect(i)
             text_col = self._blend_color(ir.centery - self._marker_y, item_h)
             if self._marker_y < 0:
-                text_col = pygame.Color(255, 255, 255) if i == active else iOSTheme.secondary_label
+                text_col = iOSTheme.on_selection if i == active else iOSTheme.secondary_label
 
             if i == self._hover_idx and i != active:
                 hs = pygame.Surface((ir.width, ir.height), pygame.SRCALPHA)
@@ -177,7 +177,7 @@ class SideNav(FloatLayout):
 
             text_col = self._blend_color(br.centery - self._marker_y, item_h)
             if self._marker_y < 0:
-                text_col = pygame.Color(255, 255, 255) if self._bottom_active else iOSTheme.secondary_label
+                text_col = iOSTheme.on_selection if self._bottom_active else iOSTheme.secondary_label
 
             if self._bottom_hover and not self._bottom_active:
                 hs = pygame.Surface((br.width, br.height), pygame.SRCALPHA)

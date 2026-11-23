@@ -91,7 +91,7 @@
     </section>
     <section class="doc-section" id="fluidsynth">
       <h2>FluidSynth</h2>
-      <p><code>pyfluidsynth</code> wraps <strong>libfluidsynth</strong>, a native library. Pianove needs it at start-up.</p>
+      <p><code>pyfluidsynth</code> wraps <strong>libfluidsynth</strong>, a native library that plays the piano sound. The ready-made apps include it; from source, install it like this:</p>
       <table class="param-table">
         <thead><tr><th>Platform</th><th>How to get it</th></tr></thead>
         <tbody>
@@ -102,14 +102,14 @@
           <tr><td class="col-name">Arch</td><td><code>sudo pacman -S fluidsynth</code></td></tr>
         </tbody>
       </table>
-      <div class="callout callout--note"><span class="callout-icon" aria-hidden="true">i</span><div><strong>No sound device?</strong> If FluidSynth is installed but no audio output can be opened, Pianove still runs; it just stays silent.</div></div>
+      <div class="callout callout--note"><span class="callout-icon" aria-hidden="true">i</span><div><strong>Without it</strong> Pianove still runs, without piano sound. <strong>Settings → Keyboard &amp; Sound</strong> then says <em>Piano sound unavailable</em> and why. The same goes for a computer without a working audio output.</div></div>
     </section>
     <section class="doc-section" id="hardware">
       <h2>Something to play on</h2>
       <ul>
         <li><strong>A MIDI keyboard</strong> (recommended): any class-compliant USB MIDI keyboard or digital piano. Pianove asks for its lowest and highest key once, or recognises common models by name.</li>
         <li><strong>An acoustic piano and a microphone</strong> (beta): the built-in laptop or phone microphone is enough. See <a href="midi-setup.html#microphone">Hear My Piano</a>.</li>
-        <li><strong>Neither</strong>: you can still browse lessons, read scores and look around; playing needs one of the two.</li>
+        <li><strong>Nothing at all</strong>: the computer keyboard plays notes (<kbd>A</kbd>–<kbd>L</kbd> for the white keys), and you can click the keys on screen. Good for trying Pianove out; a real keyboard is better for learning.</li>
       </ul>
     </section>
     <section class="doc-section" id="screen">

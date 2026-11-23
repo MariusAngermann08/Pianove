@@ -26,6 +26,7 @@ from pylay.widgets.hamburger_button import HamburgerButton
 from pylay.widgets.bottom_navigation_bar import BottomNavigationBar
 from pylay.widgets.side_nav import SideNav
 from pylay.widgets.line_chart import LineChart
+from pylay.widgets.bar_chart import BarChart
 from pylay.widgets.code_viewer import CodeViewer
 from pylay.widgets.pygame_canvas import PygameCanvas
 from pylay.widgets.scrollable_canvas import ScrollableCanvas
@@ -78,6 +79,7 @@ __all__ = [
     "BottomNavigationBar",
     "SideNav",
     "LineChart",
+    "BarChart",
     "CodeViewer",
     "PygameCanvas",
     "ScrollableCanvas",

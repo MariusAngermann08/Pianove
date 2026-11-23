@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,7 +53,7 @@
   <main class="docs-content">
     <div class="docs-page-header">
       <h1>Display Widgets</h1>
-      <p class="page-subtitle">Non-interactive display elements: Label, ProgressBar, ProgressRing, LineChart, CodeViewer, Divider, Badge, Avatar, Card, ListItem, EmptyState.</p>
+      <p class="page-subtitle">Non-interactive display elements: Label, ProgressBar, ProgressRing, LineChart, BarChart, CodeViewer, Divider, Badge, Avatar, Card, ListItem, EmptyState.</p>
     </div>
 
     <figure class="lib-screenshot">
@@ -126,6 +126,31 @@ chart = LineChart(
     active_color=ColorPalette.TEAL,
     title="Weekly Accuracy (%)",
     anchor="top_left", x=0, y=0, width=1.0, height=240,
+)</code></pre>
+    </section>
+
+    <section class="doc-section" id="barchart">
+      <h2>BarChart</h2>
+      <pre><code class="language-python">BarChart(
+    data: list[float],
+    labels: list[str] | None = None,
+    active_color=None,
+    title="",
+    highlight: int | None = None,   # this bar in full colour, the others lighter
+    target: float | None = None,    # a dashed line at this value, e.g. a goal
+    unit="",                        # printed after the highlighted bar's value
+    anchor="top_left", x=0, y=0, width=400, height=200,
+)</code></pre>
+      <p>A card with one rounded bar per value, growing in with a spring animation. Values are printed above the bars, labels below; zero values show a small dot. Good for counts per day or per item, where a line chart would suggest values between the points.</p>
+      <pre><code class="language-python">from pylay import BarChart, ColorPalette
+
+chart = BarChart(
+    data=[18, 0, 25, 12, 31, 9, 14],
+    labels=["Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon"],
+    active_color=ColorPalette.BLUE,
+    title="Minutes practised",
+    highlight=6, target=15, unit="min",
+    width=1.0, height=180,
 )</code></pre>
     </section>
 

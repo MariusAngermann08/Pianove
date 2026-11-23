@@ -37,7 +37,13 @@ def _open_course(course: dict):
     ctx.inner_router.navigate("course_detail")
 
 
-def _course_card(course: dict) -> Card:
+def _course_minutes(course: dict, all_lessons: dict) -> int:
+    return sum(int((all_lessons.get(l) or {}).get("meta", {}).get("estimated_minutes", 0) or 0)
+               for l in course["lessons"])
+
+
+def _course_card(course: dict, all_lessons: dict | None = None) -> Card:
+    from pianove import recommend
     lessons    = course["lessons"]
     n_total    = len(lessons)
     n_done     = sum(1 for lid in lessons if is_complete(lid))
@@ -46,63 +52,42 @@ def _course_card(course: dict) -> Card:
     diff_color = _DIFF_COLORS.get(diff, ColorPalette.BLUE)
     icon_name  = _COURSE_ICONS.get(course["id"], "library_music")
     all_done   = n_done == n_total
+    minutes    = _course_minutes(course, all_lessons or {})
+    suggested  = course["id"] == recommend.course_id() and not all_done
 
-    card = Card(width=1.0, height=160, spacing=8, padding=16)
-
-    header = FloatLayout(width=1.0, height=28)
-    header.add_child(Icon(
-        icon_name, size=24,
-        color=ColorPalette.BLUE if not all_done else GREEN,
-        anchor="left", x=0, y=0,
-    ))
-    header.add_child(Label(
-        text=course["title"],
-        font_size=15, bold=True, color=iOSTheme.label,
-        anchor="left", x=32, y=0,
-    ))
-    header.add_child(Badge(
-        text=t(f"diff_{diff}"),
-        color=diff_color,
-        height=22, font_size=11,
-        anchor="right", x=0, y=0,
-    ))
-    card.add_child(header)
-
-    card.add_child(Label(
-        text=course["description"],
-        font_size=12, color=iOSTheme.secondary_label,
-        width=1.0, height=18,
-    ))
-
-    prog_row = FloatLayout(width=1.0, height=22)
-    prog_row.add_child(ProgressBar(
-        progress=progress,
-        width=0.68, height=6,
-        active_color=GREEN if all_done else ColorPalette.BLUE,
-        anchor="left", x=0, y=0,
-    ))
-    prog_row.add_child(Label(
-        text=t("home_n_of_done", done=n_done, total=n_total),
-        font_size=11, color=iOSTheme.secondary_label,
-        anchor="right", x=0, y=0,
-    ))
-    card.add_child(prog_row)
-
-    footer = FloatLayout(width=1.0, height=36)
-    btn_text  = t("continue") if 0 < n_done < n_total else (
-        t("lesson_start") if n_done == 0 else t("lesson_replay")
-    )
-    footer.add_child(Button(
+    card = FloatLayout(width=1.0, height=150, background_color=iOSTheme.secondary_background,
+                       border_radius=16)
+    card.add_child(Icon(icon_name, size=26, color=GREEN if all_done else ColorPalette.BLUE,
+                        anchor="top_left", x=18, y=20))
+    card.add_child(Label(text=course["title"], font_size=16, bold=True, color=iOSTheme.label,
+                         anchor="top_left", x=56, y=18))
+    facts = [t("lesson_count", n=n_total), t(f"diff_{diff}")]
+    if minutes:
+        facts.insert(1, t("lessons_minutes", n=minutes))
+    card.add_child(Label(text="  ·  ".join(facts), font_size=12, color=iOSTheme.secondary_label,
+                         anchor="top_left", x=56, y=42))
+    card.add_child(Label(text=course["description"], font_size=13, color=iOSTheme.secondary_label,
+                         anchor="top_left", x=18, y=68))
+    if suggested:
+        card.add_child(Badge(text=t("lessons_suggested"), color=ColorPalette.BLUE,
+                             height=24, font_size=11, width=150,
+                             anchor="top_right", x=-16, y=16))
+    card.add_child(ProgressBar(progress=progress, width=0.62, height=6,
+                               active_color=GREEN if all_done else ColorPalette.BLUE,
+                               anchor="bottom_left", x=18, y=-20))
+    card.add_child(Label(text=t("home_n_of_done", done=n_done, total=n_total), font_size=12,
+                         color=iOSTheme.secondary_label, anchor="bottom_left", x=18, y=-34))
+    btn_text = t("continue") if 0 < n_done < n_total else (
+        t("lesson_start") if n_done == 0 else t("lesson_replay"))
+    card.add_child(Button(
         text=btn_text,
         on_click=lambda c=course: _open_course(c),
-        anchor="right", x=0, y=0,
-        width=124, height=34, font_size=13,
+        anchor="bottom_right", x=-16, y=-14,
+        width=132, height=36, font_size=14,
         background_color=GREEN if all_done else ColorPalette.BLUE,
         text_color=pygame.Color(255, 255, 255),
         border_radius=10,
     ))
-    card.add_child(footer)
-
     return card
 
 
@@ -133,17 +118,28 @@ def _lesson_row(index: int, lesson_id: str, course_id: str,
         label_color  = iOSTheme.secondary_label
         show_btn     = False
 
-    row = FloatLayout(width=1.0, height=52)
+    row = FloatLayout(width=1.0, height=64,
+                      background_color=iOSTheme.secondary_background if is_next else None,
+                      border_radius=12)
 
     row.add_child(Icon(
-        status_icon, size=20, color=icon_color,
-        anchor="left", x=0, y=0,
+        status_icon, size=22, color=icon_color,
+        anchor="left", x=10, y=0,
     ))
     row.add_child(Label(
         text=f"{index + 1}.  {title}",
-        font_size=14, bold=is_next,
-        color=label_color,
-        anchor="left", x=28, y=0,
+        font_size=15, bold=is_next,
+        color=iOSTheme.label if (is_next or done) else label_color,
+        anchor="left", x=44, y=-10,
+    ))
+    desc = (info or {}).get("description", "")
+    mins = (info or {}).get("meta", {}).get("estimated_minutes")
+    sub = "  ·  ".join(x for x in (t("lessons_minutes", n=mins) if mins else "", desc) if x)
+    if len(sub) > 110:
+        sub = sub[:107].rstrip() + "…"
+    row.add_child(Label(
+        text=sub, font_size=12, color=iOSTheme.secondary_label,
+        anchor="left", x=44, y=11,
     ))
 
     if show_btn:
@@ -151,8 +147,8 @@ def _lesson_row(index: int, lesson_id: str, course_id: str,
         row.add_child(Button(
             text=btn_text,
             on_click=lambda _id=lesson_id, _ci=ci: _open_lesson(_id, course_id, _ci),
-            anchor="right", x=0, y=0,
-            width=80, height=32, font_size=12,
+            anchor="right", x=-10, y=0,
+            width=88, height=34, font_size=13,
             background_color=btn_bg,
             text_color=btn_fg,
             border_radius=8,
@@ -174,8 +170,9 @@ def build():
         from pianove.ui_utils import ui_dims
         U = ui_dims()
         scroll.add_child(section_header(t("lessons_courses"), U))
-        for course in courses:
-            scroll.add_child(_course_card(course))
+        from pianove import recommend
+        for course in recommend.ordered_courses(courses):
+            scroll.add_child(_course_card(course, all_lsn))
 
     if standalone:
         from pianove.ui_utils import ui_dims
@@ -212,6 +209,32 @@ def build():
             ))
             card.add_child(foot)
             scroll.add_child(card)
+
+    # more to play, next to the courses
+    from pianove.ui_utils import ui_dims
+    scroll.add_child(section_header(t("lessons_more"), ui_dims()))
+    more = FloatLayout(width=1.0, height=86)
+    for i, (icon, title, desc, tab) in enumerate([
+        ("library_music", t("nav_songs"), t("lessons_more_songs"), 1),
+        ("piano", t("nav_practice"), t("lessons_more_practice"), 3),
+    ]):
+        tile = FloatLayout(width=0.485, height=1.0, background_color=iOSTheme.secondary_background,
+                           border_radius=16, anchor="top_left", x=0.0 if i == 0 else 0.515, y=0)
+        tile.add_child(Icon(icon, size=24, color=ColorPalette.BLUE, anchor="left", x=18, y=0))
+        tile.add_child(Label(text=title, font_size=15, bold=True, color=iOSTheme.label,
+                             anchor="left", x=56, y=-10))
+        tile.add_child(Label(text=desc, font_size=12, color=iOSTheme.secondary_label,
+                             anchor="left", x=56, y=11))
+
+        def _go(tab=tab, key=("songs" if tab == 1 else "practice")):
+            from pianove.home import container
+            container._active_tab.value = tab
+            ctx.home_page = key
+            ctx.inner_router.navigate(key)
+        tile.add_child(Button(text="", on_click=_go, width=1.0, height=1.0,
+                              background_color=pygame.Color(0, 0, 0, 0), border_radius=16))
+        more.add_child(tile)
+    scroll.add_child(more)
 
     return root
 
@@ -258,19 +281,18 @@ def build_detail():
     )
 
     # Course description
-    scroll.add_child(Label(
+    desc_row = FloatLayout(width=1.0, height=40)
+    desc_row.add_child(Label(
         text=course["description"],
-        font_size=13, color=iOSTheme.secondary_label,
-        width=1.0, height=36,
+        font_size=14, color=iOSTheme.secondary_label,
+        anchor="left", x=10, y=0,
     ))
-    scroll.add_child(Divider(width=1.0))
+    scroll.add_child(desc_row)
 
     for i, lid in enumerate(lesson_ids):
         done    = is_complete(lid)
         is_next = (i == first_inc)
         scroll.add_child(_lesson_row(i, lid, course_id, done, is_next, all_lessons))
-        if i < len(lesson_ids) - 1:
-            scroll.add_child(Divider(width=1.0))
 
     root.add_child(scroll)
     return root

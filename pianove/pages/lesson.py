@@ -3,6 +3,7 @@ from pylay import FloatLayout, VStack, Label, Button, State, Switch, iOSTheme, E
 from pylay.widgets.pygame_canvas import PygameCanvas
 from pylay.core.physics import Spring
 from pylute.score import Score
+from pylute import colors as _pl_colors
 from pylute.note import Note as _PluteNote
 from pylute.rest import Rest as _PluteRest
 from pylute.chord import Chord as _PluteChord
@@ -150,6 +151,18 @@ def _bar_notes(tl, ol, meta, si: int, i: int, pitches: list[str], time: tuple, b
     nt = _bar_types(tl, i, pitches, time, ol)
     return (nt, _bar_positions(tl, ol, i, nt, blen), [get_value(x) * 4 for x in nt],
             [False] * n, [None] * n)
+
+
+def song_tempo_scale() -> float:
+    """How fast a song is played, 0.5–1.0 of its own tempo (storage["song_tempo"]).
+    Lessons and sight-reading keep their tempo."""
+    if not ctx.current_song_id or ctx.practice_mode:
+        return 1.0
+    from pianove.state import storage
+    try:
+        return max(0.3, min(1.5, float(storage.get("song_tempo", 1.0))))
+    except (TypeError, ValueError):
+        return 1.0
 
 
 def _seconds_fn(tempos, bpm: float):
@@ -457,6 +470,8 @@ def _stop_listening():
 
 def _nav_back():
     _stop_listening()
+    from pianove.progress import stop_clock
+    stop_clock()
     ctx.lesson_step_idx    = 0
     ctx.lesson_current_idx = 0
     ctx.lesson_section_idx = 0
@@ -500,8 +515,16 @@ class _StaffView(PygameCanvas):
         # lesson's exercise; imported songs are drawn as before)
         super().__init__(draw_border=False, **kwargs)
         self.clips_to_bounds = True
-        self._bpm  = bpm
+        self._tempo_scale = song_tempo_scale()
+        self._bpm  = bpm * self._tempo_scale
         self._hits = 0
+        # metronome: a click on every beat while playing in tempo (count-in included)
+        from pianove import metronome
+        self._met_on    = phase == "performance" and metronome.enabled()
+        self._met_beat  = 60.0 / self._bpm * 4.0 / max(1, time[1])
+        self._met_bar   = max(1, int(time[0]))
+        self._met_clock = 0.0
+        self._met_next  = 0
 
         # In performance mode, prepend _PREP_BARS whole-rest bars as a count-in.
         # PyLute renders proper rest symbols; no MIDI is expected during them.
@@ -670,7 +693,10 @@ class _StaffView(PygameCanvas):
         self._step_beats = [(step_pos[i + 1] if i + 1 < len(step_pos) else bar_start) - step_pos[i]
                             for i in range(len(step_pos))]
         # seconds, through the piece's tempo changes (timed play and listening)
-        self._sec = _seconds_fn((meta or {}).get("tempos") if phase != "practice" else None, bpm)
+        tempos = (meta or {}).get("tempos") if phase != "practice" else None
+        if tempos and self._tempo_scale != 1.0:
+            tempos = [(q, b * self._tempo_scale) for q, b in tempos]
+        self._sec = _seconds_fn(tempos, self._bpm)
         self._step_secs = [self._sec(step_pos[i] + self._step_beats[i]) - self._sec(step_pos[i])
                            for i in range(len(step_pos))]
 
@@ -678,11 +704,7 @@ class _StaffView(PygameCanvas):
         # staff belongs to the hand its clef suggests
         hands_of = ({0: "right", 1: "left"} if n_staves > 1
                     else {0: "left" if clef == "bass" else "right"})
-        from pianove.state import beta_features_state
-        if beta_features_state.value:                   # the hands are a beta feature
-            self.finger_plan = _plan_fingering(self._step_list, step_pos, bpm, hands_of)
-        else:
-            self.finger_plan = [{} for _ in self._step_list]
+        self.finger_plan = _plan_fingering(self._step_list, step_pos, bpm, hands_of)
         self.bottom_inset = None          # → px hidden at the bottom (the keyboard panel)
 
         self.current_idx: int = min(initial_idx, len(self._step_list))
@@ -771,6 +793,8 @@ class _StaffView(PygameCanvas):
         self.current_idx = 0
         self._perf_timer = 0.0
         self._perf_hit   = False
+        self._met_clock  = 0.0
+        self._met_next   = 0
         if self._phase == "performance":
             self._prep_elapsed = 0.0
             self._in_prep      = True
@@ -794,7 +818,7 @@ class _StaffView(PygameCanvas):
         self._score._on_resize(self._strip_w)
         h = self._score.total_content_height(self._strip_w)
         self._offscreen = pygame.Surface((self._strip_w, h))
-        self._offscreen.fill((255, 255, 255))
+        self._offscreen.fill(_pl_colors.PAPER)
         self._score.surface = self._offscreen
         for staff in self._score.staffs:
             staff.surface = self._offscreen
@@ -831,7 +855,7 @@ class _StaffView(PygameCanvas):
 
     def _redraw_offscreen(self):
         if self._full_redraw or len(self._dirty_bars) > 4:
-            self._offscreen.fill((255, 255, 255))
+            self._offscreen.fill(_pl_colors.PAPER)
             self._score.draw()
         else:
             for i in sorted(self._dirty_bars):
@@ -863,7 +887,7 @@ class _StaffView(PygameCanvas):
             beside.append((x1, surf.subsurface((x1, 0, right_x - x1, h)).copy()))
         old = surf.get_clip()
         surf.set_clip(rect)
-        surf.fill((255, 255, 255), rect)
+        surf.fill(_pl_colors.PAPER, rect)
         for staff in staffs:
             staff.draw_lines()
         for staff in staffs:
@@ -879,10 +903,10 @@ class _StaffView(PygameCanvas):
                 b = staffs[0].bars[j]
                 x = b.bar_start_x + b.barspace
                 if j == last:
-                    pygame.draw.line(surf, (0, 0, 0), (x - 4, top), (x - 4, bot), 1)
-                    pygame.draw.rect(surf, (0, 0, 0), (x, top, 3, bot - top))
+                    pygame.draw.line(surf, _pl_colors.INK, (x - 4, top), (x - 4, bot), 1)
+                    pygame.draw.rect(surf, _pl_colors.INK, (x, top, 3, bot - top))
                 else:
-                    pygame.draw.line(surf, (0, 0, 0), (x, top), (x, bot), 2)
+                    pygame.draw.line(surf, _pl_colors.INK, (x, top), (x, bot), 2)
         surf.set_clip(old)
         for x, strip in beside:
             surf.blit(strip, (x, 0))
@@ -1027,6 +1051,13 @@ class _StaffView(PygameCanvas):
         self._scroll.update(dt)
         self._ph.update(dt)
 
+        if self._met_on and self.current_idx < len(self._step_list):
+            self._met_clock += dt
+            while self._met_clock >= self._met_next * self._met_beat:
+                from pianove import metronome
+                metronome.click(accent=self._met_next % self._met_bar == 0)
+                self._met_next += 1
+
         # Prep countdown: sweep playhead through the 2 rest bars before notes start
         if self._in_prep:
             self._prep_elapsed += dt
@@ -1088,7 +1119,7 @@ class _StaffView(PygameCanvas):
         off_h = self._offscreen.get_height()
         vw, vh = rect.width, rect.height
 
-        surface.fill((255, 255, 255), rect)
+        surface.fill(_pl_colors.PAPER, rect)
 
         scroll = max(0, min(int(self._scroll.value), max(0, off_w - vw)))
         # the keyboard panel covers the bottom: centre the score in what is left
@@ -1224,6 +1255,9 @@ class _LessonPiano:
                                      skin=hand_tone_state.value)
         self._status_font: pygame.font.Font | None = None
         self._kb_cache = None
+        self._white_rects: list = []      # (rect, note) of the keys drawn, for the mouse
+        self._black_rects: list = []
+        self._mouse_note: int | None = None
 
     def update(self, dt: float, rect: pygame.Rect):
         self._panel.update(dt, rect)
@@ -1252,7 +1286,30 @@ class _LessonPiano:
         self._hands.update(dt, sv.current_idx, frozenset(self._panel.active_notes), lead, step_time)
 
     def handle_event(self, event: pygame.event.Event, rect: pygame.Rect) -> bool:
+        """The keys on screen can be played with the mouse (or a finger)."""
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            note = self._key_at(event.pos)
+            if note is not None:
+                self._mouse_note = note
+                self._panel.press(note)
+                return True
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            note, self._mouse_note = self._mouse_note, None
+            if note is not None:
+                self._panel.release(note)
+                return True
         return False
+
+    def _key_at(self, pos) -> int | None:
+        if self._sv._phase == "listen":
+            return None
+        for kr, note in self._black_rects:          # black keys lie on top
+            if kr.collidepoint(pos):
+                return note
+        for kr, note in self._white_rects:
+            if kr.collidepoint(pos):
+                return note
+        return None
 
     def _handle_note(self, note_num: int):
         if self._sv._phase == "listen":
@@ -1348,6 +1405,9 @@ class _LessonPiano:
             for idx, note in zip(black_indices, black_notes)
         ]
 
+        self._white_rects = [(kr, n) for (kr, _), n in zip(white_keys, white_notes)]
+        self._black_rects = [(kr, n) for (kr, _), n in zip(black_keys, black_notes)]
+
         # the keys, drawn again only when one of them changes colour
         key = (rect.size, rect.topleft, tuple(white_keys), tuple(black_keys))
         if self._kb_cache is None or self._kb_cache[0] != key:
@@ -1373,9 +1433,10 @@ class _LessonPiano:
         # the MIDI (or microphone) status, on top of everything (a sleeve may pass beneath it)
         connected = self._panel.connected
         label_txt = self._panel.status_text()
-        label_col = (52, 199, 89) if connected else (180, 100, 100)
+        label_col = (52, 199, 89) if connected else (240, 170, 60)
         if self._status_font is None:
-            self._status_font = pygame.font.SysFont(None, max(14, status_h - 2))
+            from pylay.core import font_loader
+            self._status_font = font_loader.load_font(12, bold=True)
         ls = self._status_font.render(label_txt, True, label_col)
         pos = (rect.left + margin_x, rect.bottom - status_h + (status_h - ls.get_height()) // 2)
         if hands_on:
@@ -1518,7 +1579,7 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
                      border_radius=10)
         col.add_child(Label(text=val, font_size=20, bold=True,
                             color=iOSTheme.label, height=28))
-        col.add_child(Label(text=lbl, font_size=11,
+        col.add_child(Label(text=lbl, font_size=12,
                             color=iOSTheme.secondary_label, height=16))
         stats_row.add_child(col)
     body.add_child(stats_row)
@@ -1530,7 +1591,7 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
                              border_radius=12))
     btn_row.add_child(Button(text=t("practice_new_session"), on_click=_new_session,
                              anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
-                             background_color=_PURPLE,
+                             background_color=_BLUE,
                              text_color=pygame.Color(255, 255, 255),
                              border_radius=12))
     body.add_child(btn_row)
@@ -1828,9 +1889,7 @@ def build():
     if ctx.lesson_hands_vis is None:
         from pianove.state import storage
         ctx.lesson_hands_vis = bool(storage.get("show_hands", True))
-    from pianove.state import beta_features_state
-    beta         = bool(beta_features_state.value)  # the hands are a beta feature
-    hands_vis    = ctx.lesson_hands_vis and beta
+    hands_vis    = bool(ctx.lesson_hands_vis)
     section_idx  = ctx.lesson_section_idx
     initial_idx  = ctx.lesson_current_idx
 
@@ -2061,7 +2120,9 @@ def build():
         ctx.router.refresh()
 
     def _complete_lesson():
-        from pianove.progress import mark_complete, record_session, record_practice_session
+        from pianove.progress import (mark_complete, record_session, record_practice_session,
+                                      record_activity, flush_practice_time)
+        flush_practice_time()
         if is_practice:
             total = _sv[0].total_notes if _sv[0] else 1
             hits  = _sv[0].hits        if _sv[0] else 0
@@ -2090,6 +2151,7 @@ def build():
                 mark_complete(lesson_id)
                 record_session(lesson_id)
             elif ctx.path_step:
+                record_activity()
                 from pianove import song_path
                 total = _sv[0].total_notes if _sv[0] else 0
                 hits  = _sv[0].hits        if _sv[0] else 0
@@ -2099,7 +2161,7 @@ def build():
             ctx.router.refresh()
 
     counter_state = State(
-        f"{initial_idx + 1} / {n_notes}" if initial_idx < n_notes else ""
+        t("lesson_note_status", n=initial_idx + 1, total=n_notes) if initial_idx < n_notes else ""
     )
 
     def _do_note_advance(new_idx: int):
@@ -2110,7 +2172,7 @@ def build():
             else:
                 _complete_lesson()
         else:
-            counter_state.value = f"{new_idx + 1} / {n_notes}"
+            counter_state.value = t("lesson_note_status", n=new_idx + 1, total=n_notes)
 
     def _do_advance():
         if _sv[0]:
@@ -2169,20 +2231,19 @@ def build():
                              color=iOSTheme.secondary_label,
                              anchor="left", x=16, y=0, width=240, height=44))
     if phase == "listen":
-        _add_transport(controls, _sv, right_w=270 if beta else 150)
+        _add_transport(controls, _sv, right_w=270)
     controls.add_child(Button(text="↺", on_click=_on_restart,
-                              anchor="right", x=-252 if beta else -134, y=0,
+                              anchor="right", x=-252, y=0,
                               width=36, height=32, font_size=18,
                               background_color=iOSTheme.fill, text_color=iOSTheme.label,
                               border_radius=8))
-    if beta:
-        controls.add_child(Label(text=t("hands"), font_size=13,
-                                 color=iOSTheme.secondary_label,
-                                 anchor="right", x=-192, y=0, width=52, height=44))
-        controls.add_child(Switch(value=hands_vis, on_change=_on_hands_toggle,
-                                  anchor="right", x=-134, y=0,
-                                  width=51, height=31, active_color=ColorPalette.BLUE))
-    controls.add_child(Label(text="Piano", font_size=13,
+    controls.add_child(Label(text=t("hands"), font_size=13,
+                             color=iOSTheme.secondary_label,
+                             anchor="right", x=-192, y=0, width=52, height=44))
+    controls.add_child(Switch(value=hands_vis, on_change=_on_hands_toggle,
+                              anchor="right", x=-134, y=0,
+                              width=51, height=31, active_color=ColorPalette.BLUE))
+    controls.add_child(Label(text=t("lesson_keys"), font_size=13,
                              color=iOSTheme.secondary_label,
                              anchor="right", x=-80, y=0, width=42, height=44))
     controls.add_child(Switch(value=keyboard_vis, on_change=_on_kb_toggle,
@@ -2222,7 +2283,7 @@ def build():
     slide.set_max_height(_kb_h_hands() if hands_vis else _KB_H, animate=False)
 
     def _fit_panel():
-        if beta and ctx.lesson_hands_vis and slide._max_h != _kb_h_hands():
+        if ctx.lesson_hands_vis and slide._max_h != _kb_h_hands():
             slide.set_max_height(_kb_h_hands())
     piano.fit_panel = _fit_panel
     _slide_ref[0] = slide

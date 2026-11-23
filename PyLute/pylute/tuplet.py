@@ -1,6 +1,7 @@
 import pygame as pg
 from .font import get_font
 from .durations import get_value, VALUES
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -79,7 +80,7 @@ class Tuplet:
         ui_font  = pg.font.SysFont("Arial", font_sz)
 
         label    = str(self.actual)
-        surf_lbl = ui_font.render(label, True, (0, 0, 0))
+        surf_lbl = ui_font.render(label, True, colors.INK)
         lw, lh   = surf_lbl.get_size()
 
         stem_dir = self._stem_dir()
@@ -102,8 +103,8 @@ class Tuplet:
         arm_y = bracket_y + lh // 2
         gap   = lw // 2 + 3
         if x2 - x1 > lw + 12:
-            pg.draw.line(surface, (0, 0, 0), (int(x1), arm_y), (mid_x - gap, arm_y), 1)
-            pg.draw.line(surface, (0, 0, 0), (mid_x + gap, arm_y), (int(x2), arm_y), 1)
+            pg.draw.line(surface, colors.INK, (int(x1), arm_y), (mid_x - gap, arm_y), 1)
+            pg.draw.line(surface, colors.INK, (mid_x + gap, arm_y), (int(x2), arm_y), 1)
             tick = int(space * 0.3)
-            pg.draw.line(surface, (0, 0, 0), (int(x1), arm_y), (int(x1), arm_y - tick), 1)
-            pg.draw.line(surface, (0, 0, 0), (int(x2), arm_y), (int(x2), arm_y - tick), 1)
+            pg.draw.line(surface, colors.INK, (int(x1), arm_y), (int(x1), arm_y - tick), 1)
+            pg.draw.line(surface, colors.INK, (int(x2), arm_y), (int(x2), arm_y - tick), 1)

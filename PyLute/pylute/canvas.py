@@ -2,6 +2,7 @@ import math
 import os
 import pygame
 from .score import _MT as _SCORE_MT
+from . import colors
 
 
 class ScoreCanvas:
@@ -50,7 +51,7 @@ class ScoreCanvas:
             staff.surface = sub
         if self.score.brace:
             self.score.brace.surface = sub
-        sub.fill((255, 255, 255))
+        sub.fill(colors.PAPER)
         try:
             self.score.draw()
         except Exception as exc:
@@ -106,18 +107,18 @@ class _ScoreSlice:
 
         offscreen = self.pager._get_offscreen(canvas_w)
         if offscreen is None:
-            surface.fill((255, 255, 255))
+            surface.fill(colors.PAPER)
             return
 
         bounds = self.pager._page_bounds
         if self.page_idx >= len(bounds):
-            surface.fill((255, 255, 255))
+            surface.fill(colors.PAPER)
             return
 
         y_start, y_end = bounds[self.page_idx]
         slice_h = y_end - y_start
 
-        surface.fill((255, 255, 255))
+        surface.fill(colors.PAPER)
         if slice_h > 0:
             surface.blit(offscreen, (0, 0),
                          pygame.Rect(0, y_start, canvas_w, slice_h))
@@ -253,7 +254,7 @@ class ScorePager:
             if score.brace:
                 score.brace.surface = self._offscreen
 
-            self._offscreen.fill((255, 255, 255))
+            self._offscreen.fill(colors.PAPER)
             try:
                 score.draw()
             except Exception as exc:

@@ -9,11 +9,28 @@ import threading
 import time
 
 _BIN_DIR = str(pathlib.Path(__file__).parent.parent / "bin")
-if hasattr(os, "add_dll_directory"):          # Python 3.8+ on Windows
+if hasattr(os, "add_dll_directory") and os.path.isdir(_BIN_DIR):   # Python 3.8+ on Windows
     os.add_dll_directory(_BIN_DIR)
 os.environ["PATH"] = _BIN_DIR + os.pathsep + os.environ.get("PATH", "")
 
-import fluidsynth  # pyfluidsynth
+if getattr(sys, "frozen", False):
+    # Built with PyInstaller (pianove.spec): libfluidsynth sits next to the program,
+    # where pyfluidsynth's ctypes.util.find_library would never look.
+    import ctypes.util as _cu
+    _bundle = pathlib.Path(getattr(sys, "_MEIPASS", os.path.dirname(sys.executable)))
+    _shipped = sorted(p for p in _bundle.glob("*fluidsynth*")
+                      if p.suffix in (".dll", ".dylib") or ".so" in p.name)
+    if _shipped:
+        _find = _cu.find_library
+        _cu.find_library = lambda name: str(_shipped[0]) if "fluidsynth" in name else _find(name)
+
+try:
+    import fluidsynth  # pyfluidsynth: needs the native libfluidsynth
+except Exception as _exc:          # ImportError, OSError: library missing or broken
+    fluidsynth = None
+    _IMPORT_ERROR = str(_exc) or type(_exc).__name__
+else:
+    _IMPORT_ERROR = ""
 
 _SF2_PATH = str(
     pathlib.Path(__file__).parent / "assets" / "soundfonts" / "SalamanderC5-Light.sf2"
@@ -35,6 +52,9 @@ _lock     = threading.Lock()
 # set to. Map the 0..1 UI slider onto a safe, non-clipping chunk of that range.
 _MAX_GAIN = 5.0
 _pending_gain: float = _MAX_GAIN  # applied on load if set_volume was called early
+# Why there is no sound, when there is none ("" while loading or when all is well).
+# Settings shows it, so a missing library is a message rather than a crash.
+unavailable_reason: str = ""
 
 
 _PLATFORM_DRIVERS: "dict[str, list[str]]" = {
@@ -45,7 +65,12 @@ _LINUX_DRIVERS = ["pulseaudio", "alsa", "jack", "oss"]
 
 
 def _load():
-    global _fs, _sfid, _ready
+    global _fs, _sfid, _ready, unavailable_reason
+    if fluidsynth is None:
+        unavailable_reason = "FluidSynth is not installed"
+        print(f"[sound_engine_fs] {unavailable_reason} ({_IMPORT_ERROR}) — audio disabled",
+              file=sys.stderr)
+        return
     try:
         # audio.realtime-prio defaults to a non-zero value in libfluidsynth, which
         # makes it try to bump the audio thread to a real-time scheduling priority.
@@ -65,6 +90,7 @@ def _load():
         sfid = fs.sfload(_SF2_PATH)
         if sfid == -1:
             fs.delete()
+            unavailable_reason = "The piano sound file could not be loaded"
             print("[sound_engine_fs] Could not load soundfont — audio disabled",
                   file=sys.stderr)
             return
@@ -75,6 +101,7 @@ def _load():
             _ready = True
         _unmute_pipewire_stream()
     except Exception as exc:
+        unavailable_reason = "No audio output could be opened"
         print(f"[sound_engine_fs] Init failed — audio disabled: {exc}",
               file=sys.stderr)
 
@@ -111,6 +138,10 @@ def _unmute_pipewire_stream():
                 return
         time.sleep(0.1)
 
+
+
+def is_ready() -> bool:
+    return _ready
 
 
 def init():
