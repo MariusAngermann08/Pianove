@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Built-in Lessons — Pianove</title>
+  <title>Lessons & Courses — Pianove Guide</title>
+  <meta name="description" content="Two built-in courses that explain an idea, show it with animated hands, and let you play it.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -13,7 +15,7 @@
   <a class="nav-logo" href="../index.html">Pianove</a>
   <div class="nav-links">
     <a href="../story.html">Story</a>
-    <a href="../docs.html">Pianove</a>
+    <a href="../docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -21,7 +23,7 @@
         <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
       </div>
     </div>
-    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub &#x2197;</a>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
   </div>
   <div class="nav-controls">
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
@@ -31,92 +33,81 @@
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
 <div class="docs-body">
   <aside class="docs-sidebar">
-    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
     <span class="sidebar-group-label">Getting Started</span>
     <a href="quickstart.html">Quick Start</a>
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html">Installation</a>
-    <span class="sidebar-group-label">Using Pianove</span>
-    <a href="midi-setup.html">MIDI Setup</a>
-    <a href="lessons.html" class="active">Built-in Lessons</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html" class="active" aria-current="page">Lessons &amp; Courses</a>
+    <div class="sidebar-toc">
+      <a href="#courses">Courses</a>
+      <a href="#theory">Explaining: theory scenes</a>
+      <a href="#exercise">Playing: the piece</a>
+      <a href="#hands">Hands and fingering</a>
+      <a href="#languages">Languages</a>
+    </div>
+    <a href="songs.html">Songs &amp; Learning Path</a>
     <a href="musicxml.html">Importing MusicXML</a>
-    <span class="sidebar-group-label">Features</span>
-    <a href="progress.html">Progress &amp; Statistics</a>
-    <a href="synthesiser.html">Built-in Synthesiser</a>
-    <a href="settings.html">Settings &amp; Language</a>
-    <span class="sidebar-group-label">For Developers</span>
-    <a href="lesson-format.html">Lesson File Format</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
   </aside>
-
   <main class="docs-content">
     <div class="docs-page-header">
-      <h1>Built-in Lessons</h1>
-      <p class="page-subtitle">An overview of all 16 built-in lessons from beginner to intermediate.</p>
+      <p class="page-eyebrow">Playing</p>
+      <h1>Lessons &amp; Courses</h1>
+      <p class="page-subtitle">Two built-in courses that explain an idea, show it with animated hands, and let you play it.</p>
+      <div class="page-meta"><span class="meta-item">16 lessons</span><span class="meta-item">2 courses</span><span class="meta-item">English · Deutsch</span></div>
     </div>
-
-    <section class="doc-section" id="overview">
-      <h2>Overview</h2>
-      <p>Pianove ships with <strong>16 built-in lessons</strong> spanning beginner to intermediate difficulty. Lessons are accessed from the <strong>Lessons</strong> tab. Each lesson is a self-contained sequence of steps combining explanatory text, sheet music notation rendered by PyLute, and interactive keyboard exercises.</p>
-      <p>Built-in lessons are read-only and versioned with the app. Custom community lessons can be installed separately — see <a href="lesson-format.html">Lesson File Format</a>.</p>
-    </section>
-
-    <section class="doc-section" id="courses">
+<section class="doc-section" id="courses">
       <h2>Courses</h2>
-      <p>Most lessons belong to a <strong>course</strong> — an ordered collection with a shared theme and difficulty level. The Lessons tab shows a list of courses; tapping a course opens its lesson list with individual progress indicators.</p>
-      <p>Each course card shows:</p>
-      <ul>
-        <li>A difficulty badge (Beginner / Intermediate)</li>
-        <li>Overall completion percentage across all lessons in the course</li>
-        <li>An estimated total duration</li>
-      </ul>
-    </section>
-
-    <section class="doc-section" id="step-types">
-      <h2>Step Types</h2>
-      <p>Each lesson is made up of one or more steps. The step renderer dispatches on the step type:</p>
+      <p>The <strong>Lessons</strong> tab lists courses, each with its progress. Open one to see its lessons in order: finished lessons get a tick and can be replayed, the next one has a <strong>Start</strong> button.</p>
+      <div class="shot-pair"><figure class="shot "><img src="../img/ss-lessons.png" alt="The Lessons tab" loading="lazy"><figcaption>The Lessons tab</figcaption></figure><figure class="shot "><img src="../img/ss-course.png" alt="Inside a course" loading="lazy"><figcaption>Inside a course</figcaption></figure></div>
       <table class="param-table">
-        <thead><tr><th>Type</th><th>Description</th></tr></thead>
+        <thead><tr><th>Course</th><th>Lessons</th></tr></thead>
         <tbody>
-          <tr><td><code>text</code></td><td>Explanatory prose. Supports inline bold and italic via simple markup.</td></tr>
-          <tr><td><code>notation</code></td><td>Sheet music rendered live by PyLute from a MusicXML asset bundled with the lesson. Scrollable and responsive.</td></tr>
-          <tr><td><code>exercise</code></td><td>Interactive play-along. The specified notes are shown on the on-screen piano; the user plays them on their MIDI keyboard.</td></tr>
-          <tr><td><code>quiz</code></td><td>Multiple-choice question with immediate correct/incorrect feedback.</td></tr>
+          <tr><td class="col-name">Beginner Path</td><td>Welcome to Pianove · C Major Scale · Five-Note Melody · G Major Introduction · Simple Waltz · Left Hand Basics · Two-Octave Journey · First Song</td></tr>
+          <tr><td class="col-name">Melody Explorer</td><td>Natural Notes · Motif Building · Echo Phrases · D Major Scale · Pentatonic Groove · Folk Tune · Classical Theme · Final Melody</td></tr>
         </tbody>
       </table>
     </section>
-
-    <section class="doc-section" id="completing">
-      <h2>Completing a Lesson</h2>
-      <p>Steps are presented in order. Navigate forward and backward with the arrow buttons at the bottom of the screen.</p>
-      <p>For <strong>exercise steps</strong>, the correct notes must be played on the MIDI keyboard before advancing. Wrong notes are counted and factored into the lesson accuracy score displayed on the completion screen. You can retry an exercise step as many times as needed.</p>
-      <p>After the final step, a completion screen shows your accuracy for that session. The lesson is marked complete and the date is recorded for streak and weekly chart tracking.</p>
+    <section class="doc-section" id="theory">
+      <h2>Explaining: theory scenes</h2>
+      <p>Every lesson begins with a short <strong>scene</strong>: a few screens, each with a sentence or two, the keyboard, often a staff, and animated hands that show how it is played. Some screens play a phrase and then wait for you to play it back; others ask you to find keys. Use <strong>Continue</strong> to move on, <strong>‹</strong> to go back and <strong>↻</strong> to watch a screen again.</p>
+      <figure class="shot "><img src="../img/ss-lesson-theory.png" alt="C Major Scale: the hand shows how the thumb passes under" loading="lazy"><figcaption>C Major Scale: the hand shows how the thumb passes under</figcaption></figure>
     </section>
-
-    <section class="doc-section" id="standalone">
-      <h2>Standalone Lessons</h2>
-      <p>Some lessons are not part of any course and appear under <strong>All Lessons</strong> at the bottom of the Lessons tab. These are typically shorter focused exercises — sight-reading drills, scale practice — that do not fit into a course narrative.</p>
+    <section class="doc-section" id="exercise">
+      <h2>Playing: the piece</h2>
+      <p>Then you play from the staff. The piece is split into <strong>sections</strong> of a few bars:</p>
+      <ol class="steps">
+        <li><strong>Practice:</strong> one section at a time. The music waits for the right key; the key is lit on the on-screen keyboard. Played notes turn green, wrong ones flash red.</li>
+        <li><strong>Final performance:</strong> after a count-in, the whole piece in tempo, with a moving cursor.</li>
+      </ol>
+      <p>If too many notes go wrong in a row, Pianove steps back a section so you can consolidate it before moving on. The switches at the top hide or show the keyboard and the hands.</p>
     </section>
-
-    <div class="doc-nav-footer">
-      <a href="midi-setup.html" class="doc-nav-link">
-        <div class="doc-nav-dir">Previous</div>
-        <div class="doc-nav-title">← MIDI Setup</div>
-      </a>
-      <a href="musicxml.html" class="doc-nav-link doc-nav-link--next">
-        <div class="doc-nav-dir">Next</div>
-        <div class="doc-nav-title">Importing MusicXML →</div>
-      </a>
-    </div>
+    <section class="doc-section" id="hands">
+      <h2>Hands and fingering</h2>
+      <div class="callout callout--beta"><span class="callout-icon" aria-hidden="true">β</span><div><strong>Beta feature.</strong> Turn on <strong>Settings → Beta Features</strong> to see the hands in lessons and songs. Their skin tone can be changed in the same section.</div></div>
+      <p>With the hands on, two animated hands sit below the keyboard and show which finger plays each note. The fingering is worked out automatically for every passage: Pianove tries every finger for every note and picks the most comfortable sequence, following the ergonomic rules piano teachers use (thumb passing under, black keys for long fingers, no unnecessary stretches).</p>
+      <figure class="shot "><img src="../img/ss-song-play.png" alt="Both hands in a song, with the finger for the next note in blue" loading="lazy"><figcaption>Both hands in a song, with the finger for the next note in blue</figcaption></figure>
+    </section>
+    <section class="doc-section" id="languages">
+      <h2>Languages</h2>
+      <p>All lessons are written in English and German, and switch with the app language. Lessons you make yourself can have the same: see <a href="creator.html#translation">Creator Mode</a>.</p>
+    </section>
+    <div class="doc-nav-footer"><a href="midi-setup.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Keyboard &amp; Microphone</div></a><a href="songs.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Songs &amp; Learning Path →</div></a></div>
   </main>
 </div>
-
-<footer>
-  <span>Marius Angermann · 2026</span>
-  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span>
-</footer>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
 <script src="../js/landing.js"></script><script src="../js/docs.js"></script>
 </body>
 </html>

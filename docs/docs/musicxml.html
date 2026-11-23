@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Importing MusicXML — Pianove</title>
+  <title>Importing MusicXML — Pianove Guide</title>
+  <meta name="description" content="Which files Pianove reads, where to find them, and what it does with them.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -13,7 +15,7 @@
   <a class="nav-logo" href="../index.html">Pianove</a>
   <div class="nav-links">
     <a href="../story.html">Story</a>
-    <a href="../docs.html">Pianove</a>
+    <a href="../docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -21,7 +23,7 @@
         <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
       </div>
     </div>
-    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub &#x2197;</a>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
   </div>
   <div class="nav-controls">
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
@@ -31,101 +33,82 @@
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
 <div class="docs-body">
   <aside class="docs-sidebar">
-    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
     <span class="sidebar-group-label">Getting Started</span>
     <a href="quickstart.html">Quick Start</a>
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html">Installation</a>
-    <span class="sidebar-group-label">Using Pianove</span>
-    <a href="midi-setup.html">MIDI Setup</a>
-    <a href="lessons.html">Built-in Lessons</a>
-    <a href="musicxml.html" class="active">Importing MusicXML</a>
-    <span class="sidebar-group-label">Features</span>
-    <a href="progress.html">Progress &amp; Statistics</a>
-    <a href="synthesiser.html">Built-in Synthesiser</a>
-    <a href="settings.html">Settings &amp; Language</a>
-    <span class="sidebar-group-label">For Developers</span>
-    <a href="lesson-format.html">Lesson File Format</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html">Songs &amp; Learning Path</a>
+    <a href="musicxml.html" class="active" aria-current="page">Importing MusicXML</a>
+    <div class="sidebar-toc">
+      <a href="#formats">Supported files</a>
+      <a href="#where">Where to find pieces</a>
+      <a href="#import">Importing</a>
+      <a href="#what">What is read</a>
+    </div>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
   </aside>
-
   <main class="docs-content">
     <div class="docs-page-header">
+      <p class="page-eyebrow">Playing</p>
       <h1>Importing MusicXML</h1>
-      <p class="page-subtitle">Supported formats, where to find files, and how to import them.</p>
+      <p class="page-subtitle">Which files Pianove reads, where to find them, and what it does with them.</p>
+      <div class="page-meta"><span class="meta-item">.musicxml</span><span class="meta-item">.xml</span><span class="meta-item">.mxl</span></div>
     </div>
-
-    <section class="doc-section" id="formats">
-      <h2>Supported Formats</h2>
-      <p>Pianove accepts standard MusicXML in three container formats:</p>
+<section class="doc-section" id="formats">
+      <h2>Supported files</h2>
+      <p>Pianove imports <strong>MusicXML</strong>, the open exchange format nearly every notation program can write:</p>
       <ul>
-        <li><code>.xml</code> — uncompressed MusicXML (plain text)</li>
-        <li><code>.musicxml</code> — same as above, alternative extension</li>
-        <li><code>.mxl</code> — compressed MusicXML (ZIP archive)</li>
+        <li><code>.musicxml</code> and <code>.xml</code>: uncompressed MusicXML</li>
+        <li><code>.mxl</code>: compressed MusicXML (a zip), MuseScore's default export</li>
       </ul>
-      <p>For multi-instrument scores only the <strong>first part</strong> is loaded. All other instruments are silently ignored.</p>
     </section>
-
-    <section class="doc-section" id="how-to-import">
-      <h2>How to Import</h2>
-      <ol>
-        <li>Go to the <strong>Songs</strong> tab.</li>
-        <li>Tap <strong>Import</strong> (the button in the header).</li>
-        <li>A native OS file picker opens. Navigate to your MusicXML file and confirm.</li>
-        <li>Pianove parses the file, extracts note data, and stores it in the local song library. The score renders immediately in the song detail view.</li>
+    <section class="doc-section" id="where">
+      <h2>Where to find pieces</h2>
+      <ul>
+        <li><a href="https://musescore.com" target="_blank" rel="noopener">MuseScore.com</a>: huge community library; download as <em>MusicXML</em>.</li>
+        <li><a href="https://imslp.org" target="_blank" rel="noopener">IMSLP</a>: public-domain scores, some with MusicXML files.</li>
+        <li><a href="https://musescore.org" target="_blank" rel="noopener">MuseScore</a> (the free program): write or open anything and export it as MusicXML.</li>
+      </ul>
+    </section>
+    <section class="doc-section" id="import">
+      <h2>Importing</h2>
+      <ol class="steps">
+        <li>Open <strong>Songs</strong> and press <strong>+</strong>.</li>
+        <li>Choose the file. Pianove copies it to <code>~/.pianove/songs/</code>, so the original can move or be deleted.</li>
+        <li>The song appears in the list with its title, composer, number of bars and difficulty.</li>
       </ol>
-      <div class="doc-note">Import is non-destructive — the original file is not modified. Pianove stores a copy of the parsed data internally.</div>
+      <p>Title and composer are taken from the file's metadata, or from the title on the first page when that is all there is (as in many MuseScore exports).</p>
     </section>
-
-    <section class="doc-section" id="library">
-      <h2>Song Library</h2>
-      <p>All imported songs appear in the Songs tab as a scrollable list. Each entry shows the title, composer (from the MusicXML metadata), and difficulty rating.</p>
-      <p>Tap a song to open its detail screen, which shows the full score rendered by PyLute. From there you can start a practice session or delete the song.</p>
+    <section class="doc-section" id="what">
+      <h2>What is read</h2>
+      <table class="param-table">
+        <thead><tr><th>Read and used</th><th>Simplified or skipped</th></tr></thead>
+        <tbody>
+          <tr><td>Notes, rests, note values, dots, triplets</td><td>Grace notes are left out</td></tr>
+          <tr><td>Chords, ties, both staves of a piano part</td><td>Only the first part of the score is used</td></tr>
+          <tr><td>Key and time signatures, tempo, dynamics</td><td>Several voices on one staff are merged</td></tr>
+          <tr><td>Title and composer</td><td>Lyrics, repeats and slurs are not shown</td></tr>
+        </tbody>
+      </table>
+      <p>The right hand is read from the treble staff and the left from the bass staff, so a normal piano score works as it is.</p>
     </section>
-
-    <section class="doc-section" id="limitations">
-      <h2>What Is Not Supported</h2>
-      <p>The following MusicXML features are silently skipped during import. Notes and rests in unsupported constructs are omitted without error.</p>
-      <ul>
-        <li>Multiple voices on a single staff</li>
-        <li>Slurs</li>
-        <li>Repeat barlines, da capo, dal segno</li>
-        <li>Grace notes</li>
-        <li>Lyrics</li>
-        <li>Multi-instrument scores (only first part loaded)</li>
-      </ul>
-    </section>
-
-    <section class="doc-section" id="practice">
-      <h2>Practice Mode</h2>
-      <p>From the song detail screen, press <strong>Practice</strong> to start a sight-reading session. Before starting you can configure:</p>
-      <ul>
-        <li><strong>Clef</strong> — treble, bass, or both (grand staff)</li>
-        <li><strong>Difficulty</strong> — controls which notes are included in the generated exercise</li>
-        <li><strong>BPM</strong> — playback tempo</li>
-      </ul>
-      <p>The session generates a randomised sequence of notes drawn from the song's pitch pool. Accuracy is recorded and added to your practice statistics.</p>
-    </section>
-
-    <div class="doc-nav-footer">
-      <a href="lessons.html" class="doc-nav-link">
-        <div class="doc-nav-dir">Previous</div>
-        <div class="doc-nav-title">← Built-in Lessons</div>
-      </a>
-      <a href="progress.html" class="doc-nav-link doc-nav-link--next">
-        <div class="doc-nav-dir">Next</div>
-        <div class="doc-nav-title">Progress & Statistics →</div>
-      </a>
-    </div>
+    <div class="doc-nav-footer"><a href="songs.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Songs &amp; Learning Path</div></a><a href="practice.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Sight-Reading Practice →</div></a></div>
   </main>
 </div>
-
-<footer>
-  <span>Marius Angermann · 2026</span>
-  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span>
-</footer>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
 <script src="../js/landing.js"></script><script src="../js/docs.js"></script>
 </body>
 </html>

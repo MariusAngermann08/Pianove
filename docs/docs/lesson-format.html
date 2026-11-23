@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lesson File Format — Pianove</title>
+  <title>Lesson & Course Format — Pianove Guide</title>
+  <meta name="description" content="Lessons and courses are folders of plain JSON: readable, diff-friendly and easy to share.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -13,7 +15,7 @@
   <a class="nav-logo" href="../index.html">Pianove</a>
   <div class="nav-links">
     <a href="../story.html">Story</a>
-    <a href="../docs.html">Pianove</a>
+    <a href="../docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -21,7 +23,7 @@
         <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
       </div>
     </div>
-    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub &#x2197;</a>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
   </div>
   <div class="nav-controls">
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
@@ -31,157 +33,131 @@
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
 <div class="docs-body">
   <aside class="docs-sidebar">
-    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
     <span class="sidebar-group-label">Getting Started</span>
     <a href="quickstart.html">Quick Start</a>
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html">Installation</a>
-    <span class="sidebar-group-label">Using Pianove</span>
-    <a href="midi-setup.html">MIDI Setup</a>
-    <a href="lessons.html">Built-in Lessons</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html">Songs &amp; Learning Path</a>
     <a href="musicxml.html">Importing MusicXML</a>
-    <span class="sidebar-group-label">Features</span>
-    <a href="progress.html">Progress &amp; Statistics</a>
-    <a href="synthesiser.html">Built-in Synthesiser</a>
-    <a href="settings.html">Settings &amp; Language</a>
-    <span class="sidebar-group-label">For Developers</span>
-    <a href="lesson-format.html" class="active">Lesson File Format</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html" class="active" aria-current="page">Lesson &amp; Course Format</a>
+    <div class="sidebar-toc">
+      <a href="#where">Where they live</a>
+      <a href="#lesson">A lesson folder</a>
+      <a href="#steps">steps.json</a>
+      <a href="#course">A course folder</a>
+      <a href="#package">Packages</a>
+    </div>
   </aside>
-
   <main class="docs-content">
     <div class="docs-page-header">
-      <h1>Lesson File Format</h1>
-      <p class="page-subtitle">Reference for writing custom lesson courses for Pianove.</p>
+      <p class="page-eyebrow">Making Lessons</p>
+      <h1>Lesson &amp; Course Format</h1>
+      <p class="page-subtitle">Lessons and courses are folders of plain JSON: readable, diff-friendly and easy to share.</p>
+      <div class="page-meta"><span class="meta-item">JSON</span><span class="meta-item">One file per language</span><span class="meta-item">For contributors</span></div>
     </div>
-
-    <section class="doc-section" id="layout">
-      <h2>Directory Layout</h2>
-      <pre><code class="language-bash">pianove/lessons/          ← built-in lessons, read-only, versioned with the app
-~/.pianove/packages/      ← user-installed packages (lessons &amp; courses)</code></pre>
-      <p>A <code>.pianove-pkg</code> file is a renamed <code>.zip</code> of a lesson or course folder. It can be imported via the in-app package manager or the file picker.</p>
+<section class="doc-section" id="where">
+      <h2>Where they live</h2>
+      <pre><code class="language-text">pianove/lessons/&lt;id&gt;/                 built-in lessons (ship with the app, read-only)
+pianove/courses/&lt;id&gt;/                 built-in courses
+~/.pianove/packages/lessons/&lt;id&gt;/     your lessons: made in the editor or imported
+~/.pianove/packages/courses/&lt;id&gt;/     your courses</code></pre>
+      <p>Both places are scanned whenever the Lessons tab is shown. A lesson in your folder with the same id as a built-in one replaces it. Progress is stored by lesson id, which is why the editor never renames a lesson and duplicates a built-in one under a new id (<code>welcome_copy</code>).</p>
     </section>
-
-    <section class="doc-section" id="lesson-bundle">
-      <h2>Lesson Bundle</h2>
-      <p>Each lesson lives in its own folder:</p>
-      <pre><code class="language-bash">lessons/welcome/
-  meta.json          ← identity, authorship, difficulty, tags
-  en.json            ← localized strings (title, descriptions, hints)
-  de.json            ← additional locale files follow the same pattern
-  steps.json         ← ordered list of step blocks
-  assets/
-    notation_1.xml   ← MusicXML snippets rendered by PyLute
-    audio_1.ogg      ← optional backing audio</code></pre>
-
+    <section class="doc-section" id="lesson">
+      <h2>A lesson folder</h2>
+      <pre><code class="language-text">lessons/waltz_for_mia/
+  meta.json     identity, author, difficulty, tags
+  en.json       title and description in English
+  de.json       … in German (one file per language)
+  steps.json    what the lesson does, step by step</code></pre>
       <h3>meta.json</h3>
       <pre><code class="language-json">{
-  "id": "welcome",
+  "id": "waltz_for_mia",
   "version": "1.0.0",
-  "author": "Pianove",
+  "author": "Mia",
   "difficulty": "beginner",
-  "tags": ["intro", "basics"],
+  "tags": ["melody", "rhythm"],
   "locales": ["en", "de"],
-  "estimated_minutes": 5
+  "estimated_minutes": 5,
+  "based_on": "simple_waltz"
 }</code></pre>
-
-      <h3>steps.json</h3>
-      <p>A step is a typed block. The renderer dispatches on <code>type</code>:</p>
-      <pre><code class="language-json">[
-  {
-    "type": "text",
-    "content_key": "step1_text"
-  },
-  {
-    "type": "notation",
-    "file": "assets/notation_1.xml",
-    "caption_key": "step1_caption"
-  },
-  {
-    "type": "exercise",
-    "notes": ["C4", "E4", "G4"],
-    "caption_key": "step1_exercise"
-  },
-  {
-    "type": "quiz",
-    "question_key": "step1_question",
-    "options_keys": ["opt_a", "opt_b", "opt_c"],
-    "correct": 0
-  }
-]</code></pre>
-      <p><code>content_key</code>, <code>caption_key</code>, etc. are looked up in the locale file for the active language, falling back to <code>en.json</code>.</p>
-
-      <h3>Step Types</h3>
-      <table class="param-table">
-        <thead><tr><th>Type</th><th>Description</th></tr></thead>
-        <tbody>
-          <tr><td><code>text</code></td><td>Explanatory prose, supports inline bold/italic via simple markup</td></tr>
-          <tr><td><code>notation</code></td><td>Sheet music rendered by PyLute from a MusicXML asset file</td></tr>
-          <tr><td><code>exercise</code></td><td>Interactive play-along — user must play specified notes on MIDI keyboard</td></tr>
-          <tr><td><code>quiz</code></td><td>Multiple-choice question with immediate feedback</td></tr>
-        </tbody>
-      </table>
+      <p><code>id</code> must match the folder name (lowercase letters, digits and <code>_</code>). <code>difficulty</code> is <code>beginner</code>, <code>intermediate</code> or <code>advanced</code>. <code>based_on</code> is written by <em>Duplicate</em> and optional.</p>
+      <h3>en.json, de.json</h3>
+      <pre><code class="language-json">{ "title": "Waltz for Mia", "description": "A gentle waltz in three-four time." }</code></pre>
     </section>
-
-    <section class="doc-section" id="course-bundle">
-      <h2>Course Bundle</h2>
-      <p>A course is an ordered collection of lessons:</p>
-      <pre><code class="language-bash">courses/beginner_path/
-  meta.json          ← course identity and lesson order
-  en.json
-  de.json</code></pre>
+    <section class="doc-section" id="steps">
+      <h2>steps.json</h2>
+      <p>A list of steps, played in order. There are two types, and a lesson should end with an exercise.</p>
+      <h3><code>scene</code>: explaining something</h3>
+      <p>A scene is a list of <strong>beats</strong> (screens) with text, the keyboard, animated hands and an optional staff. Texts are written in every language right in the beat.</p>
       <pre><code class="language-json">{
-  "id": "beginner_path",
-  "version": "1.0.0",
-  "author": "Pianove",
-  "difficulty": "beginner",
-  "lessons": [
-    "welcome",
-    "c_major_scale",
-    "reading_notes",
-    "first_melody"
+  "type": "scene",
+  "title": { "en": "The C major scale", "de": "Die C-Dur-Tonleiter" },
+  "beats": [
+    {
+      "title":  { "en": "The thumb passes under", "de": "Der Daumen geht unten durch" },
+      "say":    { "en": "Watch the thumb …", "de": "Achte auf den Daumen …" },
+      "labels": ["E4", "F4"],
+      "mark":   ["F4"],
+      "play":   ["C4", "D4", "E4", "F4", "G4"],
+      "fingers": [1, 2, 3, 1, 2],
+      "tempo":  54,
+      "staff":  { "clef": "treble", "notes": ["C4", "D4", "E4", "F4", "G4"] }
+    }
   ]
 }</code></pre>
-      <p>Lessons referenced here can be bundled inside the course zip or declared as dependencies resolved from already-installed packages.</p>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">title, say</td><td>Heading and text of the screen, per language</td></tr>
+          <tr><td class="col-name">labels</td><td>Key names to show: a list of keys, or <code>"C"</code> (every C), <code>"white"</code>, <code>"hand"</code> (keys under the fingers)</td></tr>
+          <tr><td class="col-name">mark</td><td>Keys that are highlighted</td></tr>
+          <tr><td class="col-name">play</td><td>A phrase Pianove plays with the hand; an entry like <code>"C4+E4"</code> is a chord</td></tr>
+          <tr><td class="col-name">fingers</td><td>The finger (1 = thumb … 5) for each entry of <code>play</code>; <code>"1+3+5"</code> for a chord</td></tr>
+          <tr><td class="col-name">tempo</td><td>Beats per minute for <code>play</code> (default 76)</td></tr>
+          <tr><td class="col-name">accent, velocities</td><td>Stress every n-th note; loudness (1–127) per note</td></tr>
+          <tr><td class="col-name">try, try_say</td><td>What the learner plays afterwards (<code>"play"</code>: the same notes, or a list of notes) and the prompt shown</td></tr>
+          <tr><td class="col-name">hand, numbers, side</td><td>Where the fingers rest (<code>{"right": {"C4": 1, …}}</code>), whether finger numbers show, which hand plays</td></tr>
+          <tr><td class="col-name">staff</td><td><code>{"clef": "treble"/"bass"/"grand", "key": 1, "time": [3, 4], "notes": […], "under": "names"/"count"}</code></td></tr>
+        </tbody>
+      </table>
+      <h3><code>exercise</code>: the piece</h3>
+      <p>The music the learner plays from the staff, bar by bar: <code>bars</code> (notes per bar) and <code>types</code> (their values: <code>quarter</code>, <code>eighth</code>, <code>half</code>, …, with dots, triplets, rests and ties). An optional <code>lh</code> with its own bars and types puts the exercise on a grand staff for both hands.</p>
+      <p>The full, current reference for every field is <a href="https://github.com/MariusAngermann08/Pianove/blob/main/LESSON_FORMAT.md" target="_blank" rel="noopener"><code>LESSON_FORMAT.md</code></a> in the repository; the easiest way to get a correct file is to make the lesson in <a href="creator.html">Creator Mode</a> and look at what it saved.</p>
     </section>
-
-    <section class="doc-section" id="package-manager">
-      <h2>Package Manager</h2>
-      <p>Import source: local file picker (<code>.pianove-pkg</code> zip) — v1. Future versions may support a registry index at a hosted <code>index.json</code>.</p>
-      <h3>Package Resolution Order</h3>
-      <ol>
-        <li>Built-in (<code>pianove/lessons/</code>, <code>pianove/courses/</code>)</li>
-        <li>User-installed (<code>~/.pianove/packages/</code>)</li>
-        <li>User-installed packages shadow built-ins of the same <code>id</code> — allows community patches</li>
-      </ol>
+    <section class="doc-section" id="course">
+      <h2>A course folder</h2>
+      <pre><code class="language-json">// courses/beginner_path/meta.json
+{
+  "id": "beginner_path",
+  "version": "2.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "lessons": ["welcome", "c_major_scale", "five_note_melody", "…"]
+}</code></pre>
+      <p>Plus an <code>en.json</code> / <code>de.json</code> with its title and description, as for lessons.</p>
     </section>
-
-    <section class="doc-section" id="design-principles">
-      <h2>Design Principles</h2>
-      <ul>
-        <li><strong>Human-readable</strong> — JSON + MusicXML are plain text, readable, diffable, and Git-friendly</li>
-        <li><strong>Localizable</strong> — every user-facing string lives in locale files, following the same pattern as the rest of the app</li>
-        <li><strong>Forkable</strong> — anyone can copy a lesson folder, edit it, and share the zip or submit a PR</li>
-        <li><strong>Extensible</strong> — new step types can be added without breaking existing lessons; unknown types are skipped with a fallback UI</li>
-      </ul>
+    <section class="doc-section" id="package">
+      <h2>Packages</h2>
+      <p>A <code>.pianove-pkg</code> file is a zip with <code>lessons/&lt;id&gt;/</code> and <code>courses/&lt;id&gt;/</code> folders, exactly as above. Imports are checked: at most 20 MB, no paths outside those folders, valid ids and a <code>steps.json</code> for every lesson.</p>
     </section>
-
-    <div class="doc-nav-footer">
-      <a href="settings.html" class="doc-nav-link">
-        <div class="doc-nav-dir">Previous</div>
-        <div class="doc-nav-title">← Settings & Language</div>
-      </a>
-      <div></div>
-    </div>
+    <div class="doc-nav-footer"><a href="creator.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Creator Mode</div></a><div></div></div>
   </main>
 </div>
-
-<footer>
-  <span>Marius Angermann · 2026</span>
-  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span>
-</footer>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
 <script src="../js/landing.js"></script><script src="../js/docs.js"></script>
 </body>
 </html>

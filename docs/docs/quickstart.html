@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pianove — Quick Start</title>
+  <title>Quick Start — Pianove Guide</title>
+  <meta name="description" content="From a fresh clone to your first lesson in five minutes.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
@@ -14,7 +15,7 @@
   <a class="nav-logo" href="../index.html">Pianove</a>
   <div class="nav-links">
     <a href="../story.html">Story</a>
-    <a href="../docs.html">Pianove</a>
+    <a href="../docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -32,102 +33,76 @@
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
 <div class="docs-body">
   <aside class="docs-sidebar">
-    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
     <span class="sidebar-group-label">Getting Started</span>
-    <a href="quickstart.html" class="active">Quick Start</a>
+    <a href="quickstart.html" class="active" aria-current="page">Quick Start</a>
+    <div class="sidebar-toc">
+      <a href="#install">1. Install</a>
+      <a href="#launch">2. Launch and set up</a>
+      <a href="#home">3. Find your way around</a>
+      <a href="#first-lesson">4. Play your first lesson</a>
+      <a href="#first-song">5. Learn a song of your own</a>
+    </div>
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html">Installation</a>
-    <span class="sidebar-group-label">Using Pianove</span>
-    <a href="midi-setup.html">MIDI Setup</a>
-    <a href="lessons.html">Built-in Lessons</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html">Songs &amp; Learning Path</a>
     <a href="musicxml.html">Importing MusicXML</a>
-    <span class="sidebar-group-label">Features</span>
-    <a href="progress.html">Progress &amp; Statistics</a>
-    <a href="synthesiser.html">Built-in Synthesiser</a>
-    <a href="settings.html">Settings &amp; Language</a>
-    <span class="sidebar-group-label">For Developers</span>
-    <a href="lesson-format.html">Lesson File Format</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
   </aside>
-
   <main class="docs-content">
     <div class="docs-page-header">
+      <p class="page-eyebrow">Getting Started</p>
       <h1>Quick Start</h1>
-      <p class="page-subtitle">Install Pianove and play your first lesson in under five minutes.</p>
-      <div class="page-meta"><span class="meta-item">Python 3.10 +</span><span class="meta-item">pygame</span><span class="meta-item">MIDI optional</span></div>
+      <p class="page-subtitle">From a fresh clone to your first lesson in five minutes.</p>
+      <div class="page-meta"><span class="meta-item">Python 3.10+</span><span class="meta-item">Windows · macOS · Linux</span><span class="meta-item">MIDI or microphone</span></div>
     </div>
-
-    <section class="doc-section" id="prerequisites">
-      <h2>Prerequisites</h2>
-      <p>Pianove requires Python 3.10 or later and the <code>pygame</code> library. A MIDI keyboard is optional — you can use Pianove with your computer keyboard for testing, but a MIDI keyboard is required to follow along with lessons in real time.</p>
-      <pre><code class="language-bash">python --version   # must be 3.10 or later
-pip install pygame</code></pre>
-    </section>
-
-    <section class="doc-section" id="clone">
-      <h2>1. Clone the repository</h2>
+<section class="doc-section" id="install">
+      <h2>1. Install</h2>
+      <p>You need Python 3.10 or newer. Clone the repository and install the dependencies:</p>
       <pre><code class="language-bash">git clone https://github.com/MariusAngermann08/Pianove.git
-cd Pianove</code></pre>
+cd Pianove
+pip install -r requirements.txt</code></pre>
+      <div class="callout callout--note"><span class="callout-icon" aria-hidden="true">i</span><div><strong>FluidSynth.</strong> The piano sound comes from FluidSynth, a native library that pip cannot install. On Windows it ships in <code>bin/</code>; on macOS and Linux install it with your package manager (<code>brew install fluid-synth</code>, <code>sudo apt install libfluidsynth3</code>). Details in <a href="installation.html#fluidsynth">Installation</a>.</div></div>
     </section>
-
     <section class="doc-section" id="launch">
-      <h2>2. Launch Pianove</h2>
+      <h2>2. Launch and set up</h2>
       <pre><code class="language-bash">python main.py</code></pre>
-      <p>The application window opens. If a MIDI keyboard is connected, it will be detected automatically.</p>
-
-      <div class="doc-image-placeholder">
-        <strong>Screenshot: Pianove home screen on first launch</strong>
-        <span>Add docs/img/pianove-home.png</span>
-      </div>
+      <p>On the first start a short setup asks for your language, your name and how much piano you have played, and then looks for your keyboard. Plug in a USB MIDI keyboard and press a key, or choose <strong>Acoustic piano? Use the microphone instead</strong>. You can also skip this and connect later.</p>
+      <div class="shot-pair"><figure class="shot "><img src="../img/ss-onboarding-name.png" alt="Setup: your name" loading="lazy"><figcaption>Setup: your name</figcaption></figure><figure class="shot "><img src="../img/ss-onboarding-midi.png" alt="Setup: connect a keyboard or use the microphone" loading="lazy"><figcaption>Setup: connect a keyboard or use the microphone</figcaption></figure></div>
     </section>
-
+    <section class="doc-section" id="home">
+      <h2>3. Find your way around</h2>
+      <p>After the setup you land on <strong>Home</strong>. The sidebar holds the four main areas: <strong>Home</strong>, <strong>Songs</strong>, <strong>Lessons</strong> and <strong>Practice</strong>, plus <strong>Settings</strong> at the bottom. With Creator Mode switched on, a fifth tab, <strong>Create</strong>, appears.</p>
+      <figure class="shot "><img src="../img/ss-home.png" alt="Home: what to do next, your streak and this week's practice" loading="lazy"><figcaption>Home: what to do next, your streak and this week's practice</figcaption></figure>
+    </section>
     <section class="doc-section" id="first-lesson">
-      <h2>3. Start your first lesson</h2>
-      <ol>
-        <li>Click <strong>Lessons</strong> in the left sidebar.</li>
-        <li>Select <strong>Lesson 1 — Single Notes</strong>.</li>
-        <li>The sheet music appears at the top. The first note to play is highlighted on the keyboard display.</li>
-        <li>Play the highlighted key on your MIDI keyboard (or press the corresponding key on your computer keyboard in test mode).</li>
-        <li>Pianove advances to the next note when the correct key is detected.</li>
+      <h2>4. Play your first lesson</h2>
+      <ol class="steps">
+        <li>On Home, press <strong>Continue</strong>, or open <strong>Lessons → Beginner Path</strong> and start <em>Welcome to Pianove</em>.</li>
+        <li>The lesson first <strong>explains</strong> the idea in a few short animated screens. Read, listen, and play the keys it asks for.</li>
+        <li>Then you <strong>play the piece</strong> from the staff. The key to play next is lit on the on-screen keyboard; the music waits for you.</li>
+        <li>After each section comes the <strong>final performance</strong>: the whole piece in tempo, after a count-in.</li>
       </ol>
-
-      <div class="doc-image-placeholder">
-        <strong>Screenshot: Lesson 1 in progress, first note highlighted</strong>
-        <span>Add docs/img/pianove-lesson1.png</span>
-      </div>
+      <figure class="shot "><img src="../img/ss-lesson.png" alt="A lesson piece: notes you've played turn green, the blue line shows where you are" loading="lazy"><figcaption>A lesson piece: notes you've played turn green, the blue line shows where you are</figcaption></figure>
     </section>
-
-    <section class="doc-section" id="import-musicxml">
-      <h2>4. Import a MusicXML file</h2>
-      <p>To practice any piece you find online:</p>
-      <ol>
-        <li>Click <strong>Library</strong> in the left sidebar.</li>
-        <li>Click <strong>Import MusicXML</strong>.</li>
-        <li>Select a <code>.xml</code>, <code>.musicxml</code>, or <code>.mxl</code> file from your computer.</li>
-        <li>The piece is loaded and displayed as sheet music. Press <strong>Practice</strong> to start.</li>
-      </ol>
-      <p>MusicXML files are available from <a href="https://musescore.com" target="_blank" rel="noopener">MuseScore.com</a> and <a href="https://imslp.org" target="_blank" rel="noopener">IMSLP.org</a>.</p>
+    <section class="doc-section" id="first-song">
+      <h2>5. Learn a song of your own</h2>
+      <p>Open <strong>Songs</strong>, press <strong>+</strong> and pick a MusicXML file (<code>.musicxml</code>, <code>.xml</code> or <code>.mxl</code>). The repository includes one to try: <code>waltz-in-a-minorchopin.mxl</code>. Press <strong>Practice</strong> and Pianove builds a learning path that takes you from the first bars to the whole piece.</p>
+      <p>Where to go next: <a href="songs.html">Songs &amp; Learning Path</a>, <a href="midi-setup.html">Keyboard &amp; Microphone</a>, <a href="settings.html">Settings</a>.</p>
     </section>
-
-    <section class="doc-section" id="next-steps">
-      <h2>Next steps</h2>
-      <ul>
-        <li><a href="midi-setup.html">MIDI Setup</a> — configure your keyboard device if it was not detected automatically.</li>
-        <li><a href="lessons.html">Lessons overview</a> — a description of all 16 built-in lessons and their skill targets.</li>
-        <li><a href="musicxml.html">Importing MusicXML</a> — supported formats, where to find files, and known limitations.</li>
-        <li><a href="settings.html">Settings</a> — change the language, theme, and synthesiser volume.</li>
-      </ul>
-    </section>
-
-    <div class="doc-nav-footer">
-      <div></div>
-      <a href="requirements.html" class="doc-nav-link doc-nav-link--next">
-        <div class="doc-nav-dir">Next</div>
-        <div class="doc-nav-title">System Requirements →</div>
-      </a>
-    </div>
+    <div class="doc-nav-footer"><div></div><a href="requirements.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">System Requirements →</div></a></div>
   </main>
 </div>
 <footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>

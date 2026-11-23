@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings & Language — Pianove</title>
+  <title>Settings — Pianove Guide</title>
+  <meta name="description" content="Everything that can be changed, section by section.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -13,7 +15,7 @@
   <a class="nav-logo" href="../index.html">Pianove</a>
   <div class="nav-links">
     <a href="../story.html">Story</a>
-    <a href="../docs.html">Pianove</a>
+    <a href="../docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -21,7 +23,7 @@
         <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
       </div>
     </div>
-    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub &#x2197;</a>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
   </div>
   <div class="nav-controls">
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
@@ -31,87 +33,72 @@
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
 <div class="docs-body">
   <aside class="docs-sidebar">
-    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
     <span class="sidebar-group-label">Getting Started</span>
     <a href="quickstart.html">Quick Start</a>
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html">Installation</a>
-    <span class="sidebar-group-label">Using Pianove</span>
-    <a href="midi-setup.html">MIDI Setup</a>
-    <a href="lessons.html">Built-in Lessons</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html">Songs &amp; Learning Path</a>
     <a href="musicxml.html">Importing MusicXML</a>
-    <span class="sidebar-group-label">Features</span>
-    <a href="progress.html">Progress &amp; Statistics</a>
-    <a href="synthesiser.html">Built-in Synthesiser</a>
-    <a href="settings.html" class="active">Settings &amp; Language</a>
-    <span class="sidebar-group-label">For Developers</span>
-    <a href="lesson-format.html">Lesson File Format</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html" class="active" aria-current="page">Settings</a>
+    <div class="sidebar-toc">
+      <a href="#overview">Overview</a>
+      <a href="#language">Language</a>
+      <a href="#saved">Saved automatically</a>
+    </div>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
   </aside>
-
   <main class="docs-content">
     <div class="docs-page-header">
-      <h1>Settings & Language</h1>
-      <p class="page-subtitle">Configure theme, language, MIDI device, and synthesiser volume.</p>
+      <p class="page-eyebrow">Your App</p>
+      <h1>Settings</h1>
+      <p class="page-subtitle">Everything that can be changed, section by section.</p>
+      <div class="page-meta"><span class="meta-item">English · Deutsch</span><span class="meta-item">Dark · Light</span></div>
     </div>
-
-    <section class="doc-section" id="profile">
-      <h2>Profile</h2>
-      <p>Set your display name under <strong>Profile</strong>. The name is shown in the greeting on the Home tab. It is stored locally and never transmitted.</p>
+<section class="doc-section" id="overview">
+      <h2>Overview</h2>
+      <figure class="shot "><img src="../img/ss-settings.png" alt="Settings" loading="lazy"><figcaption>Settings</figcaption></figure>
+      <table class="param-table">
+        <thead><tr><th>Section</th><th>Setting</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Profile</td><td class="col-name">Name</td><td>How Pianove greets you</td></tr>
+          <tr><td rowspan="5">MIDI Device</td><td class="col-name">MIDI Device</td><td>The connected keyboard</td></tr>
+          <tr><td class="col-name">MIDI Setup</td><td>The keyboard view and range calibration (<a href="midi-setup.html#range">more</a>)</td></tr>
+          <tr><td class="col-name">MIDI Sound Output</td><td>Piano sound for silent keyboards (<a href="synthesiser.html">more</a>)</td></tr>
+          <tr><td class="col-name">Volume</td><td>Level of the piano sound</td></tr>
+          <tr><td class="col-name">Hear My Piano · Sensitivity</td><td>Play an acoustic piano through the microphone (<a href="midi-setup.html#microphone">more</a>)</td></tr>
+          <tr><td>Language</td><td class="col-name">English · Deutsch</td><td>The app and all built-in lessons</td></tr>
+          <tr><td>Appearance</td><td class="col-name">Dark Mode</td><td>Dark or light colours</td></tr>
+          <tr><td rowspan="2">Beta</td><td class="col-name">Beta Features</td><td>Animated hands, automatic fingering, Listen (<a href="lessons.html#hands">more</a>)</td></tr>
+          <tr><td class="col-name">Hands</td><td>Skin tone of the hands</td></tr>
+          <tr><td>Content Creator</td><td class="col-name">Creator Mode</td><td>Adds the Create tab with the lesson and course editors (<a href="creator.html">more</a>)</td></tr>
+          <tr><td></td><td class="col-name">Reset Onboarding</td><td>Runs the first-start setup again; your progress stays</td></tr>
+        </tbody>
+      </table>
     </section>
-
-    <section class="doc-section" id="midi">
-      <h2>MIDI Device</h2>
-      <p>Displays the currently active MIDI input device and lists all connected devices. Tap a device to switch. See <a href="midi-setup.html">MIDI Setup</a> for full details on detection and calibration.</p>
-    </section>
-
-    <section class="doc-section" id="volume">
-      <h2>Sound Volume</h2>
-      <p>Drag the volume slider to adjust the synthesiser output level. The setting is applied immediately to FluidSynth and saved persistently. Setting to zero mutes audio without disabling the synthesiser.</p>
-    </section>
-
     <section class="doc-section" id="language">
       <h2>Language</h2>
-      <p>Switch the app language between <strong>English</strong> and <strong>German</strong>. The change takes effect immediately — no restart required. All UI labels, lesson text, error messages, and settings descriptions update instantly.</p>
-      <p>Lesson content is localised per locale file bundled with each lesson. If a lesson does not have a translation for the active language, it falls back to English.</p>
+      <p>Pianove speaks English and German. The choice applies at once to the whole app, including lesson texts. To add a language, see <a href="https://github.com/MariusAngermann08/Pianove/tree/main/pianove/locales" target="_blank" rel="noopener"><code>pianove/locales/</code></a>; each lesson then gets one more <code>&lt;lang&gt;.json</code>.</p>
     </section>
-
-    <section class="doc-section" id="appearance">
-      <h2>Appearance</h2>
-      <p>Toggle between <strong>light mode</strong> and <strong>dark mode</strong>. Pianove uses the iOS colour palette via PyLay's theming system. The selected theme is saved and restored on the next launch.</p>
+    <section class="doc-section" id="saved">
+      <h2>Saved automatically</h2>
+      <p>Every change is saved the moment you make it, in <code>~/.pianove/storage.json</code>.</p>
     </section>
-
-    <section class="doc-section" id="creator">
-      <h2>Content Creator Mode</h2>
-      <p>Enabling Content Creator Mode unlocks the <strong>Creator</strong> tab in the home navigation. The Creator tab allows you to browse locally installed custom lessons and package them into <code>.pianove-pkg</code> files for sharing with others.</p>
-      <p>See <a href="lesson-format.html">Lesson File Format</a> for how to create custom lessons and courses.</p>
-    </section>
-
-    <section class="doc-section" id="reset">
-      <h2>Reset</h2>
-      <p>The reset option under Settings clears all progress data: lesson completion dates, streak history, practice session records, and achievement state. A confirmation dialog is shown before any data is deleted.</p>
-      <div class="doc-warning"><strong>This action cannot be undone.</strong> Imported songs are not affected by a reset — only progress statistics are cleared.</div>
-    </section>
-
-    <div class="doc-nav-footer">
-      <a href="synthesiser.html" class="doc-nav-link">
-        <div class="doc-nav-dir">Previous</div>
-        <div class="doc-nav-title">← Built-in Synthesiser</div>
-      </a>
-      <a href="lesson-format.html" class="doc-nav-link doc-nav-link--next">
-        <div class="doc-nav-dir">Next</div>
-        <div class="doc-nav-title">Lesson File Format →</div>
-      </a>
-    </div>
+    <div class="doc-nav-footer"><a href="synthesiser.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Piano Sound</div></a><a href="creator.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Creator Mode →</div></a></div>
   </main>
 </div>
-
-<footer>
-  <span>Marius Angermann · 2026</span>
-  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span>
-</footer>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
 <script src="../js/landing.js"></script><script src="../js/docs.js"></script>
 </body>
 </html>

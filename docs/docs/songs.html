@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Songs & Learning Path — Pianove Guide</title>
+  <meta name="description" content="Import a piece and Pianove turns it into a path of small steps, from the first bars to the whole piece.">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../story.html">Story</a>
+    <a href="../docs.html">Guide</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
+    <span class="sidebar-group-label">Getting Started</span>
+    <a href="quickstart.html">Quick Start</a>
+    <a href="requirements.html">System Requirements</a>
+    <a href="installation.html">Installation</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html" class="active" aria-current="page">Songs &amp; Learning Path</a>
+    <div class="sidebar-toc">
+      <a href="#library">Your song library</a>
+      <a href="#path">The learning path</a>
+      <a href="#free">Free practice</a>
+      <a href="#score">Reading the score</a>
+    </div>
+    <a href="musicxml.html">Importing MusicXML</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
+  </aside>
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <p class="page-eyebrow">Playing</p>
+      <h1>Songs &amp; Learning Path</h1>
+      <p class="page-subtitle">Import a piece and Pianove turns it into a path of small steps, from the first bars to the whole piece.</p>
+      <div class="page-meta"><span class="meta-item">MusicXML</span><span class="meta-item">Learning path</span><span class="meta-item">1–3 stars per step</span></div>
+    </div>
+<section class="doc-section" id="library">
+      <h2>Your song library</h2>
+      <p>The <strong>Songs</strong> tab lists every piece you imported, with its composer, length and difficulty, which Pianove rates from the range, chords and hand movement. Filter by difficulty at the top, press <strong>+</strong> to import, <strong>View</strong> to read the score and <strong>Practice</strong> to learn it.</p>
+      <figure class="shot "><img src="../img/ss-songs.png" alt="The Songs tab" loading="lazy"><figcaption>The Songs tab</figcaption></figure>
+    </section>
+    <section class="doc-section" id="path">
+      <h2>The learning path</h2>
+      <p>Pressing <strong>Practice</strong> opens the song's page. Its <strong>Learning path</strong> cuts the piece into parts of about twelve beats and lists what each part brings for the first time: <em>chords</em>, <em>black keys</em>, <em>leaps</em>, <em>a new hand position</em>, <em>faster notes</em>, <em>hands together</em>.</p>
+      <figure class="shot "><img src="../img/ss-song-path.png" alt="Chopin's Waltz in A minor as a learning path" loading="lazy"><figcaption>Chopin's Waltz in A minor as a learning path</figcaption></figure>
+      <p>For every new part you learn:</p>
+      <ol class="steps">
+        <li><strong>The right hand</strong>, note by note, then in tempo.</li>
+        <li><strong>The left hand</strong>, the same way.</li>
+        <li><strong>Both hands</strong> together.</li>
+      </ol>
+      <p>Every two parts are then <strong>joined</strong> and played in tempo one after the other, and the path ends with <strong>the whole piece</strong>. A part that repeats an earlier one is not learned twice; one that is nearly the same only gets a short step for the variation. Each step can earn up to three stars, and the next step unlocks when you finish the one before.</p>
+    </section>
+    <section class="doc-section" id="free">
+      <h2>Free practice</h2>
+      <p>Switch to <strong>Free practice</strong> to play the whole piece your way: choose the right hand, left hand or both, then <strong>Practice</strong> (the music waits for you) or <strong>Play along</strong> (in tempo after a count-in). With Beta Features on there is also <strong>Listen</strong>, which plays the piece to you.</p>
+    </section>
+    <section class="doc-section" id="score">
+      <h2>Reading the score</h2>
+      <p><strong>View</strong> shows the full score, typeset by <a href="../pylute.html">PyLute</a>: title and composer, grand staff, beams, chords, accidentals and ties, page by page.</p>
+      <figure class="shot "><img src="../img/ss-song-score.png" alt="The score viewer" loading="lazy"><figcaption>The score viewer</figcaption></figure>
+    </section>
+    <div class="doc-nav-footer"><a href="lessons.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Lessons &amp; Courses</div></a><a href="musicxml.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Importing MusicXML →</div></a></div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

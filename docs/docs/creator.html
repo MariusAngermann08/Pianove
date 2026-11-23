@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creator Mode — Pianove Guide</title>
+  <meta name="description" content="Write your own lessons and courses inside the app, test them, and share them as one file.">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="../index.html">Pianove</a>
+  <div class="nav-links">
+    <a href="../story.html">Story</a>
+    <a href="../docs.html">Guide</a>
+    <div class="nav-dropdown" id="nav-libraries">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="../pylute.html" role="menuitem"><span class="dropdown-item-name">PyLute</span><span class="dropdown-item-desc">Music notation renderer</span></a>
+        <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
+      </div>
+    </div>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
+  </div>
+  <div class="nav-controls">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="docs-body">
+  <aside class="docs-sidebar">
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
+    <span class="sidebar-group-label">Getting Started</span>
+    <a href="quickstart.html">Quick Start</a>
+    <a href="requirements.html">System Requirements</a>
+    <a href="installation.html">Installation</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html">Songs &amp; Learning Path</a>
+    <a href="musicxml.html">Importing MusicXML</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html">Piano Sound</a>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html" class="active" aria-current="page">Creator Mode</a>
+    <div class="sidebar-toc">
+      <a href="#enable">Turning it on</a>
+      <a href="#editor">The lesson editor</a>
+      <a href="#piece">Writing the piece</a>
+      <a href="#check">Checking and testing</a>
+      <a href="#translation">Translation</a>
+      <a href="#courses">Courses</a>
+      <a href="#share">Sharing: packages</a>
+    </div>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
+  </aside>
+  <main class="docs-content">
+    <div class="docs-page-header">
+      <p class="page-eyebrow">Making Lessons</p>
+      <h1>Creator Mode</h1>
+      <p class="page-subtitle">Write your own lessons and courses inside the app, test them, and share them as one file.</p>
+      <div class="page-meta"><span class="meta-item">Lesson editor</span><span class="meta-item">Course editor</span><span class="meta-item">.pianove-pkg</span></div>
+    </div>
+<section class="doc-section" id="enable">
+      <h2>Turning it on</h2>
+      <p>Open <strong>Settings → Content Creator</strong> and switch on <strong>Creator Mode</strong>. A new tab, <strong>Create</strong>, appears in the sidebar.</p>
+      <figure class="shot "><img src="../img/ss-creator.png" alt="The Create tab" loading="lazy"><figcaption>The Create tab</figcaption></figure>
+      <p>From here you can:</p>
+      <ul>
+        <li><strong>Create a lesson</strong>, empty or from a template: <em>New notes</em>, <em>Melody</em> or <em>Rhythm</em>.</li>
+        <li><strong>Create a course</strong> and fill it with lessons.</li>
+        <li><strong>Duplicate a built-in lesson</strong> to change your own copy; the original and its progress stay as they are.</li>
+        <li><strong>Import</strong> and <strong>export</strong> packages.</li>
+      </ul>
+    </section>
+    <section class="doc-section" id="editor">
+      <h2>The lesson editor</h2>
+      <p>A lesson is built like the built-in ones: <strong>chapters</strong> of screens that explain, then a <strong>piece</strong> to play. The outline on the left shows them in order; select one to edit it on the right, with a live preview on top.</p>
+      <figure class="shot "><img src="../img/ss-lesson-editor.png" alt="Editing a “Listen &amp; play” screen: the preview plays the phrase with the hand" loading="lazy"><figcaption>Editing a “Listen &amp; play” screen: the preview plays the phrase with the hand</figcaption></figure>
+      <p>There are four kinds of screen:</p>
+      <table class="param-table">
+        <thead><tr><th>Screen</th><th>What the learner sees</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">Explain</td><td>Text, with keys highlighted or named on the keyboard</td></tr>
+          <tr><td class="col-name">Listen &amp; play</td><td>Pianove plays a short phrase, the learner plays it back; it can be shown on a staff</td></tr>
+          <tr><td class="col-name">Find the keys</td><td>The learner finds and plays the keys you picked</td></tr>
+          <tr><td class="col-name">Hand position</td><td>Where the fingers rest, with their numbers</td></tr>
+        </tbody>
+      </table>
+      <p>Write a phrase by tapping keys on the preview, by playing it on your keyboard, or with <strong>Record</strong> to a metronome. <strong>Suggest</strong> fills in the fingering.</p>
+    </section>
+    <section class="doc-section" id="piece">
+      <h2>Writing the piece</h2>
+      <p>The piece has a small score editor: one staff or both hands, time signature, note values from sixteenths to whole notes, dots, triplets, rests, chords and ties. Notes can be dragged up and down. On a computer keyboard:</p>
+      <table class="param-table">
+        <thead><tr><th>Key</th><th>Does</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">A – G</td><td>Insert a note</td></tr>
+          <tr><td class="col-name">Shift + A – G</td><td>Add a note to the chord</td></tr>
+          <tr><td class="col-name">3 – 7</td><td>Note value: 16th … whole</td></tr>
+          <tr><td class="col-name">.</td><td>Dot</td></tr>
+          <tr><td class="col-name">Ctrl + 3</td><td>Triplet</td></tr>
+          <tr><td class="col-name">0</td><td>Rest</td></tr>
+          <tr><td class="col-name">T</td><td>Tie</td></tr>
+        </tbody>
+      </table>
+      <p>Or bring the bars in from a file with <strong>Import MusicXML…</strong> and pick the hand.</p>
+    </section>
+    <section class="doc-section" id="check">
+      <h2>Checking and testing</h2>
+      <p>The editor checks the lesson as you go (<em>Lesson details → Check</em>): missing titles or translations, notes that aren't notes, bars that are too full, fingerings that don't match. Tap a problem to jump to it. You can save and test anyway.</p>
+      <p><strong>Test</strong> plays the lesson exactly as a learner would, starting at the screen you're on; <strong>Back</strong> returns to the editor. Test runs don't count as progress.</p>
+    </section>
+    <section class="doc-section" id="translation">
+      <h2>Translation</h2>
+      <p>You write in the app's language; <strong>Translation</strong> lists every text with an empty field for the other language, and counts what's still missing.</p>
+    </section>
+    <section class="doc-section" id="courses">
+      <h2>Courses</h2>
+      <p>A course is a title, a description, a difficulty and an ordered list of lessons, built-in or your own.</p>
+      <figure class="shot "><img src="../img/ss-course-editor.png" alt="The course editor" loading="lazy"><figcaption>The course editor</figcaption></figure>
+    </section>
+    <section class="doc-section" id="share">
+      <h2>Sharing: packages</h2>
+      <p><strong>Export</strong> writes a lesson or a course with all its lessons into one <code>.pianove-pkg</code> file. Someone else imports it with <strong>Import package…</strong> on their Create tab, and its lessons appear in their Lessons tab. A package is a zip of the plain JSON folders described in <a href="lesson-format.html">Lesson &amp; Course Format</a>, so it can also be read and edited by hand.</p>
+    </section>
+    <div class="doc-nav-footer"><a href="settings.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Settings</div></a><a href="lesson-format.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Lesson &amp; Course Format →</div></a></div>
+  </main>
+</div>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
+<script src="../js/landing.js"></script><script src="../js/docs.js"></script>
+</body>
+</html>

@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Built-in Synthesiser — Pianove</title>
+  <title>Piano Sound — Pianove Guide</title>
+  <meta name="description" content="A sampled grand piano built in, for keyboards without speakers and for every demo.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script>(function(){var t=localStorage.getItem('pianove-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -13,7 +15,7 @@
   <a class="nav-logo" href="../index.html">Pianove</a>
   <div class="nav-links">
     <a href="../story.html">Story</a>
-    <a href="../docs.html">Pianove</a>
+    <a href="../docs.html">Guide</a>
     <div class="nav-dropdown" id="nav-libraries">
       <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">API Reference<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron"><polyline points="1 1 5 5 9 1"/></svg></button>
       <div class="nav-dropdown-menu" role="menu">
@@ -21,7 +23,7 @@
         <a href="../pylay.html" role="menuitem"><span class="dropdown-item-name">PyLay</span><span class="dropdown-item-desc">pygame UI framework</span></a>
       </div>
     </div>
-    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub &#x2197;</a>
+    <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener" class="nav-github">GitHub ↗</a>
   </div>
   <div class="nav-controls">
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
@@ -31,71 +33,65 @@
     <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
 <div class="docs-body">
   <aside class="docs-sidebar">
-    <a href="../docs.html" class="sidebar-back">← Docs</a>
+    <a href="../docs.html" class="sidebar-back">← Guide overview</a>
     <span class="sidebar-group-label">Getting Started</span>
     <a href="quickstart.html">Quick Start</a>
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html">Installation</a>
-    <span class="sidebar-group-label">Using Pianove</span>
-    <a href="midi-setup.html">MIDI Setup</a>
-    <a href="lessons.html">Built-in Lessons</a>
+    <span class="sidebar-group-label">Playing</span>
+    <a href="midi-setup.html">Keyboard &amp; Microphone</a>
+    <a href="lessons.html">Lessons &amp; Courses</a>
+    <a href="songs.html">Songs &amp; Learning Path</a>
     <a href="musicxml.html">Importing MusicXML</a>
-    <span class="sidebar-group-label">Features</span>
-    <a href="progress.html">Progress &amp; Statistics</a>
-    <a href="synthesiser.html" class="active">Built-in Synthesiser</a>
-    <a href="settings.html">Settings &amp; Language</a>
-    <span class="sidebar-group-label">For Developers</span>
-    <a href="lesson-format.html">Lesson File Format</a>
+    <a href="practice.html">Sight-Reading Practice</a>
+    <span class="sidebar-group-label">Your App</span>
+    <a href="progress.html">Progress &amp; Achievements</a>
+    <a href="synthesiser.html" class="active" aria-current="page">Piano Sound</a>
+    <div class="sidebar-toc">
+      <a href="#what">What it does</a>
+      <a href="#engine">Engine and sound</a>
+      <a href="#volume">Volume</a>
+      <a href="#mic">With the microphone</a>
+    </div>
+    <a href="settings.html">Settings</a>
+    <span class="sidebar-group-label">Making Lessons</span>
+    <a href="creator.html">Creator Mode</a>
+    <a href="lesson-format.html">Lesson &amp; Course Format</a>
   </aside>
-
   <main class="docs-content">
     <div class="docs-page-header">
-      <h1>Built-in Synthesiser</h1>
-      <p class="page-subtitle">How the built-in synthesiser works — FluidSynth, with a bundled soundfont.</p>
+      <p class="page-eyebrow">Your App</p>
+      <h1>Piano Sound</h1>
+      <p class="page-subtitle">A sampled grand piano built in, for keyboards without speakers and for every demo.</p>
+      <div class="page-meta"><span class="meta-item">FluidSynth</span><span class="meta-item">Salamander Grand (C5 Light)</span></div>
     </div>
-
-    <section class="doc-section" id="overview">
-      <h2>Overview</h2>
-      <p>Pianove uses <strong>FluidSynth</strong> as its audio backend via the <a href="https://pypi.org/project/pyfluidsynth/" target="_blank" rel="noopener">pyFluidSynth</a> Python binding. FluidSynth is a real-time software synthesiser that plays back MIDI using a SoundFont 2 file (<code>.sf2</code>). The application bundles a <strong>Salamander Grand Piano</strong> soundfont so no soundfont needs to be downloaded or configured manually.</p>
-      <div class="doc-note"><strong>FluidSynth must be installed as a system library.</strong> pyFluidSynth is a Python binding — it wraps the native <code>libfluidsynth</code> library, which must be installed separately. See <a href="requirements.html">System Requirements</a> for platform-specific instructions.</div>
+<section class="doc-section" id="what">
+      <h2>What it does</h2>
+      <p>Pianove plays piano sound in two situations:</p>
+      <ul>
+        <li><strong>Demos:</strong> theory scenes, <em>Listen</em> and the editors' preview play phrases for you.</li>
+        <li><strong>Your keys:</strong> with <strong>Settings → MIDI Sound Output</strong> on, every key you press on a MIDI keyboard sounds, including the sustain pedal. Leave it off if your digital piano has its own speakers.</li>
+      </ul>
     </section>
-
-    <section class="doc-section" id="soundfont">
-      <h2>Bundled SoundFont</h2>
-      <p>The included soundfont is the <strong>Salamander Grand Piano</strong> (C5 Light) by Alexander Holm, sampled from a real Yamaha C5 grand piano and distributed under the <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">Creative Commons Attribution 3.0</a> license. It covers the full 88-key piano range with multiple velocity layers. The file ships inside <code>pianove/assets/soundfonts/</code> alongside the application and is loaded automatically on startup.</p>
-      <p>Piano playback uses MIDI program 0 (Acoustic Grand Piano) and responds to the sustain (damper) pedal via MIDI CC 64. The audio channel, sample rate (44100 Hz), and gain are configured internally and require no user adjustment.</p>
+    <section class="doc-section" id="engine">
+      <h2>Engine and sound</h2>
+      <p>The sound engine is <a href="https://www.fluidsynth.org" target="_blank" rel="noopener">FluidSynth</a> playing the bundled <strong>Salamander Grand Piano (C5 Light)</strong> SoundFont, sampled from a Yamaha C5 grand by Alexander Holm (CC BY 3.0). It covers all 88 keys with several velocity layers, so soft and loud playing sound different. The file is <code>pianove/assets/soundfonts/SalamanderC5-Light.sf2</code>; nothing has to be downloaded.</p>
+      <p>The audio buffer is kept small (256 samples at 44.1 kHz, about 6 ms) so a key sounds the moment you press it.</p>
     </section>
-
     <section class="doc-section" id="volume">
-      <h2>Volume Control</h2>
-      <p>Volume is adjustable from the <a href="settings.html">Settings</a> tab. The slider maps linearly to FluidSynth's gain parameter (0.0 – 1.0). The setting is saved persistently and restored on the next launch.</p>
+      <h2>Volume</h2>
+      <p><strong>Settings → Volume</strong> sets the level; it is remembered between sessions.</p>
     </section>
-
-    <section class="doc-section" id="fallback">
-      <h2>Fallback Behaviour</h2>
-      <p>If FluidSynth is not available (library not installed or import fails), Pianove starts normally without sound. Exercise steps can still be completed — the app detects note input from the MIDI device regardless of audio output. A warning is displayed in the Settings tab when audio is unavailable.</p>
+    <section class="doc-section" id="mic">
+      <h2>With the microphone</h2>
+      <p>When Pianove listens through the microphone it knows which notes it is playing itself, so its own sound is not mistaken for yours.</p>
     </section>
-
-    <div class="doc-nav-footer">
-      <a href="progress.html" class="doc-nav-link">
-        <div class="doc-nav-dir">Previous</div>
-        <div class="doc-nav-title">← Progress & Statistics</div>
-      </a>
-      <a href="settings.html" class="doc-nav-link doc-nav-link--next">
-        <div class="doc-nav-dir">Next</div>
-        <div class="doc-nav-title">Settings & Language →</div>
-      </a>
-    </div>
+    <div class="doc-nav-footer"><a href="progress.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← Progress &amp; Achievements</div></a><a href="settings.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Settings →</div></a></div>
   </main>
 </div>
-
-<footer>
-  <span>Marius Angermann · 2026</span>
-  <span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE Youth Hacking For Freedom 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span>
-</footer>
+<footer><span>Marius Angermann · 2026</span><span><a href="https://fsfe.org/activities/yh4f/" target="_blank" rel="noopener">FSFE YH4F 2026</a> &nbsp;·&nbsp; <a href="https://github.com/MariusAngermann08/Pianove" target="_blank" rel="noopener">GitHub</a></span></footer>
 <script src="../js/landing.js"></script><script src="../js/docs.js"></script>
 </body>
 </html>
