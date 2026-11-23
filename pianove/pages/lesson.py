@@ -1372,9 +1372,11 @@ class _LessonPiano:
                                                         ctx.current_song_hand == "left") else "right"
             return ACCENT[side]
 
+        # a key held down: right ones in green, others in a neutral grey; red would read as
+        # a mistake (wrong notes are shown on the staff)
         def _wc(note):
             if note in sounding: return tuple(int(255 - (255 - c) * 0.75) for c in _played(note))
-            if _active(note): return (190, 60, 60)
+            if _active(note): return (120, 200, 140) if _exp(note) else (176, 182, 194)
             if _exp(note):
                 acc = _hand_col(note)          # the colour of the hand that plays it
                 if acc:
@@ -1384,7 +1386,7 @@ class _LessonPiano:
 
         def _bc(note):
             if note in sounding: return tuple(int(c * 0.9) for c in _played(note))
-            if _active(note): return (140, 45, 45)
+            if _active(note): return (40, 130, 70) if _exp(note) else (92, 98, 110)
             if _exp(note):
                 acc = _hand_col(note)
                 if acc:

@@ -192,6 +192,7 @@ See [`PyLay/README.md`](PyLay/README.md).
 pip install pytest
 python -m pytest tests -q                    # runs headless: no window, sound card or keyboard
 python scripts/screenshot_pianove.py         # regenerate the app screenshots in docs/img/
+python scripts/promo/record.py clips && python scripts/promo/compose.py clips promo.mp4   # the promo video
 pip install pyinstaller && pyinstaller pianove.spec   # build the stand-alone app into dist/
 ```
 
