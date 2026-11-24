@@ -187,7 +187,8 @@ def build():
         anchor="top_left", x=16, y=16,
     ))
     header.add_child(Label(
-        text=t("songs_count", n=len(songs)) if songs else t("songs_subtitle"),
+        text=(t("songs_count_one") if len(songs) == 1 else t("songs_count", n=len(songs)))
+        if songs else t("songs_subtitle"),
         font_size=13, color=iOSTheme.secondary_label,
         anchor="top_left", x=16, y=48,
     ))
