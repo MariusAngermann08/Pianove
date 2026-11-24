@@ -344,6 +344,24 @@ def shot_tempo_intro():
     ctx.lesson_intro = None
 
 
+def shot_result():
+    """The finish screen after a run in tempo: how it went, timing, and the take."""
+    from pianove.pages.lesson import store_result
+    from pianove import recording
+    start_lesson("five_note_melody", "beginner_path", 2, step=1)
+    store_result("lesson:five_note_melody", 12, 16, [0.03] * 9)           # last time
+    ctx.last_result = store_result("lesson:five_note_melody", 15, 16,
+                                   [0.02, -0.04, 0.05, 0.12, 0.01, -0.03, 0.06, 0.0, 0.04,
+                                    -0.11, 0.03, 0.02, 0.07, -0.02, 0.05])
+    recording.keep([(0.5 * i, 1, 60 + i % 5, 80, 0) for i in range(8)], "Five-Note Melody")
+    ctx.lesson_phase = "performance"
+    ctx.lesson_completed = True
+    ctx.lesson_current_idx = 10 ** 6
+    go("lesson", 80); save("ss-result")
+    ctx.lesson_completed = False
+    ctx.lesson_current_idx = 0
+
+
 def shot_practice():
     home_tab("practice"); save("ss-practice")
 

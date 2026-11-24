@@ -43,10 +43,11 @@
     <span class="sidebar-group-label">Playing</span>
     <a href="midi-setup.html" class="active" aria-current="page">Keyboard &amp; Microphone</a>
     <div class="sidebar-toc">
+      <a href="#instrument">Your instrument</a>
       <a href="#midi">Connecting a MIDI keyboard</a>
       <a href="#range">Your keyboard's range</a>
-      <a href="#sound">Silent keyboards</a>
-      <a href="#microphone">Hear My Piano: the microphone</a>
+      <a href="#sound">Does your keyboard make a sound?</a>
+      <a href="#microphone">Acoustic piano: the microphone</a>
       <a href="#computer">No instrument: computer keyboard and mouse</a>
       <a href="#trouble">Troubleshooting</a>
     </div>
@@ -66,29 +67,35 @@
     <div class="docs-page-header">
       <p class="page-eyebrow">Playing</p>
       <h1>Keyboard &amp; Microphone</h1>
-      <p class="page-subtitle">Play on a MIDI keyboard, on any acoustic piano through the microphone, or on your computer keyboard.</p>
+      <p class="page-subtitle">Play on a MIDI keyboard, on any acoustic piano through the microphone, or on your computer keyboard. You choose it in one place: <strong>Settings → Your Instrument</strong>.</p>
       <div class="page-meta"><span class="meta-item">USB MIDI</span><span class="meta-item">Microphone (beta)</span><span class="meta-item">Computer keyboard</span></div>
     </div>
+<section class="doc-section" id="instrument">
+      <h2>Your instrument</h2>
+      <p><strong>Settings → Your Instrument</strong> starts with three choices: <em>MIDI keyboard</em>, <em>Acoustic piano</em> and <em>No instrument</em>. Below them you only see what belongs to your choice: the keyboard as Pianove sees it and its range, the microphone's fine-tuning, or the computer keys to use.</p>
+      <div class="shot-pair"><figure class="shot "><img src="../img/ss-instrument-mic.png" alt="Acoustic piano: Pianove listens through the microphone" loading="lazy"><figcaption>Acoustic piano: Pianove listens through the microphone</figcaption></figure><figure class="shot "><img src="../img/ss-instrument-none.png" alt="No instrument: which computer keys play which notes" loading="lazy"><figcaption>No instrument: which computer keys play which notes</figcaption></figure></div>
+    </section>
 <section class="doc-section" id="midi">
       <h2>Connecting a MIDI keyboard</h2>
       <p>Plug the keyboard in by USB, before or while Pianove is running. It is found automatically, its name appears at the bottom of the sidebar and under the on-screen keyboard (<em>MIDI connected: …</em>), and it reconnects by itself if you unplug it and plug it back in.</p>
-      <figure class="shot "><img src="../img/ss-midi-setup.png" alt="Settings → MIDI Setup: the keyboard as Pianove sees it" loading="lazy"><figcaption>Settings → MIDI Setup: the keyboard as Pianove sees it</figcaption></figure>
+      <figure class="shot "><img src="../img/ss-midi-setup.png" alt="Settings → Your Instrument: the keyboard as Pianove sees it" loading="lazy"><figcaption>Settings → Your Instrument: the keyboard as Pianove sees it</figcaption></figure>
     </section>
     <section class="doc-section" id="range">
       <h2>Your keyboard's range</h2>
       <p>Keyboards have 25, 49, 61, 76 or 88 keys. The first time a keyboard is connected, Pianove either recognises the model by name or asks you to press its <strong>lowest</strong> and then its <strong>highest</strong> key. The on-screen keyboard in lessons then matches the one in front of you.</p>
-      <p>To do it again, for example with a different keyboard, open <strong>Settings → Keyboard &amp; Sound → MIDI Setup → Reconfigure keyboard range</strong>.</p>
+      <p>To do it again, for example with a different keyboard, open <strong>Settings → Your Instrument → Reconfigure keyboard range</strong>.</p>
     </section>
     <section class="doc-section" id="sound">
-      <h2>Silent keyboards</h2>
-      <p>Many controller keyboards make no sound of their own. Turn on <strong>Settings → Keyboard &amp; Sound → MIDI Sound Output</strong> and Pianove plays a sampled grand piano for every key you press, with the sustain pedal. See <a href="synthesiser.html">Piano Sound</a>.</p>
+      <h2>Does your keyboard make a sound?</h2>
+      <p>Many controller keyboards make no sound of their own. The first time a keyboard is connected, Home asks once: <em>Does your keyboard make a sound of its own?</em> Answer <strong>No, it stays silent</strong> and Pianove plays a sampled grand piano for every key you press, with the sustain pedal; answer <strong>Yes</strong> and Pianove stays quiet. The same question, with your answer, is on <strong>Settings → Your Instrument</strong>. See <a href="synthesiser.html">Piano Sound</a>.</p>
+      <figure class="shot "><img src="../img/ss-home-sound-question.png" alt="The question on Home, asked once" loading="lazy"><figcaption>The question on Home, asked once</figcaption></figure>
     </section>
     <section class="doc-section" id="microphone">
-      <h2>Hear My Piano: the microphone</h2>
+      <h2>Acoustic piano: the microphone</h2>
       <div class="callout callout--beta"><span class="callout-icon" aria-hidden="true">β</span><div><strong>Beta.</strong> Works best in a quiet room with the microphone near the piano. Expect the odd missed or extra note on very fast or very soft passages.</div></div>
-      <p>No MIDI cable? Pianove can listen to an acoustic piano, upright or grand, through the computer's microphone and work out which keys you play. Turn on <strong>Settings → Keyboard &amp; Sound → Hear My Piano (Microphone)</strong>, or choose <em>Acoustic piano: use the microphone</em> during setup.</p>
+      <p>No MIDI cable? Pianove can listen to an acoustic piano, upright or grand, through the computer's microphone and work out which keys you play. Choose <strong>Acoustic piano</strong> in <strong>Settings → Your Instrument</strong>, or choose <em>Acoustic piano: use the microphone</em> during setup.</p>
       <ul>
-        <li><strong>Sensitivity:</strong> the slider that appears below the switch. Raise it if soft notes are missed; lower it if notes appear that you didn't play.</li>
+        <li><strong>Fine-tuning:</strong> the slider on the same page. Raise it if soft notes are missed; lower it if notes appear that you didn't play.</li>
         <li><strong>It knows what comes next:</strong> during a lesson Pianove tells the detector which keys are expected, so the right note is recognised faster and reliably.</li>
         <li><strong>Any tuning:</strong> an old piano that is a little flat is still heard on the right keys.</li>
       </ul>
@@ -113,8 +120,8 @@
         <thead><tr><th>Problem</th><th>Try this</th></tr></thead>
         <tbody>
           <tr><td>“No MIDI keyboard: play with your computer keys …”</td><td>Check the cable and that the keyboard is on. Some keyboards need to be switched to USB-MIDI mode. Close other programs (a DAW) that may hold the port.</td></tr>
-          <tr><td>The on-screen keyboard is shifted</td><td>Reconfigure the range in Settings → MIDI Setup, or check that the keyboard's octave/transpose buttons are at zero.</td></tr>
-          <tr><td>Keys play no sound</td><td>Turn on MIDI Sound Output and check the volume.</td></tr>
+          <tr><td>The on-screen keyboard is shifted</td><td>Reconfigure the range in Settings → Your Instrument, or check that the keyboard's octave/transpose buttons are at zero.</td></tr>
+          <tr><td>Keys play no sound</td><td>In Settings → Your Instrument, answer <em>No, it stays silent</em>, and check the volume.</td></tr>
           <tr><td>“No microphone found”</td><td>Allow Pianove (your terminal or Python) to use the microphone in your system's privacy settings, and install <code>sounddevice</code>.</td></tr>
         </tbody>
       </table>
