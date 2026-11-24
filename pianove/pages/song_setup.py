@@ -9,7 +9,7 @@ from pianove.i18n import t
 from pianove.components import GREEN, ORANGE
 
 _hand_state = State(0)   # 0=right, 1=left, 2=both
-_mode       = [0]        # 0=learning path, 1=free practice (kept while the app runs)
+_open       = {"adjust": False, "steps": False}   # folded parts of the page (kept while the app runs)
 _range: dict = {}        # song id → [first bar, last bar] chosen for free practice (1-based)
 _TEMPOS     = [50, 60, 70, 80, 90, 100]   # % of the song's own tempo
 
@@ -73,30 +73,40 @@ def build():
                   width=1.0, height=win_h - 54)
     body.add_child(_song_card(song, compact))
 
-    def _on_mode(i):
-        _mode[0] = i
-        ctx.router.refresh()
-
-    body.add_child(SegmentedControl(
-        segments=[t("path_mode_path"), t("path_mode_free")],
-        selected_index=State(_mode[0]),
-        on_change=_on_mode,
-        anchor="center", x=0, y=0,
-        width=1.0, height=36,
-    ))
-
-    body.add_child(_play_settings(song))
-
     from pianove import song_path
-    path = song_path.build_path(song_id) if _mode[0] == 0 else None
-    if path and path["steps"]:
-        _path_view(body, song_id, path)
-    else:
-        if _mode[0] == 0:          # nothing to cut into steps (a piece with one short part)
-            body.add_child(Label(text=t("path_none"), font_size=13,
-                                 color=iOSTheme.secondary_label, anchor="center", x=0, y=0,
-                                 width=1.0, height=36))
+    path = song_path.build_path(song_id)
+    steps = path["steps"] if path else []
+    if steps:
+        body.add_child(_next_card(song, path))
+    else:                          # nothing to cut into steps (a piece with one short part)
+        body.add_child(Label(text=t("path_none"), font_size=13,
+                             color=iOSTheme.secondary_label, anchor="center", x=0, y=0,
+                             width=1.0, height=30))
+
+    # everything else is folded away until asked for
+    toggles = FloatLayout(width=1.0, height=36)
+
+    def _toggle(key):
+        _open[key] = not _open[key]
+        ctx.router.refresh()
+    toggles.add_child(Button(text=t("song_adjust") + ("  ↑" if _open["adjust"] else "  ↓"),
+                             on_click=lambda: _toggle("adjust"),
+                             anchor="left", x=0, y=0, width=170, height=34, font_size=14,
+                             background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                             border_radius=10))
+    if steps:
+        toggles.add_child(Button(text=t("song_all_steps") + ("  ↑" if _open["steps"] else "  ↓"),
+                                 on_click=lambda: _toggle("steps"),
+                                 anchor="left", x=182, y=0, width=170, height=34, font_size=14,
+                                 background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                                 border_radius=10))
+    body.add_child(toggles)
+
+    if _open["adjust"] or not steps:
+        body.add_child(_play_settings(song))
         _free_view(body, song)
+    if steps and _open["steps"]:
+        _path_view(body, song_id, path)
 
     main.add_child(body)
     return root
@@ -184,10 +194,84 @@ def _play_settings(song: dict) -> FloatLayout:
     row.add_child(Switch(value=metronome.enabled(), on_change=metronome.set_enabled,
                          anchor="right", x=-14, y=0, width=51, height=31,
                          active_color=ColorPalette.BLUE))
-    return row
+
+    # learning one hand, Pianove plays the other
+    from pianove.pages.lesson import accompaniment_on
+    box = VStack(spacing=8, padding=0, width=1.0, height=104)
+    box.add_child(row)
+    acc = FloatLayout(width=1.0, height=48, background_color=iOSTheme.secondary_background,
+                      border_radius=12)
+    acc.add_child(Icon("piano", size=20, color=iOSTheme.secondary_label, anchor="left", x=14, y=0))
+    acc.add_child(Label(text=t("song_accompany"), font_size=14, color=iOSTheme.label,
+                        anchor="left", x=44, y=-8))
+    acc.add_child(Label(text=t("song_accompany_desc"), font_size=12, color=iOSTheme.secondary_label,
+                        anchor="left", x=44, y=11))
+    acc.add_child(Switch(value=accompaniment_on(),
+                         on_change=lambda v: storage.set("song_accompany", bool(v)),
+                         anchor="right", x=-14, y=0, width=51, height=31,
+                         active_color=ColorPalette.BLUE))
+    box.add_child(acc)
+    return box
 
 
 # ── The learning path ────────────────────────────────────────────────────────────────
+
+def _next_card(song: dict, path: dict) -> FloatLayout:
+    """The one thing to do next: the next step of the path, big, with its button."""
+    from pianove import song_path
+    steps = path["steps"]
+    done = song_path.progress(song["id"])
+    nxt = song_path.next_step(path, done)
+    n_done = sum(1 for st in steps if st["id"] in done)
+    card = FloatLayout(width=1.0, height=150, background_color=iOSTheme.secondary_background,
+                       border_radius=18)
+    card.add_child(Label(text=t("song_next_eyebrow") if nxt < len(steps) else t("path_all_done"),
+                         font_size=12, bold=True, color=ORANGE if nxt < len(steps) else GREEN,
+                         anchor="top_left", x=22, y=18))
+    if nxt < len(steps):
+        step = steps[nxt]
+        key, fmt = step["title"]
+        card.add_child(Label(text=t(key, **fmt), font_size=22, bold=True, color=iOSTheme.label,
+                             anchor="top_left", x=22, y=40))
+        sub = (t("path_kind_join") if step["kind"] == "join" else
+               t("path_kind_full") if step["kind"] == "full" else t("path_kind_learn"))
+        if step.get("topics"):
+            first = not any(s["id"] in done for s in steps)
+            sub += "  ·  " + t("path_needs" if first else "path_new",
+                               topics=" · ".join(t(k) for k in step["topics"]))
+        card.add_child(Label(text=sub, font_size=13, color=iOSTheme.secondary_label,
+                             anchor="top_left", x=22, y=74))
+        go = (lambda s=step: _start_step(s))
+        go_text = t("continue") if n_done else t("path_begin")
+    else:
+        card.add_child(Label(text=song.get("title", ""), font_size=22, bold=True, color=iOSTheme.label,
+                             anchor="top_left", x=22, y=40))
+        go = (lambda s=steps[-1]: _start_step(s))
+        go_text = t("song_play_whole")
+    card.add_child(ProgressBar(progress=n_done / len(steps), width=0.5, height=6,
+                               active_color=GREEN if n_done == len(steps) else ColorPalette.BLUE,
+                               anchor="bottom_left", x=22, y=-24))
+    card.add_child(Label(text=t("path_progress", done=n_done, total=len(steps)), font_size=12,
+                         color=iOSTheme.secondary_label, anchor="bottom_left", x=22, y=-36))
+    card.add_child(Button(text=go_text, on_click=go,
+                          anchor="bottom_right", x=-20, y=-20, width=220, height=48, font_size=16,
+                          background_color=ColorPalette.BLUE, text_color=pygame.Color(255, 255, 255),
+                          border_radius=12))
+
+    def _listen():
+        ctx.song_range = None
+        ctx.path_step = None
+        ctx.current_song_hand = "both"
+        ctx.lesson_current_idx = ctx.lesson_section_idx = 0
+        ctx.lesson_completed = False
+        ctx.lesson_phase = "listen"
+        ctx.router.navigate("lesson", "right")
+    card.add_child(Button(text="▶  " + t("song_listen"), on_click=_listen,
+                          anchor="bottom_right", x=-252, y=-20, width=130, height=48, font_size=15,
+                          background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                          border_radius=12))
+    return card
+
 
 def _start_step(step: dict):
     from pianove.pages.lesson import start_path_step
@@ -201,28 +285,6 @@ def _path_view(body: VStack, song_id: str, path: dict):
     done  = song_path.progress(song_id)
     nxt   = song_path.next_step(path, done)
     n_done = sum(1 for s in steps if s["id"] in done)
-
-    # how far along, and the one button that matters: the next step
-    prog = FloatLayout(width=1.0, height=22)
-    prog.add_child(ProgressBar(progress=n_done / len(steps), width=0.70, height=6,
-                               active_color=GREEN if n_done == len(steps) else ColorPalette.BLUE,
-                               anchor="left", x=0, y=0))
-    prog.add_child(Label(text=t("path_progress", done=n_done, total=len(steps)),
-                         font_size=12, color=iOSTheme.secondary_label,
-                         anchor="right", x=0, y=0))
-    body.add_child(prog)
-    if nxt < len(steps):
-        key, fmt = steps[nxt]["title"]
-        body.add_child(Button(
-            text=t("path_continue", step=t(key, **fmt)) if n_done else t("path_begin"),
-            on_click=lambda s=steps[nxt]: _start_step(s),
-            width=1.0, height=48, font_size=15,
-            background_color=ColorPalette.BLUE, text_color=pygame.Color(255, 255, 255),
-            border_radius=14,
-        ))
-    else:
-        body.add_child(Label(text=t("path_all_done"), font_size=15, bold=True, color=GREEN,
-                             anchor="center", x=0, y=0, width=1.0, height=40))
 
     parts = {p["letter"]: p for p in path["parts"]}
     shown_part = None
@@ -321,12 +383,10 @@ def _free_view(body: VStack, song: dict):
         ctx.router.navigate("lesson", "right")
 
     from pianove.components import section_subheader
-    body.add_child(section_subheader(t("song_hand_label")))
-    hand_desc_state = State(_hand_desc(0))
+    body.add_child(section_subheader(t("song_free_title")))
 
     def _on_hand(i):
         _hand_state.value = i
-        hand_desc_state.value = _hand_desc(i)
 
     body.add_child(SegmentedControl(
         segments=[t("hand_right"), t("hand_left"), t("hand_both")],
@@ -334,12 +394,6 @@ def _free_view(body: VStack, song: dict):
         on_change=_on_hand,
         anchor="center", x=0, y=0,
         width=1.0, height=36,
-    ))
-    body.add_child(Label(
-        text=hand_desc_state,
-        font_size=13, color=iOSTheme.secondary_label,
-        anchor="center", x=0, y=0,
-        width=1.0, height=30,
     ))
 
     # which bars: the whole piece, or a passage to work on
@@ -380,7 +434,7 @@ def _free_view(body: VStack, song: dict):
     bw = 0.32
     buttons = FloatLayout(width=1.0, height=52)
     buttons.add_child(Button(
-        text=t("song_start"),
+        text=t("song_note_by_note"),
         on_click=_start,
         anchor="left", x=0, y=0,
         width=bw, height=52, font_size=16,
@@ -389,7 +443,7 @@ def _free_view(body: VStack, song: dict):
         border_radius=14,
     ))
     buttons.add_child(Button(
-        text=t("song_play_along"),
+        text=t("song_in_tempo"),
         on_click=lambda: _start("performance"),
         anchor="center" if listen else "right", x=0, y=0,
         width=bw, height=52, font_size=16,

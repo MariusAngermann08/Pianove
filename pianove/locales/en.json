@@ -117,7 +117,7 @@
   "songs_import_hint": "Press Import and choose a MusicXML file (.musicxml, .xml or .mxl). Free scores: MuseScore.com, IMSLP.org",
   "song_import_title": "Import MusicXML",
   "song_bars": "{n} bars",
-  "song_start": "Practice",
+  "song_start": "Learn this piece",
   "song_play_along": "Play along",
   "song_setup_title": "Song Setup",
   "song_hand_label": "Practice hand",
@@ -520,5 +520,14 @@
   "home_or": "or",
   "home_repertoire": "Pieces you can play",
   "home_repertoire_empty": "Finish a song's learning path and it appears here.",
-  "home_lessons_done": "{n} lessons finished"
+  "home_lessons_done": "{n} lessons finished",
+  "song_next_eyebrow": "NEXT STEP",
+  "song_adjust": "Adjust",
+  "song_all_steps": "All steps",
+  "song_accompany": "Pianove plays the other hand",
+  "song_accompany_desc": "While you learn one hand, you hear the whole piece",
+  "song_free_title": "Play it your way",
+  "song_note_by_note": "Note by note",
+  "song_in_tempo": "In tempo",
+  "song_play_whole": "Play the whole piece"
 }

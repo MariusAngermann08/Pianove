@@ -18,6 +18,7 @@ _GREEN  = GREEN
 _RED    = RED
 _ORANGE = ORANGE
 _PURPLE = PURPLE
+_AUTO   = pygame.Color(120, 150, 200)     # notes Pianove plays for you (the other hand)
 _BLUE   = ColorPalette.BLUE
 _PX_PER_BAR = 300
 _KB_H       = 130       # keyboard canvas height when visible
@@ -151,6 +152,12 @@ def _bar_notes(tl, ol, meta, si: int, i: int, pitches: list[str], time: tuple, b
     nt = _bar_types(tl, i, pitches, time, ol)
     return (nt, _bar_positions(tl, ol, i, nt, blen), [get_value(x) * 4 for x in nt],
             [False] * n, [None] * n)
+
+
+def accompaniment_on() -> bool:
+    """Whether Pianove plays the other hand while you learn one (storage["song_accompany"])."""
+    from pianove.state import storage
+    return bool(storage.get("song_accompany", True))
 
 
 def song_tempo_scale() -> float:
@@ -462,10 +469,16 @@ def _short_sleep():
 _LISTENING: list = [None]
 
 
+_ACCOMPANYING: list = [None]       # the view whose other hand Pianove is playing
+
+
 def _stop_listening():
     sv, _LISTENING[0] = _LISTENING[0], None
     if sv is not None:
         sv.stop_listening()
+    sv, _ACCOMPANYING[0] = _ACCOMPANYING[0], None
+    if sv is not None:
+        sv.stop_accompaniment()
 
 
 def _nav_back():
@@ -510,10 +523,17 @@ class _StaffView(PygameCanvas):
                  onsets: list[list[float]] | None = None,
                  bass_onsets: list[list[float]] | None = None,
                  bar_lens: list[float] | None = None, meta: dict | None = None,
-                 key=None, notation: bool = False, **kwargs):
+                 key=None, notation: bool = False, auto_staff: int | None = None, **kwargs):
         # notation: draw ties and triplet brackets from meta["ties"] / meta["trip"] (a
         # lesson's exercise; imported songs are drawn as before)
+        # auto_staff: the staff (0 treble, 1 bass) Pianove plays itself while you play the
+        # other one; None: you play everything shown
         super().__init__(draw_border=False, **kwargs)
+        self.auto_staff = auto_staff
+        self.auto_advance = None                  # → the page's advance (set by build())
+        self._auto_sounding: dict[int, float] = {}   # key → seconds it still sounds
+        self._auto_played: set[int] = set()          # steps whose accompaniment has sounded
+        self._auto_wait: float | None = None         # an accompaniment-only step: time left
         self.clips_to_bounds = True
         self._tempo_scale = song_tempo_scale()
         self._bpm  = bpm * self._tempo_scale
@@ -731,15 +751,26 @@ class _StaffView(PygameCanvas):
         self._scroll = Spring(value=0.0, response=0.55, damping_fraction=0.88)
         self._ph     = Spring(value=0.0, response=0.35, damping_fraction=0.82)
 
+    def _mine(self, step: list) -> list:
+        """The notes of a step the player plays (all of them unless Pianove accompanies)."""
+        if self.auto_staff is None:
+            return step
+        return [n for n in step if getattr(n, "_si", 0) != self.auto_staff]
+
+    def _theirs(self, step: list) -> list:
+        if self.auto_staff is None:
+            return []
+        return [n for n in step if getattr(n, "_si", 0) == self.auto_staff]
+
     @property
     def total_notes(self) -> int:
-        return len(self._step_list)
+        return sum(1 for step in self._step_list if self._mine(step))
 
     def expected_midis(self) -> frozenset[int]:
         if self._in_prep or self.current_idx >= len(self._step_list):
             return frozenset()
         midis = set()
-        for ev in self._step_list[self.current_idx]:
+        for ev in self._mine(self._step_list[self.current_idx]):
             if isinstance(ev, _PluteChord):
                 midis.update(_pitch_to_midi(n.pitch) for n in ev.notes)
             else:
@@ -751,7 +782,7 @@ class _StaffView(PygameCanvas):
         so the player sees where to start."""
         if self.current_idx >= len(self._step_list):
             return frozenset()
-        return frozenset(_pitch_to_midi(n.pitch) for n in self._step_list[self.current_idx])
+        return frozenset(_pitch_to_midi(n.pitch) for n in self._mine(self._step_list[self.current_idx]))
 
     def expected_midi(self) -> int | None:
         m = self.expected_midis()
@@ -760,6 +791,8 @@ class _StaffView(PygameCanvas):
     def advance(self):
         if self.current_idx >= len(self._step_list):
             return
+        self._sound_auto(self.current_idx)
+        self._auto_wait = None
         for note in self._step_list[self.current_idx]:
             note.color = _GREEN
         self._touch(self._step_list[self.current_idx])
@@ -795,6 +828,9 @@ class _StaffView(PygameCanvas):
         self._perf_hit   = False
         self._met_clock  = 0.0
         self._met_next   = 0
+        self._auto_played.clear()
+        self._auto_wait = None
+        self._release_auto()
         if self._phase == "performance":
             self._prep_elapsed = 0.0
             self._in_prep      = True
@@ -1042,11 +1078,77 @@ class _StaffView(PygameCanvas):
             return False
         return True
 
+    # ── Pianove plays the other hand ───────────────────────────────────────────
+    def _sound_auto(self, idx: int):
+        """Strike Pianove's notes of step idx (once), and show them as played by Pianove."""
+        if self.auto_staff is None or idx in self._auto_played or idx >= len(self._step_list):
+            return
+        self._auto_played.add(idx)
+        theirs = self._theirs(self._step_list[idx])
+        if not theirs:
+            return
+        from pianove.sound import play_raw, stop
+        q_sec = 60.0 / max(1.0, self._bpm)
+        for note in theirs:
+            keys = ([_pitch_to_midi(n.pitch) for n in note.notes] if isinstance(note, _PluteChord)
+                    else [_pitch_to_midi(note.pitch)])
+            vel = int((getattr(note, "_vel", None) or 72) * 0.85)
+            for m in keys:
+                if m in self._auto_sounding:
+                    stop(m)
+                play_raw(m, max(20, vel))
+                self._auto_sounding[m] = max(0.15, (getattr(note, "_len_q", 1.0) or 1.0) * q_sec * 0.95)
+            note.color = _AUTO
+        self._touch(theirs)
+
+    def _release_auto(self):
+        if self._auto_sounding:
+            from pianove.sound import stop
+            for m in list(self._auto_sounding):
+                stop(m)
+            self._auto_sounding.clear()
+
+    def stop_accompaniment(self):
+        self._release_auto()
+
+    @property
+    def auto_keys(self) -> dict[int, int]:
+        """Keys Pianove is playing now → the staff they belong to (for the keyboard)."""
+        return {m: self.auto_staff for m in self._auto_sounding} if self.auto_staff is not None else {}
+
+    def _accompany(self, dt: float):
+        if self.auto_staff is None:
+            return
+        if self._auto_sounding:
+            from pianove.sound import stop
+            for m in list(self._auto_sounding):
+                self._auto_sounding[m] -= dt
+                if self._auto_sounding[m] <= 0:
+                    stop(m)
+                    del self._auto_sounding[m]
+        # waiting for you: a step that only Pianove plays goes by in its own time
+        if (self._phase == "practice" and not self._in_prep
+                and self.current_idx < len(self._step_list)
+                and not self._mine(self._step_list[self.current_idx])):
+            if self._auto_wait is None:
+                self._sound_auto(self.current_idx)
+                self._auto_wait = self._step_secs[self.current_idx]
+            else:
+                self._auto_wait -= dt
+                if self._auto_wait <= 0:
+                    self._auto_wait = None
+                    if self.auto_advance:
+                        self.auto_advance()
+                    else:
+                        self.advance()
+
     def update_content(self, dt: float):
         if self._offscreen is None:
             self._build_offscreen()
         elif self._dirty:
             self._redraw_offscreen()
+        if self._phase != "listen":
+            self._accompany(dt)
 
         self._scroll.update(dt)
         self._ph.update(dt)
@@ -1074,6 +1176,7 @@ class _StaffView(PygameCanvas):
             if self._prep_elapsed >= self._prep_duration:
                 self._in_prep = False
                 self._perf_timer = 0.0
+                self._sound_auto(self.current_idx)
             return
 
         if self._phase == "listen":
@@ -1102,12 +1205,14 @@ class _StaffView(PygameCanvas):
 
             if self._perf_timer >= note_dur:
                 self._perf_timer -= note_dur
-                if not self._perf_hit and self.current_idx < len(self._step_list):
-                    for note in self._step_list[self.current_idx]:
+                if (not self._perf_hit and self.current_idx < len(self._step_list)
+                        and self._mine(self._step_list[self.current_idx])):
+                    for note in self._mine(self._step_list[self.current_idx]):
                         note.color = _ORANGE
                     self._touch(self._step_list[self.current_idx])
                 self.current_idx += 1
                 self._perf_hit = False
+                self._sound_auto(self.current_idx)
                 if self._on_advance:
                     self._on_advance(self.current_idx)
 
@@ -1334,7 +1439,7 @@ class _LessonPiano:
         expected = self._sv.upcoming_midis()   # frozenset[int]
         active   = self._panel.active_notes
         idx      = self._sv.current_idx
-        sounding = self._sv.sounding           # listen mode: the keys Pianove is playing
+        sounding = self._sv.sounding or self._sv.auto_keys   # the keys Pianove is playing
         if self._sv._phase == "listen":
             expected, active = frozenset(), frozenset(sounding)
 
@@ -2072,11 +2177,20 @@ def build():
                 lesson_lh = (_lesson_view(lh["pitches"]), _lesson_view(lh["types"]),
                              _lesson_view(lh["onsets"]))
 
-    # For "both hands" song mode, split into treble/bass for grand-staff display
+    # For "both hands" song mode, split into treble/bass for grand-staff display. Playing one
+    # hand of a song, Pianove plays the other: both staves are shown, the other is its part.
     _both_lh_bars = None
+    auto_staff = None
+    if (ctx.current_song_id and not is_practice and phase != "listen"
+            and ctx.current_song_hand in ("right", "left") and accompaniment_on()):
+        from pianove.song_store import get_song_bars_split
+        _rh, _lh = get_song_bars_split(ctx.current_song_id)
+        other = _in_range(_lh if ctx.current_song_hand == "right" else _rh) or []
+        if any(any(b) for b in other):                # only when that hand has something to play
+            auto_staff = 1 if ctx.current_song_hand == "right" else 0
     if lesson_lh is not None:                         # a lesson's exercise for both hands
         _both_lh_bars, _both_lh_types, _both_lh_onsets = lesson_lh
-    if ctx.current_song_id and ctx.current_song_hand == "both":
+    if ctx.current_song_id and (ctx.current_song_hand == "both" or auto_staff is not None):
         from pianove.song_store import get_song_bars_split
         rh_all, lh_all = get_song_bars_split(ctx.current_song_id)
         rh_all, lh_all = _in_range(rh_all), _in_range(lh_all)
@@ -2237,6 +2351,11 @@ def build():
             wrong_tracker.record(True)
             _do_note_advance(_sv[0].current_idx)
 
+    def _auto_advance():                      # a step only Pianove plays went by
+        if _sv[0]:
+            _sv[0].advance()
+            _do_note_advance(_sv[0].current_idx)
+
     def _do_wrong():
         if _sv[0]:
             _sv[0].mark_wrong()
@@ -2317,9 +2436,12 @@ def build():
         bpm=bpm, clef=clef, bass_bars=_both_lh_bars, time=song_time,
         types=active_types, bass_types=_both_lh_types,
         onsets=active_onsets, bass_onsets=_both_lh_onsets, bar_lens=active_lens, meta=meta,
-        key=song_key, notation=lesson_notation, width=1.0, height=staff_h,
+        key=song_key, notation=lesson_notation, auto_staff=auto_staff, width=1.0, height=staff_h,
     )
     _sv[0] = staff_view
+    if auto_staff is not None:
+        _ACCOMPANYING[0] = staff_view
+        staff_view.auto_advance = _auto_advance
     while _TRANSPORT_HOOKS:
         _TRANSPORT_HOOKS.pop()()
     staff_view.bottom_inset = lambda: _slide_ref[0].reveal_height if _slide_ref[0] else 0

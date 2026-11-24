@@ -304,11 +304,19 @@ def shot_song_path():
 
 def shot_song_free():
     from pianove.pages import song_setup
-    song_setup._mode[0] = 1
+    song_setup._open["adjust"] = True
     song_setup._range[waltz["id"]] = [9, 16]
     ctx.current_song_id = waltz["id"]
     go("song_setup", 80); save("ss-song-free")
-    song_setup._mode[0] = 0
+    song_setup._open["adjust"] = False
+
+
+def shot_song_steps():
+    from pianove.pages import song_setup
+    song_setup._open["steps"] = True
+    ctx.current_song_id = waltz["id"]
+    go("song_setup", 80); save("ss-song-steps")
+    song_setup._open["steps"] = False
 
 
 def shot_song_score():

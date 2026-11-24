@@ -117,7 +117,7 @@
   "songs_import_hint": "Drück auf Importieren und wähl eine MusicXML-Datei (.musicxml, .xml oder .mxl). Freie Noten: MuseScore.com, IMSLP.org",
   "song_import_title": "MusicXML importieren",
   "song_bars": "{n} Takte",
-  "song_start": "Üben",
+  "song_start": "Dieses Stück lernen",
   "song_play_along": "Mitspielen",
   "song_setup_title": "Song-Setup",
   "song_hand_label": "Hand auswählen",
@@ -520,5 +520,14 @@
   "home_or": "oder",
   "home_repertoire": "Stücke, die du spielen kannst",
   "home_repertoire_empty": "Wenn du den Lernpfad eines Songs abschließt, erscheint er hier.",
-  "home_lessons_done": "{n} Lektionen abgeschlossen"
+  "home_lessons_done": "{n} Lektionen abgeschlossen",
+  "song_next_eyebrow": "NÄCHSTER SCHRITT",
+  "song_adjust": "Anpassen",
+  "song_all_steps": "Alle Schritte",
+  "song_accompany": "Pianove spielt die andere Hand",
+  "song_accompany_desc": "Während du eine Hand lernst, hörst du das ganze Stück",
+  "song_free_title": "Frei spielen",
+  "song_note_by_note": "Note für Note",
+  "song_in_tempo": "Im Tempo",
+  "song_play_whole": "Das ganze Stück spielen"
 }
