@@ -499,5 +499,6 @@
   "songs_import": "Import",
   "songs_count": "{n} pieces in your library",
   "songs_subtitle": "Your own pieces, from any MusicXML file",
-  "songs_none": "No songs yet"
+  "songs_none": "No songs yet",
+  "songs_count_one": "1 piece in your library"
 }
