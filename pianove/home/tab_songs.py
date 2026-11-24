@@ -44,11 +44,6 @@ def _open_song(song_id: str):
     ctx.router.navigate("song_setup", "right")
 
 
-def _view_score(song_id: str):
-    ctx.score_song_id = song_id
-    ctx.router.navigate("song_score", "right")
-
-
 _confirm = {"id": None, "keep": False}   # a delete tapped once waits for a second tap
 
 
@@ -101,18 +96,43 @@ def _song_card(song: dict) -> FloatLayout:
         anchor="left", x=56, y=12,
     ))
 
+    # how far along the learning path, so the list says where each piece stands
+    from pianove import song_path
+    try:
+        steps = song_path.build_path(song_id)["steps"]
+        done = song_path.progress(song_id)
+        n_done = sum(1 for st in steps if st["id"] in done)
+    except Exception:
+        steps, n_done = [], 0
+    if steps:
+        learned = n_done == len(steps)
+        state = (t("songs_learned") if learned else
+                 t("path_progress", done=n_done, total=len(steps)) if n_done else t("songs_not_started"))
+        card.add_child(Label(text=state, font_size=12, bold=n_done > 0,
+                             color=GREEN if learned else (iOSTheme.label if n_done else iOSTheme.secondary_label),
+                             anchor="right", x=-128, y=-9))
+        card.add_child(ProgressBar(progress=n_done / len(steps), width=110, height=5,
+                                   active_color=GREEN if learned else ColorPalette.BLUE,
+                                   anchor="right", x=-128, y=11))
     card.add_child(Label(
         text=t(f"diff_{diff}"),
         font_size=12, bold=True, color=diff_color,
-        anchor="right", x=-276 if _confirming(song_id) else -212, y=0,
+        anchor="right", x=-262 if steps else -128, y=0,
     ))
 
+    # the whole card opens the song; delete sits on top of it
+    card.add_child(Icon("chevron_right", size=22, color=iOSTheme.secondary_label,
+                        anchor="right", x=-14, y=0))
+    card.children.insert(0, Button(text="", on_click=lambda _id=song_id: _open_song(_id),
+                                   width=1.0, height=1.0, background_color=pygame.Color(0, 0, 0, 0),
+                                   border_radius=14))
+    card.children[0].parent = card
     if _confirming(song_id):
         card.add_child(Button(
             text=t("song_delete_confirm"),
             on_click=lambda _id=song_id: _delete_song(_id),
-            anchor="right", x=-168, y=0,
-            width=96, height=34, font_size=13,
+            anchor="right", x=-48, y=0,
+            width=80, height=32, font_size=13,
             background_color=RED,
             text_color=pygame.Color(255, 255, 255),
             border_radius=10,
@@ -121,32 +141,12 @@ def _song_card(song: dict) -> FloatLayout:
         card.add_child(Button(
             icon_fn=Icon.as_icon_fn("delete", base_size=16),
             on_click=lambda _id=song_id: _delete_song(_id),
-            anchor="right", x=-168, y=0,
+            anchor="right", x=-48, y=0,
             width=32, height=32,
             background_color=iOSTheme.fill,
             text_color=iOSTheme.secondary_label,
             border_radius=8,
         ))
-
-    card.add_child(Button(
-        text=t("song_view_score"),
-        on_click=lambda _id=song_id: _view_score(_id),
-        anchor="right", x=-88, y=0,
-        width=72, height=34, font_size=13,
-        background_color=iOSTheme.fill,
-        text_color=iOSTheme.label,
-        border_radius=10,
-    ))
-
-    card.add_child(Button(
-        text=t("song_start"),
-        on_click=lambda _id=song_id: _open_song(_id),
-        anchor="right", x=-8, y=0,
-        width=72, height=34, font_size=13,
-        background_color=ColorPalette.BLUE,
-        text_color=pygame.Color(255, 255, 255),
-        border_radius=10,
-    ))
 
     return card
 

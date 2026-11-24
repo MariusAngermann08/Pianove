@@ -1514,6 +1514,44 @@ def _add_transport(controls: FloatLayout, sv_ref: list, right_w: int):
 
 _TRANSPORT_HOOKS: list = []
 
+def _session_button(btn_row: FloatLayout, in_session: bool) -> bool:
+    """On a finish screen during today's session: the right-hand button goes on to the
+    session's next item (or home when it was the last). True when it placed one."""
+    if not in_session:
+        return False
+    from pianove import session
+    nxt = session.current()
+    if nxt is not None:
+        text, action, color = t("session_next", item=session.describe(nxt)), session.launch_next, _GREEN
+    else:
+        def action():
+            ctx.lesson_completed = False
+            ctx.practice_mode = False
+            ctx.router.navigate("home", "left")
+        text, color = t("session_finished"), _BLUE
+    btn_row.add_child(Button(text=text, on_click=action,
+                             anchor="right", x=-16, y=0, width=0.5, height=44, font_size=14,
+                             background_color=color, text_color=pygame.Color(255, 255, 255),
+                             border_radius=12))
+    return True
+
+
+def _session_step_done() -> bool:
+    """A finish screen is showing. If it finishes today's session item, move the session on,
+    once: the screen can be built again (a resize, a theme change) without skipping items."""
+    from pianove import session
+    st = session._state()
+    if not st:
+        return False
+    marker = getattr(ctx, "session_done_marker", None)
+    if marker and marker[0] == st["day"]:
+        return True                       # this finish screen has already counted
+    if session.is_current_open():
+        ctx.session_done_marker = (st["day"], st["i"])
+        session.finish_current()
+        return True
+    return False
+
 
 def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
     accuracy = hits / total if total > 0 else 0.0
@@ -1523,6 +1561,8 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
         _ORANGE if pct >= 50 else
         _RED
     )
+
+    in_session = _session_step_done()
 
     def _try_again():
         ctx.lesson_current_idx = 0
@@ -1591,11 +1631,12 @@ def _build_practice_completion(hits: int, total: int, bpm: int) -> FloatLayout:
                              anchor="left", x=16, y=0, width=0.42, height=44, font_size=14,
                              background_color=iOSTheme.fill, text_color=iOSTheme.label,
                              border_radius=12))
-    btn_row.add_child(Button(text=t("practice_new_session"), on_click=_new_session,
-                             anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
-                             background_color=_BLUE,
-                             text_color=pygame.Color(255, 255, 255),
-                             border_radius=12))
+    if not _session_button(btn_row, in_session):
+        btn_row.add_child(Button(text=t("practice_new_session"), on_click=_new_session,
+                                 anchor="right", x=-16, y=0, width=0.42, height=44, font_size=14,
+                                 background_color=_BLUE,
+                                 text_color=pygame.Color(255, 255, 255),
+                                 border_radius=12))
     body.add_child(btn_row)
     main.add_child(body)
     return root
@@ -1768,8 +1809,11 @@ def _build_completion(lesson_title: str) -> FloatLayout:
                              anchor="left", x=16, y=0, width=0.42, height=44, font_size=14,
                              background_color=iOSTheme.fill, text_color=iOSTheme.label,
                              border_radius=12))
+    in_session = _session_step_done()
     nxt = None if ctx.current_song_id else _next_in_course()
-    if nxt:
+    if _session_button(btn_row, in_session):
+        pass
+    elif nxt:
         next_id, next_idx = nxt
         def _go_next():
             ctx.current_lesson_id    = next_id
@@ -1849,7 +1893,10 @@ def _build_path_completion(song_title: str) -> FloatLayout:
                              anchor="left", x=16, y=0, width=0.42, height=44, font_size=14,
                              background_color=iOSTheme.fill, text_color=iOSTheme.label,
                              border_radius=12))
-    if nxt is not None:
+    in_session = _session_step_done()
+    if _session_button(btn_row, in_session):
+        pass
+    elif nxt is not None:
         def _go_next():
             start_path_step(nxt)
             ctx.router.refresh()
@@ -1898,6 +1945,14 @@ def build():
     # Practice (go) mode: skip all lesson loading, force performance phase
     is_practice = ctx.practice_mode
     bpm         = ctx.practice_bpm if is_practice else _BPM
+
+    # what was opened last, for Home's "Continue" (not sight-reading, not an editor test)
+    if not is_practice and not ctx.lesson_test_return:
+        from pianove import session
+        if ctx.current_song_id:
+            session.note_activity("song", ctx.current_song_id)
+        elif lesson_id:
+            session.note_activity("lesson", lesson_id)
 
     if is_practice:
         clef = ctx.practice_clef

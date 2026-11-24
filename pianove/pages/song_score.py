@@ -17,8 +17,10 @@ _CONTENT_Y  = _TOOLBAR_H + _NAV_H + _STATUS_H
 
 
 def _nav_back():
+    """Back to where the score was opened from: the song's page (or Home)."""
     ctx.score_song_id = None
-    ctx.router.navigate("home", "left")
+    back, ctx.score_return = getattr(ctx, "score_return", None), None
+    ctx.router.navigate(back or "home", "left")
 
 
 def build():
@@ -56,7 +58,7 @@ def build():
         color=iOSTheme.label,
         anchor="center", x=0, y=0,
     ))
-    if song:
+    if song and getattr(ctx, "score_return", None) != "song_setup":
         def _practice(_id=song["id"]):
             ctx.score_song_id   = None
             ctx.current_song_id = _id

@@ -124,6 +124,18 @@ for _fname, (_title, _composer, _bars) in _DEMO_SONGS.items():
     import_song(str(_path))
 waltz = import_song(str(ROOT / "waltz-in-a-minorchopin.mxl"))
 
+# a little progress on the songs: Twinkle learned, Chopin's waltz under way
+from pianove import song_path  # noqa: E402
+
+from pianove.song_store import list_songs  # noqa: E402
+
+for _s in list_songs():
+    _steps = song_path.build_path(_s["id"])["steps"]
+    _n = len(_steps) if "Twinkle" in _s["title"] else (4 if "Waltz" in _s["title"] else 0)
+    for _st in _steps[:_n]:
+        song_path.record(_s["id"], _st["id"], 0.95)
+storage.set("last_activity", {"kind": "song", "id": waltz["id"], "day": today.isoformat()})
+
 # ── the app, built the way main.py builds it ───────────────────────────────────
 ui = App(title="Pianove", width=WIDTH, height=HEIGHT, dark_mode=True, managed_display=True)
 ctx.ui = ui

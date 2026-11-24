@@ -30,6 +30,31 @@ _DEFAULTS = {
 }
 
 
+def start_sight_reading(cfg: dict):
+    """Fresh music from cfg (clef, difficulty, key, notes, bpm), played in tempo."""
+    from pianove.note_generator import generate_bars
+    bars = generate_bars(cfg["clef"], cfg["difficulty"], cfg["key"], cfg["notes"])
+    ctx.practice_mode        = True
+    ctx.practice_bars        = bars
+    ctx.practice_bpm         = cfg["bpm"]
+    ctx.practice_clef        = cfg["clef"]
+    ctx.practice_last_hits   = 0
+    ctx.practice_last_total  = 0
+    ctx.current_lesson_id    = "__practice__"
+    ctx.current_song_id      = None
+    ctx.current_course_id    = None
+    ctx.path_step            = None
+    ctx.song_range           = None
+    ctx.lesson_phase         = "performance"
+    ctx.lesson_section_idx   = 0
+    ctx.lesson_current_idx   = 0
+    ctx.lesson_completed     = False
+    if ctx.router.active_page_name == "lesson":   # from a finish screen: build it anew
+        ctx.router.refresh()
+    else:
+        ctx.router.navigate("lesson", "right")
+
+
 def _load_cfg() -> dict:
     saved = storage.get(_CFG_KEY, {})
     cfg = dict(_DEFAULTS)
@@ -234,22 +259,7 @@ def build():
 
     # Start button
     def _start():
-        from pianove.note_generator import generate_bars
-        bars = generate_bars(cfg["clef"], cfg["difficulty"], cfg["key"], cfg["notes"])
-        ctx.practice_mode        = True
-        ctx.practice_bars        = bars
-        ctx.practice_bpm         = cfg["bpm"]
-        ctx.practice_clef        = cfg["clef"]
-        ctx.practice_last_hits   = 0
-        ctx.practice_last_total  = 0
-        ctx.current_lesson_id    = "__practice__"
-        ctx.current_song_id      = None
-        ctx.current_course_id    = None
-        ctx.lesson_phase         = "performance"
-        ctx.lesson_section_idx   = 0
-        ctx.lesson_current_idx   = 0
-        ctx.lesson_completed     = False
-        ctx.router.navigate("lesson", "right")
+        start_sight_reading(cfg)
 
     config_card.add_child(Button(
         text=t("practice_start"),

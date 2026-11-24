@@ -50,6 +50,16 @@ def build():
         background_color=iOSTheme.fill, text_color=iOSTheme.label,
         border_radius=8,
     ))
+    def _sheet(_id=song_id):
+        ctx.score_song_id = _id
+        ctx.score_return  = "song_setup"
+        ctx.router.navigate("song_score", "right")
+    nav.add_child(Button(
+        text=t("song_sheet"), on_click=_sheet,
+        anchor="right", x=-12, y=0, width=104, height=34, font_size=14,
+        background_color=iOSTheme.fill, text_color=iOSTheme.label,
+        border_radius=8,
+    ))
     nav.add_child(Label(
         text=song.get("title") or t("song_setup_title"),
         font_size=16, bold=True, color=iOSTheme.label,
