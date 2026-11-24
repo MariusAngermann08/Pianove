@@ -63,6 +63,7 @@ name_state.value = "Alex"
 storage.set("name", "Alex")
 experience_state.value = "basics"
 storage.set("experience", "basics")
+storage.set("sound_asked", True)          # the one-time "does your keyboard make a sound?" question
 iOSTheme.dark = True
 iOSTheme.update_theme()
 from pianove.ui_utils import apply_score_colors  # noqa: E402
@@ -394,6 +395,22 @@ def shot_settings():
 
 def shot_midi_setup():
     go("midi_setup", 60); save("ss-midi-setup")
+
+
+def shot_instrument_modes():
+    from pianove.pages import midi_setup
+    for i, name in ((2, "ss-instrument-none"), (1, "ss-instrument-mic")):
+        midi_setup._set_mode(i)
+        tick(40)
+        go("midi_setup", 40); save(name)
+    midi_setup._set_mode(0)
+    tick(20)
+
+
+def shot_sound_question():
+    storage.remove("sound_asked")
+    home_tab("home"); save("ss-home-sound-question")
+    storage.set("sound_asked", True)
 
 
 def shot_creator():

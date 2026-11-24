@@ -135,6 +135,10 @@ def build():
 
     # ── today's session: what to play, decided for you ─────────────────────────
     from pianove import session
+    from pianove.pages.midi_setup import needs_sound_question, sound_question
+    if needs_sound_question():               # asked once, the first time a keyboard is there
+        scroll.add_child(sound_question(
+            on_answer=lambda: ctx.inner_router and ctx.inner_router.reload_current_page()))
     scroll.add_child(_session_card(session, U))
 
     # ── continue: the song or lesson you opened last first ─────────────────────

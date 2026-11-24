@@ -4,9 +4,8 @@ from pylay import (FloatLayout, VStack, Label, Button, Switch, ListItem, Avatar,
                    iOSTheme, Slider, SegmentedControl, Stepper, State)
 from pylay.widgets.icon import Icon
 from pianove.i18n import t, language_state, available_languages
-from pianove.state import (name_state, midi_device_state, dark_mode_state, sound_enabled_state,
-                           sound_volume_state, creator_mode_state, hand_tone_state,
-                           mic_input_state, mic_sensitivity_state, storage)
+from pianove.state import (name_state, dark_mode_state, sound_volume_state, creator_mode_state,
+                           hand_tone_state, storage)
 from pianove.components.tone_picker import TonePicker
 from pianove.ui_utils import ui_dims
 from pianove.components import section_subheader as _section_header, RED
@@ -82,51 +81,27 @@ def build():
 
     # ── keyboard, microphone and sound ─────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_playing")))
-    device = FloatLayout(width=210, height=28)
-    device.add_child(Label(text=midi_device_state, font_size=14, color=iOSTheme.secondary_label,
+    from pianove.pages.midi_setup import instrument_summary
+    device = FloatLayout(width=260, height=28)
+    device.add_child(Label(text=instrument_summary(), font_size=14, color=iOSTheme.secondary_label,
                            anchor="right", x=-26, y=0))
     device.add_child(Icon("chevron_right", size=20, color=iOSTheme.secondary_label,
                           anchor="right", x=0, y=0))
     scroll.add_child(ListItem(
-        title=t("settings_midi_setup"),
-        subtitle=t("settings_midi_setup_desc"),
+        title=t("settings_instrument"),
+        subtitle=t("settings_instrument_desc"),
         trailing=device,
         on_click=lambda: ctx.router.navigate("midi_setup", "right"),
-        height=60,
-    ))
-    scroll.add_child(ListItem(
-        title=t("settings_keys"),
-        subtitle=t("settings_keys_desc"),
         height=60,
     ))
     from pianove import sound
     no_sound = sound.unavailable_reason() if hasattr(sound, "unavailable_reason") else ""
     scroll.add_child(ListItem(
-        title=t("settings_midi_sound"),
-        subtitle=(t("settings_no_sound", reason=no_sound) if no_sound
-                  else t("settings_midi_sound_desc")),
-        trailing=_switch(sound_enabled_state),
-        height=60,
-    ))
-    scroll.add_child(ListItem(
         title=t("settings_midi_volume"),
+        subtitle=t("settings_no_sound", reason=no_sound) if no_sound else t("settings_volume_desc"),
         trailing=_slider_row(sound_volume_state, lambda v: f"{int(round(float(v) * 100))} %"),
-    ))
-
-    def _mic(on):
-        mic_input_state.value = bool(on)
-        _reload()                         # the sensitivity only shows with the microphone on
-    scroll.add_child(ListItem(
-        title=t("settings_mic_input"),
-        subtitle=t("settings_mic_input_desc"),
-        trailing=_switch(bool(mic_input_state.value), _mic),
         height=60,
     ))
-    if mic_input_state.value:
-        scroll.add_child(ListItem(
-            title=t("settings_mic_sensitivity"),
-            trailing=_slider_row(mic_sensitivity_state, lambda v: f"{int(round(float(v) * 100))} %"),
-        ))
 
     # ── lessons ────────────────────────────────────────────────────────────────
     scroll.add_child(_section_header(t("settings_lessons")))
