@@ -210,31 +210,6 @@ def build():
             card.add_child(foot)
             scroll.add_child(card)
 
-    # more to play, next to the courses
-    from pianove.ui_utils import ui_dims
-    scroll.add_child(section_header(t("lessons_more"), ui_dims()))
-    more = FloatLayout(width=1.0, height=86)
-    for i, (icon, title, desc, tab) in enumerate([
-        ("library_music", t("nav_songs"), t("lessons_more_songs"), 1),
-        ("piano", t("nav_practice"), t("lessons_more_practice"), 3),
-    ]):
-        tile = FloatLayout(width=0.485, height=1.0, background_color=iOSTheme.secondary_background,
-                           border_radius=16, anchor="top_left", x=0.0 if i == 0 else 0.515, y=0)
-        tile.add_child(Icon(icon, size=24, color=ColorPalette.BLUE, anchor="left", x=18, y=0))
-        tile.add_child(Label(text=title, font_size=15, bold=True, color=iOSTheme.label,
-                             anchor="left", x=56, y=-10))
-        tile.add_child(Label(text=desc, font_size=12, color=iOSTheme.secondary_label,
-                             anchor="left", x=56, y=11))
-
-        def _go(tab=tab, key=("songs" if tab == 1 else "practice")):
-            from pianove.home import container
-            container._active_tab.value = tab
-            ctx.home_page = key
-            ctx.inner_router.navigate(key)
-        tile.add_child(Button(text="", on_click=_go, width=1.0, height=1.0,
-                              background_color=pygame.Color(0, 0, 0, 0), border_radius=16))
-        more.add_child(tile)
-    scroll.add_child(more)
 
     return root
 

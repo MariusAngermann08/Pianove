@@ -1,0 +1,286 @@
+[
+  {
+    "type": "scene",
+    "title": {
+      "en": "Two jobs",
+      "de": "Zwei Aufgaben"
+    },
+    "beats": [
+      {
+        "title": {
+          "en": "Melody and bass",
+          "de": "Melodie und Bass"
+        },
+        "say": {
+          "en": "The right hand plays the tune. The left hand plays one low note at the start of each bar and holds it.",
+          "de": "Die rechte Hand spielt die Melodie. Die linke spielt am Anfang jedes Takts einen tiefen Ton und hält ihn."
+        },
+        "hand": {
+          "right": {
+            "C4": 1,
+            "D4": 2,
+            "E4": 3,
+            "F4": 4,
+            "G4": 5
+          },
+          "left": {
+            "C3": 5,
+            "D3": 4,
+            "E3": 3,
+            "F3": 2,
+            "G3": 1
+          }
+        },
+        "staff": {
+          "clef": "grand",
+          "notes": [
+            "C3+C4",
+            "E4",
+            "G4",
+            "E4"
+          ]
+        },
+        "play": [
+          "C3+C4",
+          "E4",
+          "G4",
+          "E4"
+        ],
+        "tempo": 72,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "The bass changes",
+          "de": "Der Bass wechselt"
+        },
+        "say": {
+          "en": "When the harmony changes, the bass changes with it: C, then F, then G, and home to C.",
+          "de": "Wenn sich die Harmonie ändert, wechselt der Bass mit: C, dann F, dann G und zurück zum C."
+        },
+        "hand": {
+          "right": {
+            "C4": 1,
+            "D4": 2,
+            "E4": 3,
+            "F4": 4,
+            "G4": 5
+          },
+          "left": {
+            "C3": 5,
+            "D3": 4,
+            "E3": 3,
+            "F3": 2,
+            "G3": 1
+          }
+        },
+        "staff": {
+          "clef": "grand",
+          "notes": [
+            "C3+E4",
+            "F3+F4",
+            "G3+D4",
+            "C3+C4"
+          ]
+        },
+        "play": [
+          "C3+E4",
+          "F3+F4",
+          "G3+D4",
+          "C3+C4"
+        ],
+        "tempo": 60,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "Keep holding",
+          "de": "Weiter halten"
+        },
+        "say": {
+          "en": "The hard part: keep the left key down while the right hand moves on. Go slowly; Pianove waits for you.",
+          "de": "Das Schwierige: Halte die linke Taste, während die rechte Hand weiterspielt. Lass dir Zeit, Pianove wartet auf dich."
+        },
+        "hand": {
+          "right": {
+            "C4": 1,
+            "D4": 2,
+            "E4": 3,
+            "F4": 4,
+            "G4": 5
+          },
+          "left": {
+            "C3": 5,
+            "D3": 4,
+            "E3": 3,
+            "F3": 2,
+            "G3": 1
+          }
+        },
+        "play": [
+          "C3+C4",
+          "E4",
+          "G4",
+          "E4",
+          "F3+F4",
+          "E4",
+          "D4",
+          "C4"
+        ],
+        "tempo": 76
+      }
+    ]
+  },
+  {
+    "type": "exercise",
+    "time": [
+      4,
+      4
+    ],
+    "tempo": 63,
+    "bars": [
+      [
+        "C4",
+        "E4",
+        "G4",
+        "E4"
+      ],
+      [
+        "F4",
+        "E4",
+        "D4"
+      ],
+      [
+        "E4",
+        "C4",
+        "D4",
+        "E4"
+      ],
+      [
+        "D4",
+        "F4",
+        "D4"
+      ],
+      [
+        "C4",
+        "E4",
+        "G4",
+        "E4"
+      ],
+      [
+        "F4",
+        "G4",
+        "F4",
+        "E4"
+      ],
+      [
+        "D4",
+        "E4",
+        "D4",
+        "C4"
+      ],
+      [
+        "C4"
+      ]
+    ],
+    "types": [
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "whole"
+      ]
+    ],
+    "lh": {
+      "bars": [
+        [
+          "C3"
+        ],
+        [
+          "F3"
+        ],
+        [
+          "C3"
+        ],
+        [
+          "G3"
+        ],
+        [
+          "C3"
+        ],
+        [
+          "F3"
+        ],
+        [
+          "G3"
+        ],
+        [
+          "C3"
+        ]
+      ],
+      "types": [
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ]
+      ]
+    }
+  }
+]

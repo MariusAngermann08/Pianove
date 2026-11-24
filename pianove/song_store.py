@@ -9,7 +9,7 @@ _FILES_DIR  = os.path.join(_STORE_DIR, "files")
 _INDEX_FILE = os.path.join(_STORE_DIR, "index.json")
 
 # Difficulty heuristic thresholds (avg notes/bar after range weighting)
-_DIFF_EASY   = 2.0
+_DIFF_EASY   = 2.2
 _DIFF_MEDIUM = 3.6
 
 # MusicXML type name → beat duration (in quarter-note units)
@@ -443,10 +443,12 @@ def _compute_difficulty(parsed: dict) -> str:
     bar_q = time[0] * 4.0 / max(1, time[1])
     lens = parsed.get("bar_lens") or []
     total_q = sum(float(x) for x in lens if x) if lens else bar_q * max(len(bars_rh), len(bars_lh), 1)
-    density = len(notes) / max(1.0, total_q)                       # keys per quarter note
+    # keys per quarter note; a left hand that holds one bass note a bar counts for less
+    lh_density = len(pitches_lh) / max(1.0, total_q)
+    density = (len(pitches_rh) + 0.5 * len(pitches_lh)) / max(1.0, total_q)
 
     lh_bars = sum(1 for bar in bars_lh if _bar_pitches(bar))
-    both_hands = lh_bars / max(1, len(bars_rh))                    # 0 … 1
+    both_hands = lh_bars / max(1, len(bars_rh)) * min(1.0, 0.4 + lh_density)   # 0 … 1
 
     def _chord_share(onsets):
         starts = struck = 0
@@ -478,7 +480,7 @@ def _compute_difficulty(parsed: dict) -> str:
     return "advanced"
 
 
-_RATING_VERSION = 2       # bump when _compute_difficulty changes: songs are rated again
+_RATING_VERSION = 3       # bump when _compute_difficulty changes: songs are rated again
 
 
 def list_songs() -> list[dict]:
@@ -529,6 +531,43 @@ def import_song(filepath: str) -> dict:
     index.append(entry)
     _save_index(index)
     return entry
+
+
+_BUNDLED_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "songs")
+_BUNDLED_SEEN = os.path.join(_STORE_DIR, "bundled.json")
+
+
+def add_bundled_songs() -> int:
+    """Put the songs Pianove brings along (assets/songs) into the library, each once: a
+    song you delete stays deleted. Returns how many were added."""
+    if not os.path.isdir(_BUNDLED_DIR):
+        return 0
+    try:
+        with open(_BUNDLED_SEEN, "r", encoding="utf-8") as f:
+            seen = set(json.load(f))
+    except Exception:
+        seen = set()
+    added = 0
+    for name in sorted(os.listdir(_BUNDLED_DIR)):
+        if not name.endswith((".musicxml", ".xml", ".mxl")) or name in seen:
+            continue
+        try:
+            entry = import_song(os.path.join(_BUNDLED_DIR, name))
+        except Exception as e:                       # a broken file must not stop the app
+            print(f"Bundled song {name} not added: {e}")
+            continue
+        index = _load_index()
+        for s in index:
+            if s["id"] == entry["id"]:
+                s["bundled"] = name
+        _save_index(index)
+        seen.add(name)
+        added += 1
+    if added:
+        _ensure_dirs()
+        with open(_BUNDLED_SEEN, "w", encoding="utf-8") as f:
+            json.dump(sorted(seen), f, indent=1)
+    return added
 
 
 def delete_song(song_id: str):

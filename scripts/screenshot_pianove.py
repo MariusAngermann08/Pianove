@@ -63,6 +63,7 @@ name_state.value = "Alex"
 storage.set("name", "Alex")
 experience_state.value = "basics"
 storage.set("experience", "basics")
+storage.set("sound_asked", True)          # the one-time "does your keyboard make a sound?" question
 iOSTheme.dark = True
 iOSTheme.update_theme()
 from pianove.ui_utils import apply_score_colors  # noqa: E402
@@ -78,51 +79,22 @@ storage.set("practice_log", {(today - timedelta(days=6 - i)).isoformat(): m * 60
                              for i, m in enumerate(_minutes) if m})
 storage.set("daily_goal_minutes", 15)
 
-from pianove.song_store import import_song  # noqa: E402
+from pianove.song_store import import_song, add_bundled_songs  # noqa: E402
 
-
-def _melody_xml(title: str, composer: str, bars: list[str], time=(4, 4)) -> str:
-    """A one-staff MusicXML file from bars written as "E4:q E4:q F4:h" (q, h, w, e)."""
-    dur = {"e": (1, "eighth"), "q": (2, "quarter"), "h": (4, "half"), "w": (8, "whole")}
-    meas = []
-    for i, bar in enumerate(bars, 1):
-        notes = []
-        for tok in bar.split():
-            pitch, v = tok.split(":")
-            d, typ = dur[v]
-            step, octave = pitch[0], pitch[-1]
-            alter = "<alter>1</alter>" if "#" in pitch else ""
-            notes.append(f"<note><pitch><step>{step}</step>{alter}<octave>{octave}</octave>"
-                         f"</pitch><duration>{d}</duration><type>{typ}</type></note>")
-        attrs = ("<attributes><divisions>2</divisions><key><fifths>0</fifths></key>"
-                 f"<time><beats>{time[0]}</beats><beat-type>{time[1]}</beat-type></time>"
-                 "<clef><sign>G</sign><line>2</line></clef></attributes>") if i == 1 else ""
-        meas.append(f'<measure number="{i}">{attrs}{"".join(notes)}</measure>')
-    return ('<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1">'
-            f"<work><work-title>{title}</work-title></work><identification>"
-            f'<creator type="composer">{composer}</creator></identification>'
-            '<part-list><score-part id="P1"><part-name>Piano</part-name></score-part>'
-            f'</part-list><part id="P1">{"".join(meas)}</part></score-partwise>')
-
-
-# A few public-domain melodies next to the Chopin waltz, so the Songs tab looks used.
-_DEMO_SONGS = {
-    "ode_to_joy.musicxml": ("Ode to Joy", "Ludwig van Beethoven", [
-        "E4:q E4:q F4:q G4:q", "G4:q F4:q E4:q D4:q", "C4:q C4:q D4:q E4:q", "E4:q D4:q D4:h",
-        "E4:q E4:q F4:q G4:q", "G4:q F4:q E4:q D4:q", "C4:q C4:q D4:q E4:q", "D4:q C4:q C4:h",
-        "D4:q D4:q E4:q C4:q", "D4:q E4:e F4:e E4:q C4:q", "D4:q E4:e F4:e E4:q D4:q",
-        "C4:q D4:q G3:h", "E4:q E4:q F4:q G4:q", "G4:q F4:q E4:q D4:q", "C4:q C4:q D4:q E4:q",
-        "D4:q C4:q C4:h"]),
-    "twinkle.musicxml": ("Twinkle, Twinkle, Little Star", "Traditional", [
-        "C4:q C4:q G4:q G4:q", "A4:q A4:q G4:h", "F4:q F4:q E4:q E4:q", "D4:q D4:q C4:h",
-        "G4:q G4:q F4:q F4:q", "E4:q E4:q D4:h", "G4:q G4:q F4:q F4:q", "E4:q E4:q D4:h",
-        "C4:q C4:q G4:q G4:q", "A4:q A4:q G4:h", "F4:q F4:q E4:q E4:q", "D4:q D4:q C4:h"]),
-}
-for _fname, (_title, _composer, _bars) in _DEMO_SONGS.items():
-    _path = Path(_home) / _fname
-    _path.write_text(_melody_xml(_title, _composer, _bars), encoding="utf-8")
-    import_song(str(_path))
+add_bundled_songs()                       # the songs Pianove brings along
 waltz = import_song(str(ROOT / "waltz-in-a-minorchopin.mxl"))
+
+# a little progress on the songs: Twinkle learned, Chopin's waltz under way
+from pianove import song_path  # noqa: E402
+
+from pianove.song_store import list_songs  # noqa: E402
+
+for _s in list_songs():
+    _steps = song_path.build_path(_s["id"])["steps"]
+    _n = len(_steps) if "Twinkle" in _s["title"] else (4 if "Waltz" in _s["title"] else 0)
+    for _st in _steps[:_n]:
+        song_path.record(_s["id"], _st["id"], 0.95)
+storage.set("last_activity", {"kind": "song", "id": waltz["id"], "day": today.isoformat()})
 
 # ── the app, built the way main.py builds it ───────────────────────────────────
 ui = App(title="Pianove", width=WIDTH, height=HEIGHT, dark_mode=True, managed_display=True)
@@ -292,11 +264,19 @@ def shot_song_path():
 
 def shot_song_free():
     from pianove.pages import song_setup
-    song_setup._mode[0] = 1
+    song_setup._open["adjust"] = True
     song_setup._range[waltz["id"]] = [9, 16]
     ctx.current_song_id = waltz["id"]
     go("song_setup", 80); save("ss-song-free")
-    song_setup._mode[0] = 0
+    song_setup._open["adjust"] = False
+
+
+def shot_song_steps():
+    from pianove.pages import song_setup
+    song_setup._open["steps"] = True
+    ctx.current_song_id = waltz["id"]
+    go("song_setup", 80); save("ss-song-steps")
+    song_setup._open["steps"] = False
 
 
 def shot_song_score():
@@ -356,6 +336,32 @@ def shot_lesson():
     go("lesson", 150); save("ss-lesson")
 
 
+def shot_tempo_intro():
+    start_lesson("five_note_melody", "beginner_path", 2, step=1)
+    ctx.lesson_phase = "performance"
+    ctx.lesson_intro = "tempo"
+    go("lesson", 60); save("ss-tempo-intro")
+    ctx.lesson_intro = None
+
+
+def shot_result():
+    """The finish screen after a run in tempo: how it went, timing, and the take."""
+    from pianove.pages.lesson import store_result
+    from pianove import recording
+    start_lesson("five_note_melody", "beginner_path", 2, step=1)
+    store_result("lesson:five_note_melody", 12, 16, [0.03] * 9)           # last time
+    ctx.last_result = store_result("lesson:five_note_melody", 15, 16,
+                                   [0.02, -0.04, 0.05, 0.12, 0.01, -0.03, 0.06, 0.0, 0.04,
+                                    -0.11, 0.03, 0.02, 0.07, -0.02, 0.05])
+    recording.keep([(0.5 * i, 1, 60 + i % 5, 80, 0) for i in range(8)], "Five-Note Melody")
+    ctx.lesson_phase = "performance"
+    ctx.lesson_completed = True
+    ctx.lesson_current_idx = 10 ** 6
+    go("lesson", 80); save("ss-result")
+    ctx.lesson_completed = False
+    ctx.lesson_current_idx = 0
+
+
 def shot_practice():
     home_tab("practice"); save("ss-practice")
 
@@ -366,6 +372,22 @@ def shot_settings():
 
 def shot_midi_setup():
     go("midi_setup", 60); save("ss-midi-setup")
+
+
+def shot_instrument_modes():
+    from pianove.pages import midi_setup
+    for i, name in ((2, "ss-instrument-none"), (1, "ss-instrument-mic")):
+        midi_setup._set_mode(i)
+        tick(40)
+        go("midi_setup", 40); save(name)
+    midi_setup._set_mode(0)
+    tick(20)
+
+
+def shot_sound_question():
+    storage.remove("sound_asked")
+    home_tab("home"); save("ss-home-sound-question")
+    storage.set("sound_asked", True)
 
 
 def shot_creator():

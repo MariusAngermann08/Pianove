@@ -28,6 +28,7 @@ path_last_stars: int        = 0
 
 # Score viewer (set when user taps "View Score" on the songs tab)
 score_song_id: str | None = None
+score_return:  str | None = None     # the page "Back" in the score viewer goes to
 
 # Inner tab router (home shell) — set by home/container.py so tabs can self-refresh
 inner_router: "PageRouter | None" = None
@@ -48,3 +49,13 @@ editor_lesson_id:   str | None = None
 editor_course_id:   str | None = None
 lesson_test_return: str | None = None
 lesson_beat_idx:    int        = 0      # a test run starts on this screen of the scene
+
+# Today's session (pianove/session.py): set by a finish screen that moved the session on,
+# so building that screen again doesn't move it twice
+session_done_marker: tuple | None = None
+
+# a short screen before the run in tempo ("tempo") or None
+lesson_intro: str | None = None
+
+# how the last run in tempo went (pages/lesson.store_result), for its finish screen
+last_result: dict | None = None

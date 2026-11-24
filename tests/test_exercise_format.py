@@ -27,6 +27,8 @@ def test_old_exercises_play_as_before():
     from pianove.pages import lesson as L
     n = 0
     for name, ex in _exercises():
+        if ex.get("types"):                  # written with note values: not an old one
+            continue
         time = tuple(ex["time"])
         bars = ex["bars"]
         pitches, types, onsets = ef.music(ex)

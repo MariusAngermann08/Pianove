@@ -1,0 +1,16 @@
+{
+  "id": "both_hands_finale",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "intermediate",
+  "tags": [
+    "two-hands",
+    "piece",
+    "review"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 10
+}

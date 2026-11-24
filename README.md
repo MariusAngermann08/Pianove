@@ -32,7 +32,7 @@ Pianove is built in Python on pygame, together with two libraries of its own, fo
 <td width="50%" valign="top">
 
 ### Lessons that explain, then let you play
-16 lessons in two courses. Each starts with a short animated scene (text, keyboard, staff and a hand that shows how it is played), then you play the piece from the staff, section by section, up to a final performance in tempo.
+24 lessons in three courses. Each starts with a short animated scene (text, keyboard, staff and a hand that shows how it is played), then you play the piece from the staff, section by section, up to a run in tempo. Afterwards you see how many notes were on time and how it compares with last time, and you can listen to your take or save it as audio.
 
 </td>
 <td width="50%"><img src="docs/img/ss-lesson.png" alt="Playing a lesson piece"></td>
@@ -42,7 +42,7 @@ Pianove is built in Python on pygame, together with two libraries of its own, fo
 <td valign="top">
 
 ### Any piece, as a learning path
-Import a MusicXML file and Pianove cuts it into parts, names what is new in each (chords, leaps, black keys, hands together) and takes you through right hand, left hand and both, up to the whole piece, with up to three stars per step. Slow it down, switch on the metronome, or loop the bars you're stuck on.
+Twelve public-domain pieces come with the app, from *Mary Had a Little Lamb* to Pachelbel's *Canon*; import any MusicXML file for more. Pianove cuts a piece into parts, names what is new in each (chords, leaps, black keys, hands together) and takes you through right hand, left hand and both, up to the whole piece, with up to three stars per step. While you learn one hand, Pianove plays the other, so you always hear the whole piece. Slow it down, switch on the metronome, or loop the bars you're stuck on.
 
 </td>
 </tr>
@@ -68,10 +68,12 @@ Write your own lessons and courses in the app, with a live preview, a score edit
 
 ## Features
 
-- **16 built-in lessons** in two courses (*Beginner Path*, *Melody Explorer*), in English and German; the setup asks how much you've played and suggests where to start
-- **Songs:** import any MusicXML file (`.musicxml`, `.xml`, `.mxl`), read the full score, and learn it on a **learning path** or in free practice: one hand or both, any range of bars, 50–100 % tempo, with a metronome
+- **Today's session:** one tap on Home starts a short plan made from where you are: a sight-reading warm-up, your next lesson, the next step of your song
+- **24 built-in lessons** in three courses (*Beginner Path*, *Melody Explorer*, *Both Hands Together*), in English and German; the setup asks how much you've played and suggests where to start
+- **12 songs to start with**, arranged for both hands; **import** any MusicXML file (`.musicxml`, `.xml`, `.mxl`), read the full score, and learn it on a **learning path** or in free practice: one hand or both, any range of bars, 50–100 % tempo, with a metronome; Pianove plays the hand you're not practising
+- **Feedback after every run in tempo:** notes on time, early or late, the change since last time, and your take to listen to or save as a WAV file
 - **Sight-reading practice:** endless generated exercises by clef, key, level and tempo
-- **Play on anything:** a USB MIDI keyboard (found and calibrated automatically), an acoustic piano through the microphone *(beta, local numpy note detector)*, or the computer keyboard and mouse
+- **Play on anything**, chosen in one place (*Settings → Your Instrument*): a USB MIDI keyboard (found and calibrated automatically), an acoustic piano through the microphone *(beta, local numpy note detector)*, or the computer keyboard and mouse
 - **Animated hands with automatic fingering** in lessons and songs
 - **Honest progress:** practice time measured from what you play, a daily goal in minutes, streaks that count lessons, songs and sight-reading, the last 7 days as a chart, achievements
 - **Built-in grand piano sound** (FluidSynth + Salamander C5 SoundFont); without it Pianove runs silently and says why
@@ -104,11 +106,13 @@ No keyboard? Choose *Use the microphone* during setup for an acoustic piano, or 
 | Home | Lessons | Songs |
 |---|---|---|
 | ![Home](docs/img/ss-home.png) | ![Lessons](docs/img/ss-lessons.png) | ![Songs](docs/img/ss-songs.png) |
-| **Free practice** | **Score viewer** | **Sight-reading practice** |
-| ![Free practice](docs/img/ss-song-free.png) | ![Score viewer](docs/img/ss-song-score.png) | ![Practice](docs/img/ss-practice.png) |
-| **Settings** | **First-start setup** | **Course** |
-| ![Settings](docs/img/ss-settings.png) | ![Setup](docs/img/ss-onboarding-ready.png) | ![Course](docs/img/ss-course.png) |
-| **Light mode** | **Keyboard setup** | **Creator Mode** |
+| **A song, adjusted** | **Score viewer** | **Sight-reading** |
+| ![A song's settings](docs/img/ss-song-free.png) | ![Score viewer](docs/img/ss-song-score.png) | ![Practice](docs/img/ss-practice.png) |
+| **Settings** | **Your instrument** | **Course** |
+| ![Settings](docs/img/ss-settings.png) | ![Your instrument](docs/img/ss-midi-setup.png) | ![Course](docs/img/ss-course.png) |
+| **After a run in tempo** | **Before the run in tempo** | **First-start setup** |
+| ![Result](docs/img/ss-result.png) | ![Tempo](docs/img/ss-tempo-intro.png) | ![Setup](docs/img/ss-onboarding-ready.png) |
+| **Light mode** | **Setup: your keyboard** | **Creator Mode** |
 | ![Home in light mode](docs/img/ss-home-light.png) | ![Onboarding](docs/img/ss-onboarding-midi.png) | ![Create tab](docs/img/ss-creator.png) |
 
 ## What's inside
@@ -126,11 +130,14 @@ Pianove/
 ├── main.py                 entry point
 ├── pianove/                the application
 │   ├── pages/              full-screen pages: onboarding, lesson player, theory scenes, editors
-│   ├── home/               the tabs: Home, Songs, Lessons, Practice, Create, Settings
+│   ├── home/               the tabs: Home, Songs, Lessons, Sight-Reading, Create, Settings
 │   ├── lessons/ courses/   built-in content (JSON, see LESSON_FORMAT.md)
+│   ├── assets/songs/       the songs that come with the app (MusicXML)
 │   ├── audio_input/        microphone note detection
 │   ├── midi/               MIDI keyboard input and the on-screen keyboard
 │   ├── song_path.py        learning paths for imported songs
+│   ├── session.py          today's session on Home
+│   ├── recording.py        your take: listen back, save as WAV
 │   ├── fingering.py        automatic fingering
 │   ├── hands.py            animated hands
 │   ├── progress.py         practice time, streaks, daily goal
@@ -139,7 +146,7 @@ Pianove/
 ├── PyLute/                 notation renderer library
 ├── PyLay/                  UI framework library
 ├── docs/                   website and user guide (static HTML)
-├── scripts/                screenshots, detector evaluation, piano templates
+├── scripts/                screenshots, the bundled songs, detector evaluation, piano templates
 ├── tests/                  pytest suite
 ├── pianove.spec            PyInstaller build of the stand-alone app
 └── .github/workflows/      builds the apps for Windows, macOS and Linux

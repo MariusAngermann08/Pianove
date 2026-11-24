@@ -1,0 +1,15 @@
+{
+  "id": "chords_c_f_g",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": [
+    "chords",
+    "harmony"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 8
+}

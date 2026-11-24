@@ -20,6 +20,11 @@ _ICON_FNS = {
 
 
 def build():
+    try:                                   # the songs Pianove brings along, the first time
+        from pianove.song_store import add_bundled_songs
+        add_bundled_songs()
+    except Exception as e:
+        print(f"Bundled songs not added: {e}")
     nav_w        = max(160, int(_NAV_W * UI_SCALE))
     content_w    = max(200, ctx.ui.width - nav_w)
     show_creator = bool(creator_mode_state.value)

@@ -1,0 +1,16 @@
+{
+  "id": "dotted_rhythms",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "intermediate",
+  "tags": [
+    "rhythm",
+    "dotted",
+    "waltz"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 7
+}

@@ -133,51 +133,19 @@ def build():
     ))
     scroll.add_child(greeting_row)
 
-    scroll.add_child(section_header(t("continue_label"), U))
+    # ── today's session: what to play, decided for you ─────────────────────────
+    from pianove import session
+    from pianove.pages.midi_setup import needs_sound_question, sound_question
+    if needs_sound_question():               # asked once, the first time a keyboard is there
+        scroll.add_child(sound_question(
+            on_answer=lambda: ctx.inner_router and ctx.inner_router.reload_current_page()))
+    scroll.add_child(_session_card(session, U))
 
-    if next_lesson and next_course:
-        n_total  = len(next_course["lessons"])
-        n_done   = sum(1 for lid in next_course["lessons"] if is_complete(lid))
-        progress = n_done / n_total
-
-        cont = Card(width=1.0, height=138)
-        cont.add_child(Label(
-            text=next_lesson["title"],
-            font_size=15, bold=True, color=iOSTheme.label, height=22,
-        ))
-        cont.add_child(Label(
-            text=f"{next_course['title']}  ·  {t('home_n_of_done', done=n_done, total=n_total)}",
-            font_size=12, color=iOSTheme.secondary_label, height=18,
-        ))
-        cont.add_child(ProgressBar(
-            progress=progress, width=1.0, height=6,
-            active_color=ColorPalette.BLUE,
-        ))
-
-        lid, cid, ci = next_lesson["id"], next_course["id"], next_idx
-        def _start():
-            ctx.current_lesson_id    = lid
-            ctx.current_course_id    = cid
-            ctx.current_course_index = ci
-            ctx.router.navigate("lesson", "right")
-
-        cont.add_child(Button(
-            text=t("continue") if n_done > 0 else t("lesson_start"),
-            on_click=_start,
-            width=0.4, height=34, font_size=13,
-            background_color=ColorPalette.BLUE,
-            text_color=pygame.Color(255, 255, 255),
-            border_radius=10,
-        ))
+    # ── continue: the song or lesson you opened last first ─────────────────────
+    cont = _continue_card(session, next_lesson, next_course, next_idx)
+    if cont is not None:
+        scroll.add_child(section_header(t("continue_label"), U))
         scroll.add_child(cont)
-    else:
-        done_card = Card(width=1.0, height=92)
-        done_card.add_child(EmojiIcon("🏆", size=28, color=ORANGE))
-        done_card.add_child(Label(
-            text=t("home_all_done"),
-            font_size=15, bold=True, color=iOSTheme.label, height=22,
-        ))
-        scroll.add_child(done_card)
 
     from pianove.song_store import list_songs
     if recommend.suggests_songs() and not list_songs():
@@ -223,7 +191,16 @@ def build():
         anchor="left", x=64, y=12,
     ))
     goal.add_child(goal_row)
-    scroll.add_child(goal)
+
+    def _to_settings():                       # "change it in Settings": a tap takes you there
+        ctx.home_page = "settings"
+        ctx.router.reload_current_page()
+    goal_wrap = FloatLayout(width=1.0, height=80)
+    goal.anchor, goal.x_spec, goal.y_spec = "top_left", 0, 0
+    goal_wrap.add_child(goal)
+    goal_wrap.add_child(Button(text="", on_click=_to_settings, width=1.0, height=1.0,
+                               background_color=pygame.Color(0, 0, 0, 0), border_radius=16))
+    scroll.add_child(goal_wrap)
 
     scroll.add_child(section_header(t("home_overview"), U))
     stats_row = FloatLayout(width=1.0, height=scaled_px(104))
@@ -264,6 +241,9 @@ def build():
                 width=1.0, height=scaled_px(150),
             ))
 
+    scroll.add_child(section_header(t("home_repertoire"), U))
+    scroll.add_child(_repertoire(session, lessons_done))
+
     scroll.add_child(section_header(t("stats_achievements"), U))
 
     badges_row1 = FloatLayout(width=1.0, height=scaled_px(64))
@@ -285,3 +265,157 @@ def build():
     scroll.add_child(badges_row2)
 
     return root
+
+
+def _session_card(session, U) -> FloatLayout:
+    """Today's session: the plan (or how far it got) and one button."""
+    active, done_today = session.active(), session.finished_today()
+    st = session._state()
+    items = st["items"] if st else session.plan()
+    pos = st["i"] if st else 0
+    rows = len(items)
+    card = FloatLayout(width=1.0, height=96 + rows * 30, background_color=iOSTheme.secondary_background,
+                       border_radius=18)
+    card.add_child(Icon("event_available" if not done_today else "check_circle", size=26,
+                        color=GREEN if done_today else ColorPalette.BLUE,
+                        anchor="top_left", x=20, y=20))
+    card.add_child(Label(text=t("session_title"), font_size=18, bold=True, color=iOSTheme.label,
+                         anchor="top_left", x=58, y=18))
+    card.add_child(Label(text=t("session_done") if done_today else
+                         t("session_sub", min=session.minutes(items)),
+                         font_size=13, color=GREEN if done_today else iOSTheme.secondary_label,
+                         anchor="top_left", x=58, y=44))
+    for k, it in enumerate(items):
+        y = 76 + k * 30
+        finished = k < pos
+        now = active and k == pos
+        card.add_child(Icon("check_circle" if finished else ("play_circle" if now else "radio_button_unchecked"),
+                            size=18, color=GREEN if finished else (ColorPalette.BLUE if now else iOSTheme.fill_tertiary),
+                            anchor="top_left", x=58, y=y))
+        card.add_child(Label(text=session.describe(it), font_size=14, bold=now,
+                             color=iOSTheme.secondary_label if finished else iOSTheme.label,
+                             anchor="top_left", x=86, y=y))
+        card.add_child(Label(text=t("lessons_minutes", n=it.get("minutes", 3)), font_size=12,
+                             color=iOSTheme.secondary_label, anchor="top_right", x=-20, y=y + 1))
+    if done_today:
+        btn = Button(text=t("session_again"), on_click=session.start,
+                     anchor="top_right", x=-20, y=20, width=150, height=38, font_size=14,
+                     background_color=iOSTheme.fill, text_color=iOSTheme.label, border_radius=10)
+    elif active:
+        k, n = session.position()
+        btn = Button(text=t("session_continue", k=k, n=n), on_click=session.launch_next,
+                     anchor="top_right", x=-20, y=20, width=170, height=38, font_size=14,
+                     background_color=ColorPalette.BLUE, text_color=pygame.Color(255, 255, 255),
+                     border_radius=10)
+    else:
+        btn = Button(text=t("session_start"), on_click=session.start,
+                     anchor="top_right", x=-20, y=20, width=150, height=38, font_size=15,
+                     background_color=ColorPalette.BLUE, text_color=pygame.Color(255, 255, 255),
+                     border_radius=10)
+    card.add_child(btn)
+    return card
+
+
+def _continue_card(session, next_lesson, next_course, next_idx):
+    """The song or lesson opened last, with the other one as a smaller second line."""
+    sp = session.song_in_progress()
+    last = session.last_activity() or {}
+    song_first = sp is not None and (last.get("kind") == "song" or next_lesson is None)
+    if sp is None and not next_lesson:
+        done_card = Card(width=1.0, height=92)
+        done_card.add_child(EmojiIcon("🏆", size=28, color=ORANGE))
+        done_card.add_child(Label(text=t("home_all_done"), font_size=15, bold=True,
+                                  color=iOSTheme.label, height=22))
+        return done_card
+
+    def _start_lesson(lid=next_lesson["id"] if next_lesson else None,
+                      cid=next_course["id"] if next_course else None, ci=next_idx):
+        ctx.practice_mode = False
+        ctx.current_song_id = None
+        ctx.path_step = ctx.song_range = None
+        ctx.current_lesson_id = lid
+        ctx.current_course_id = cid
+        ctx.current_course_index = ci
+        ctx.lesson_step_idx = ctx.lesson_current_idx = ctx.lesson_section_idx = 0
+        ctx.lesson_completed = False
+        ctx.router.navigate("lesson", "right")
+
+    def _start_song():
+        song, step = sp
+        from pianove.pages.lesson import start_path_step
+        ctx.practice_mode = False
+        ctx.current_song_id = song["id"]
+        start_path_step(step)
+        ctx.router.navigate("lesson", "right")
+
+    def _song_line():
+        from pianove import song_path
+        song, step = sp
+        steps = song_path.build_path(song["id"])["steps"]
+        done = song_path.progress(song["id"])
+        n_done = sum(1 for st in steps if st["id"] in done)
+        key, fmt = step["title"]
+        return (song.get("title", ""), t("home_continue_song", step=t(key, **fmt)),
+                n_done / max(1, len(steps)), _start_song, "library_music")
+
+    def _lesson_line():
+        lessons = next_course["lessons"]
+        n_done = sum(1 for lid in lessons if is_complete(lid))
+        return (next_lesson["title"],
+                f"{next_course['title']}  ·  {t('home_n_of_done', done=n_done, total=len(lessons))}",
+                n_done / max(1, len(lessons)), _start_lesson, "school")
+
+    main_line = _song_line() if song_first else _lesson_line()
+    other = (_lesson_line() if song_first else _song_line()) if (sp and next_lesson) else None
+
+    card = FloatLayout(width=1.0, height=104 if other else 84,
+                       background_color=iOSTheme.secondary_background, border_radius=16)
+    title, sub, prog, action, icon = main_line
+    card.add_child(Icon(icon, size=26, color=ColorPalette.BLUE, anchor="top_left", x=18, y=18))
+    card.add_child(Label(text=title, font_size=16, bold=True, color=iOSTheme.label,
+                         anchor="top_left", x=58, y=14))
+    card.add_child(Label(text=sub, font_size=13, color=iOSTheme.secondary_label,
+                         anchor="top_left", x=58, y=38))
+    card.add_child(ProgressBar(progress=prog, width=0.5, height=5, active_color=ColorPalette.BLUE,
+                               anchor="top_left", x=58, y=62))
+    card.add_child(Button(text=t("continue"), on_click=action,
+                          anchor="top_right", x=-18, y=18, width=130, height=38, font_size=14,
+                          background_color=ColorPalette.BLUE, text_color=pygame.Color(255, 255, 255),
+                          border_radius=10))
+    if other:
+        o_title, o_sub, _, o_action, _ = other
+        o_text = f"{t('home_or')}  {o_title}  ·  {o_sub}"
+        card.add_child(Button(text=o_text, on_click=o_action,
+                              anchor="bottom_left", x=52, y=-8, width=24 + int(len(o_text) * 6.6),
+                              height=26, font_size=12,
+                              background_color=pygame.Color(0, 0, 0, 0), text_color=ColorPalette.BLUE,
+                              border_radius=6))
+    return card
+
+
+def _repertoire(session, lessons_done: int) -> FloatLayout:
+    """The pieces you can play: songs whose learning path is done, as chips."""
+    songs = session.learned_songs()
+    if not songs:
+        box = FloatLayout(width=1.0, height=58, background_color=iOSTheme.secondary_background,
+                          border_radius=14)
+        box.add_child(Icon("piano", size=22, color=iOSTheme.secondary_label, anchor="left", x=18, y=0))
+        box.add_child(Label(text=t("home_repertoire_empty"), font_size=13,
+                            color=iOSTheme.secondary_label, anchor="left", x=52, y=-8))
+        box.add_child(Label(text=t("home_lessons_done", n=lessons_done), font_size=12,
+                            color=iOSTheme.secondary_label, anchor="left", x=52, y=11))
+        return box
+    row = FloatLayout(width=1.0, height=48)
+    x = 0
+    for s in songs[:6]:
+        w = 30 + int(len(s.get("title", "")) * 8.2)
+
+        def _open(_id=s["id"]):
+            ctx.current_song_id = _id
+            ctx.router.navigate("song_setup", "right")
+        row.add_child(Button(text="♪  " + s.get("title", ""), on_click=_open,
+                             anchor="top_left", x=x, y=4, width=w, height=38, font_size=13,
+                             background_color=iOSTheme.secondary_background, text_color=iOSTheme.label,
+                             border_radius=19))
+        x += w + 10
+    return row

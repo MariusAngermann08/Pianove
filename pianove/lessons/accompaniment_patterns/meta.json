@@ -1,0 +1,16 @@
+{
+  "id": "accompaniment_patterns",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "intermediate",
+  "tags": [
+    "accompaniment",
+    "left-hand",
+    "two-hands"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 9
+}

@@ -1,0 +1,16 @@
+{
+  "id": "two_hands_together",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "intermediate",
+  "lessons": [
+    "chords_c_f_g",
+    "eighth_notes",
+    "bass_clef_notes",
+    "melody_and_bass",
+    "dotted_rhythms",
+    "a_minor",
+    "accompaniment_patterns",
+    "both_hands_finale"
+  ]
+}
