@@ -1,0 +1,15 @@
+{
+  "id": "eighth_notes",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": [
+    "rhythm",
+    "eighths"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 7
+}

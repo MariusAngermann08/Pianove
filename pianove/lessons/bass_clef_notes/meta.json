@@ -1,0 +1,16 @@
+{
+  "id": "bass_clef_notes",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": [
+    "reading",
+    "bass-clef",
+    "left-hand"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 7
+}

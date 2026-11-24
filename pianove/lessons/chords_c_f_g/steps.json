@@ -1,0 +1,288 @@
+[
+  {
+    "type": "scene",
+    "title": {
+      "en": "Three chords",
+      "de": "Drei Akkorde"
+    },
+    "beats": [
+      {
+        "title": {
+          "en": "C major",
+          "de": "C-Dur"
+        },
+        "say": {
+          "en": "Thumb on C, middle finger on E, little finger on G: press them together. That's the C major chord.",
+          "de": "Daumen auf C, Mittelfinger auf E, kleiner Finger auf G: drück sie zusammen. Das ist der C-Dur-Akkord."
+        },
+        "hand": {
+          "right": {
+            "C4": 1,
+            "E4": 3,
+            "G4": 5
+          }
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "treble",
+          "notes": [
+            "C4+E4+G4"
+          ]
+        },
+        "play": [
+          "C4+E4+G4"
+        ],
+        "tempo": 50,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "F major",
+          "de": "F-Dur"
+        },
+        "say": {
+          "en": "Move the whole hand up to F: F, A and C. The shape stays the same, only the place changes.",
+          "de": "Schieb die ganze Hand hoch zum F: F, A und C. Die Form bleibt gleich, nur der Ort ändert sich."
+        },
+        "hand": {
+          "right": {
+            "F4": 1,
+            "A4": 3,
+            "C5": 5
+          }
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "treble",
+          "notes": [
+            "F4+A4+C5"
+          ]
+        },
+        "play": [
+          "F4+A4+C5"
+        ],
+        "tempo": 50,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "G major",
+          "de": "G-Dur"
+        },
+        "say": {
+          "en": "One more step: G, B and D. With these three chords you can accompany a lot of songs.",
+          "de": "Noch ein Schritt: G, H und D. Mit diesen drei Akkorden kannst du sehr viele Lieder begleiten."
+        },
+        "hand": {
+          "right": {
+            "G4": 1,
+            "B4": 3,
+            "D5": 5
+          }
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "treble",
+          "notes": [
+            "G4+B4+D5"
+          ]
+        },
+        "play": [
+          "G4+B4+D5"
+        ],
+        "tempo": 50,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "Away and home again",
+          "de": "Weg und wieder heim"
+        },
+        "say": {
+          "en": "C, F, C, G, C. Listen to how the G chord wants to go back home to C.",
+          "de": "C, F, C, G, C. Hör, wie der G-Akkord zurück nach Hause zum C will."
+        },
+        "staff": {
+          "clef": "treble",
+          "notes": [
+            "C4+E4+G4",
+            "F4+A4+C5",
+            "C4+E4+G4",
+            "G4+B4+D5",
+            "C4+E4+G4"
+          ]
+        },
+        "play": [
+          "C4+E4+G4",
+          "F4+A4+C5",
+          "C4+E4+G4",
+          "G4+B4+D5",
+          "C4+E4+G4"
+        ],
+        "tempo": 56,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "The left hand helps",
+          "de": "Die linke Hand hilft"
+        },
+        "say": {
+          "en": "In the piece, the left hand plays the chord's own note, its root, low down: C, F or G.",
+          "de": "Im Stück spielt die linke Hand den Grundton des Akkords tief unten: C, F oder G."
+        },
+        "hand": {
+          "left": {
+            "C3": 5,
+            "D3": 4,
+            "E3": 3,
+            "F3": 2,
+            "G3": 1
+          }
+        },
+        "labels": "hand",
+        "side": "left",
+        "staff": {
+          "clef": "bass",
+          "notes": [
+            "C3",
+            "F3",
+            "C3",
+            "G3",
+            "C3"
+          ],
+          "under": "names"
+        },
+        "play": [
+          "C3",
+          "F3",
+          "C3",
+          "G3",
+          "C3"
+        ],
+        "tempo": 70,
+        "try": "play"
+      }
+    ]
+  },
+  {
+    "type": "exercise",
+    "time": [
+      4,
+      4
+    ],
+    "tempo": 60,
+    "bars": [
+      [
+        "C4+E4+G4"
+      ],
+      [
+        "F4+A4+C5"
+      ],
+      [
+        "C4+E4+G4"
+      ],
+      [
+        "G4+B4+D5"
+      ],
+      [
+        "C4+E4+G4",
+        "C4+E4+G4"
+      ],
+      [
+        "F4+A4+C5",
+        "F4+A4+C5"
+      ],
+      [
+        "G4+B4+D5",
+        "G4+B4+D5"
+      ],
+      [
+        "C4+E4+G4"
+      ]
+    ],
+    "types": [
+      [
+        "whole"
+      ],
+      [
+        "whole"
+      ],
+      [
+        "whole"
+      ],
+      [
+        "whole"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "whole"
+      ]
+    ],
+    "lh": {
+      "bars": [
+        [
+          "C3"
+        ],
+        [
+          "F3"
+        ],
+        [
+          "C3"
+        ],
+        [
+          "G3"
+        ],
+        [
+          "C3"
+        ],
+        [
+          "F3"
+        ],
+        [
+          "G3"
+        ],
+        [
+          "C3"
+        ]
+      ],
+      "types": [
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ]
+      ]
+    }
+  }
+]

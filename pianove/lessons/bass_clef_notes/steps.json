@@ -1,0 +1,235 @@
+[
+  {
+    "type": "scene",
+    "title": {
+      "en": "The bass clef",
+      "de": "Der Bassschlüssel"
+    },
+    "beats": [
+      {
+        "title": {
+          "en": "The F line",
+          "de": "Die F-Linie"
+        },
+        "say": {
+          "en": "The bass clef is also called the F clef: its two dots sit around the fourth line, and that line is F.",
+          "de": "Der Bassschlüssel heißt auch F-Schlüssel: Seine zwei Punkte liegen um die vierte Linie, und diese Linie ist das F."
+        },
+        "staff": {
+          "clef": "bass",
+          "notes": [
+            "F3"
+          ],
+          "under": "names"
+        },
+        "labels": [
+          "F3"
+        ],
+        "mark": [
+          "F3"
+        ],
+        "play": [
+          "F3"
+        ],
+        "side": "left",
+        "tempo": 60,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "Middle C from below",
+          "de": "Das mittlere C von unten"
+        },
+        "say": {
+          "en": "Middle C sits on a little extra line just above the bass staff. The C an octave lower is in the second space.",
+          "de": "Das mittlere C sitzt auf einer kleinen Hilfslinie direkt über dem Bass-System. Das C eine Oktave tiefer steht im zweiten Zwischenraum."
+        },
+        "staff": {
+          "clef": "bass",
+          "notes": [
+            "C4",
+            "C3"
+          ],
+          "under": "names"
+        },
+        "labels": [
+          "C3",
+          "C4"
+        ],
+        "play": [
+          "C4",
+          "C3"
+        ],
+        "side": "left",
+        "tempo": 60
+      },
+      {
+        "title": {
+          "en": "The lines",
+          "de": "Die Linien"
+        },
+        "say": {
+          "en": "From the bottom up, the lines are G, B, D, F and A.",
+          "de": "Von unten nach oben heißen die Linien G, H, D, F und A."
+        },
+        "staff": {
+          "clef": "bass",
+          "notes": [
+            "G2",
+            "B2",
+            "D3",
+            "F3",
+            "A3"
+          ],
+          "under": "names"
+        },
+        "labels": [
+          "G2",
+          "B2",
+          "D3",
+          "F3",
+          "A3"
+        ],
+        "play": [
+          "G2",
+          "B2",
+          "D3",
+          "F3",
+          "A3"
+        ],
+        "side": "left",
+        "tempo": 72
+      },
+      {
+        "title": {
+          "en": "The spaces",
+          "de": "Die Zwischenräume"
+        },
+        "say": {
+          "en": "The spaces in between are A, C, E and G. Play them from the bottom up.",
+          "de": "Die Zwischenräume dazwischen sind A, C, E und G. Spiel sie von unten nach oben."
+        },
+        "staff": {
+          "clef": "bass",
+          "notes": [
+            "A2",
+            "C3",
+            "E3",
+            "G3"
+          ],
+          "under": "names"
+        },
+        "labels": [
+          "A2",
+          "C3",
+          "E3",
+          "G3"
+        ],
+        "play": [
+          "A2",
+          "C3",
+          "E3",
+          "G3"
+        ],
+        "side": "left",
+        "tempo": 72,
+        "try": "play"
+      }
+    ]
+  },
+  {
+    "type": "exercise",
+    "time": [
+      4,
+      4
+    ],
+    "tempo": 66,
+    "bars": [
+      [
+        "C3",
+        "D3",
+        "E3",
+        "F3"
+      ],
+      [
+        "G3",
+        "E3"
+      ],
+      [
+        "F3",
+        "E3",
+        "D3",
+        "C3"
+      ],
+      [
+        "D3",
+        "B2"
+      ],
+      [
+        "C3",
+        "E3",
+        "G3",
+        "E3"
+      ],
+      [
+        "F3",
+        "A3",
+        "F3",
+        "D3"
+      ],
+      [
+        "E3",
+        "D3",
+        "C3",
+        "B2"
+      ],
+      [
+        "C3"
+      ]
+    ],
+    "types": [
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "whole"
+      ]
+    ],
+    "clef": "bass"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "id": "melody_and_bass",
+  "version": "1.0.0",
+  "author": "Pianove",
+  "difficulty": "beginner",
+  "tags": [
+    "two-hands",
+    "melody",
+    "bass"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "estimated_minutes": 8
+}

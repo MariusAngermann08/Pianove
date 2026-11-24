@@ -1,0 +1,273 @@
+[
+  {
+    "type": "scene",
+    "title": {
+      "en": "A minor",
+      "de": "a-Moll"
+    },
+    "beats": [
+      {
+        "title": {
+          "en": "Another home",
+          "de": "Ein anderes Zuhause"
+        },
+        "say": {
+          "en": "Put your thumb on the A below middle C. Same white keys, but start and end on A and the music sounds darker. That's A minor.",
+          "de": "Leg den Daumen auf das A unter dem mittleren C. Dieselben weißen Tasten, aber auf A angefangen und beendet klingt die Musik dunkler. Das ist a-Moll."
+        },
+        "hand": {
+          "right": {
+            "A3": 1,
+            "B3": 2,
+            "C4": 3,
+            "D4": 4,
+            "E4": 5
+          }
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "treble",
+          "notes": [
+            "A3",
+            "B3",
+            "C4",
+            "D4",
+            "E4",
+            "D4",
+            "C4",
+            "B3",
+            "A3"
+          ],
+          "under": "names"
+        },
+        "play": [
+          "A3",
+          "B3",
+          "C4",
+          "D4",
+          "E4",
+          "D4",
+          "C4",
+          "B3",
+          "A3"
+        ],
+        "tempo": 84,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "The A minor chord",
+          "de": "Der a-Moll-Akkord"
+        },
+        "say": {
+          "en": "A, C and E together, fingers 1, 3 and 5. Listen to it next to C major: sad, then bright, then sad again.",
+          "de": "A, C und E zusammen, Finger 1, 3 und 5. Hör ihn neben C-Dur: traurig, dann hell, dann wieder traurig."
+        },
+        "hand": {
+          "right": {
+            "A3": 1,
+            "C4": 3,
+            "E4": 5
+          }
+        },
+        "numbers": true,
+        "staff": {
+          "clef": "treble",
+          "notes": [
+            "A3+C4+E4",
+            "C4+E4+G4",
+            "A3+C4+E4"
+          ]
+        },
+        "play": [
+          "A3+C4+E4",
+          "C4+E4+G4",
+          "A3+C4+E4"
+        ],
+        "tempo": 50,
+        "try": "play"
+      },
+      {
+        "title": {
+          "en": "Low A",
+          "de": "Das tiefe A"
+        },
+        "say": {
+          "en": "The left hand plays the low A, the home note, and the E above it.",
+          "de": "Die linke Hand spielt das tiefe A, den Grundton, und das E darüber."
+        },
+        "hand": {
+          "left": {
+            "A2": 5,
+            "B2": 4,
+            "C3": 3,
+            "D3": 2,
+            "E3": 1
+          }
+        },
+        "labels": "hand",
+        "side": "left",
+        "staff": {
+          "clef": "bass",
+          "notes": [
+            "A2",
+            "E3",
+            "A2"
+          ],
+          "under": "names"
+        },
+        "play": [
+          "A2",
+          "E3",
+          "A2"
+        ],
+        "tempo": 66,
+        "try": "play"
+      }
+    ]
+  },
+  {
+    "type": "exercise",
+    "time": [
+      4,
+      4
+    ],
+    "tempo": 69,
+    "bars": [
+      [
+        "A3",
+        "B3",
+        "C4",
+        "D4"
+      ],
+      [
+        "E4",
+        "E4"
+      ],
+      [
+        "D4",
+        "C4",
+        "B3",
+        "D4"
+      ],
+      [
+        "C4",
+        "A3"
+      ],
+      [
+        "E4",
+        "D4",
+        "C4",
+        "B3"
+      ],
+      [
+        "C4",
+        "D4",
+        "E4"
+      ],
+      [
+        "D4",
+        "C4",
+        "B3"
+      ],
+      [
+        "A3"
+      ]
+    ],
+    "types": [
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "half",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "quarter",
+        "quarter"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "half"
+      ],
+      [
+        "quarter",
+        "quarter",
+        "half"
+      ],
+      [
+        "whole"
+      ]
+    ],
+    "lh": {
+      "bars": [
+        [
+          "A2"
+        ],
+        [
+          "A2"
+        ],
+        [
+          "E3"
+        ],
+        [
+          "A2"
+        ],
+        [
+          "A2"
+        ],
+        [
+          "A2"
+        ],
+        [
+          "E3"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "types": [
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ],
+        [
+          "whole"
+        ]
+      ]
+    }
+  }
+]
