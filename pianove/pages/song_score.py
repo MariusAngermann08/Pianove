@@ -67,7 +67,7 @@ def build():
             text=t("song_start"),
             on_click=_practice,
             anchor="right", x=-12, y=0,
-            width=96, height=34, font_size=14,
+            width=150, height=34, font_size=14,
             background_color=ColorPalette.BLUE,
             text_color=pygame.Color(255, 255, 255),
             border_radius=8,

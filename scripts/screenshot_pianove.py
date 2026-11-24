@@ -79,50 +79,9 @@ storage.set("practice_log", {(today - timedelta(days=6 - i)).isoformat(): m * 60
                              for i, m in enumerate(_minutes) if m})
 storage.set("daily_goal_minutes", 15)
 
-from pianove.song_store import import_song  # noqa: E402
+from pianove.song_store import import_song, add_bundled_songs  # noqa: E402
 
-
-def _melody_xml(title: str, composer: str, bars: list[str], time=(4, 4)) -> str:
-    """A one-staff MusicXML file from bars written as "E4:q E4:q F4:h" (q, h, w, e)."""
-    dur = {"e": (1, "eighth"), "q": (2, "quarter"), "h": (4, "half"), "w": (8, "whole")}
-    meas = []
-    for i, bar in enumerate(bars, 1):
-        notes = []
-        for tok in bar.split():
-            pitch, v = tok.split(":")
-            d, typ = dur[v]
-            step, octave = pitch[0], pitch[-1]
-            alter = "<alter>1</alter>" if "#" in pitch else ""
-            notes.append(f"<note><pitch><step>{step}</step>{alter}<octave>{octave}</octave>"
-                         f"</pitch><duration>{d}</duration><type>{typ}</type></note>")
-        attrs = ("<attributes><divisions>2</divisions><key><fifths>0</fifths></key>"
-                 f"<time><beats>{time[0]}</beats><beat-type>{time[1]}</beat-type></time>"
-                 "<clef><sign>G</sign><line>2</line></clef></attributes>") if i == 1 else ""
-        meas.append(f'<measure number="{i}">{attrs}{"".join(notes)}</measure>')
-    return ('<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1">'
-            f"<work><work-title>{title}</work-title></work><identification>"
-            f'<creator type="composer">{composer}</creator></identification>'
-            '<part-list><score-part id="P1"><part-name>Piano</part-name></score-part>'
-            f'</part-list><part id="P1">{"".join(meas)}</part></score-partwise>')
-
-
-# A few public-domain melodies next to the Chopin waltz, so the Songs tab looks used.
-_DEMO_SONGS = {
-    "ode_to_joy.musicxml": ("Ode to Joy", "Ludwig van Beethoven", [
-        "E4:q E4:q F4:q G4:q", "G4:q F4:q E4:q D4:q", "C4:q C4:q D4:q E4:q", "E4:q D4:q D4:h",
-        "E4:q E4:q F4:q G4:q", "G4:q F4:q E4:q D4:q", "C4:q C4:q D4:q E4:q", "D4:q C4:q C4:h",
-        "D4:q D4:q E4:q C4:q", "D4:q E4:e F4:e E4:q C4:q", "D4:q E4:e F4:e E4:q D4:q",
-        "C4:q D4:q G3:h", "E4:q E4:q F4:q G4:q", "G4:q F4:q E4:q D4:q", "C4:q C4:q D4:q E4:q",
-        "D4:q C4:q C4:h"]),
-    "twinkle.musicxml": ("Twinkle, Twinkle, Little Star", "Traditional", [
-        "C4:q C4:q G4:q G4:q", "A4:q A4:q G4:h", "F4:q F4:q E4:q E4:q", "D4:q D4:q C4:h",
-        "G4:q G4:q F4:q F4:q", "E4:q E4:q D4:h", "G4:q G4:q F4:q F4:q", "E4:q E4:q D4:h",
-        "C4:q C4:q G4:q G4:q", "A4:q A4:q G4:h", "F4:q F4:q E4:q E4:q", "D4:q D4:q C4:h"]),
-}
-for _fname, (_title, _composer, _bars) in _DEMO_SONGS.items():
-    _path = Path(_home) / _fname
-    _path.write_text(_melody_xml(_title, _composer, _bars), encoding="utf-8")
-    import_song(str(_path))
+add_bundled_songs()                       # the songs Pianove brings along
 waltz = import_song(str(ROOT / "waltz-in-a-minorchopin.mxl"))
 
 # a little progress on the songs: Twinkle learned, Chopin's waltz under way
