@@ -249,7 +249,7 @@ class MidiPanel:
             self.midi_in = None
         if self.mic is not None:
             self.mic.close()
-        from pianove.sound_engine_fs import set_sustain_pedal as _sustain
+        from pianove.sound import set_sustain_pedal as _sustain
         _sustain(0)
         self.active_notes.clear()
         self._cal_low = None
@@ -337,10 +337,10 @@ class MidiPanel:
                     self._on_note_on(msg.note, msg.velocity)
                 elif msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0):
                     self.active_notes.discard(msg.note)
-                    from pianove.sound_engine_fs import stop as _stop
+                    from pianove.sound import stop as _stop
                     _stop(msg.note)
                 elif msg.type == "control_change" and msg.control == 64:  # sustain/damper pedal
-                    from pianove.sound_engine_fs import set_sustain_pedal as _sustain
+                    from pianove.sound import set_sustain_pedal as _sustain
                     _sustain(msg.value)
         except Exception as e:
             print(f"MIDI read error: {e}")
@@ -371,7 +371,7 @@ class MidiPanel:
             self._mark_key_played()
             _count_practice_time()
             if sound:   # a piano heard through the microphone sounds by itself
-                from pianove.sound_engine_fs import play as _play
+                from pianove.sound import play as _play
                 _play(note, velocity)
 
     # -- keys played without an instrument: the mouse, or the computer keyboard --
@@ -388,7 +388,7 @@ class MidiPanel:
         self._note_ons.append(note)
         self._mark_key_played()
         _count_practice_time()
-        from pianove.sound_engine_fs import play_raw as _play
+        from pianove.sound import play_raw as _play
         _play(note, velocity)
 
     def release(self, note: int):
@@ -396,7 +396,7 @@ class MidiPanel:
             return
         self._virtual.discard(note)
         self.active_notes.discard(note)
-        from pianove.sound_engine_fs import stop as _stop
+        from pianove.sound import stop as _stop
         _stop(note)
 
     def release_all_virtual(self):

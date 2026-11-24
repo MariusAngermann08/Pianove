@@ -316,12 +316,12 @@ def _next_in_course() -> tuple[str, int] | None:
 
 def _listen_on(t: float, midi: int, velocity: int):
     """Strike a key for listen mode (t: when it was due, in the piece's seconds)."""
-    from pianove.sound_engine_fs import play_raw
+    from pianove.sound import play_raw
     play_raw(midi, velocity)
 
 
 def _listen_off(t: float, midi: int):
-    from pianove.sound_engine_fs import stop
+    from pianove.sound import stop
     stop(midi)
 
 

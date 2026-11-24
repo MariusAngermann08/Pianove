@@ -99,8 +99,8 @@ def build():
         subtitle=t("settings_keys_desc"),
         height=60,
     ))
-    from pianove import sound_engine_fs
-    no_sound = sound_engine_fs.unavailable_reason
+    from pianove import sound
+    no_sound = sound.unavailable_reason() if hasattr(sound, "unavailable_reason") else ""
     scroll.add_child(ListItem(
         title=t("settings_midi_sound"),
         subtitle=(t("settings_no_sound", reason=no_sound) if no_sound

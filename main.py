@@ -34,7 +34,7 @@ ctx.ui = ui
 
 # Boot the synthesiser AFTER App() so pygame.mixer is already initialised.
 # Apply the persisted setting; pre-generation starts in a background thread.
-from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_set, set_volume as _sound_vol, shutdown as _sound_shutdown
+from pianove.sound import init as _sound_init, set_enabled as _sound_set, set_volume as _sound_vol, shutdown as _sound_shutdown
 _sound_init()
 _sound_set(bool(storage.get("midi_sound", False)))
 _sound_vol(float(storage.get("midi_volume", 1.0)))

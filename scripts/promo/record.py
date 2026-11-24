@@ -83,11 +83,14 @@ def _off(m):
     clip["events"].append([round(clip["t"], 4), 0, int(m), 0])
 
 
-se.play = _on
-se.play_raw = _on
-se.stop = _off
-se.init = lambda: None
-se.set_sustain_pedal = lambda v: None
+from pianove import sound as _sound  # noqa: E402
+
+for _m in (se, _sound):                 # the app plays through pianove.sound
+    _m.play = _on
+    _m.play_raw = _on
+    _m.stop = _off
+    _m.init = lambda: None
+    _m.set_sustain_pedal = lambda v: None
 
 # a connected keyboard, so the status line is green
 import pianove.midi.panel as _panel  # noqa: E402

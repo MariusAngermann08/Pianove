@@ -38,13 +38,13 @@ def _on_dark_mode_change(val):
 
 
 def _on_sound_enabled_change(val):
-    from pianove.sound_engine_fs import set_enabled
+    from pianove.sound import set_enabled
     set_enabled(bool(val))
     storage.set("midi_sound", bool(val))
 
 
 def _on_sound_volume_change(val):
-    from pianove.sound_engine_fs import set_volume
+    from pianove.sound import set_volume
     set_volume(float(val))
     storage.set("midi_volume", float(val))
 
@@ -105,7 +105,7 @@ def _own_note(note, playing):
 def hook_sound_engine():
     """Lets the microphone input ignore the notes Pianove plays itself (call once the
     sound engine is imported)."""
-    from pianove.sound_engine_fs import add_note_hook
+    from pianove.sound import add_note_hook
     add_note_hook(_own_note)
 
 

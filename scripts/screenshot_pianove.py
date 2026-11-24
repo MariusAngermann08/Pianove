@@ -128,7 +128,7 @@ waltz = import_song(str(ROOT / "waltz-in-a-minorchopin.mxl"))
 ui = App(title="Pianove", width=WIDTH, height=HEIGHT, dark_mode=True, managed_display=True)
 ctx.ui = ui
 
-from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_set  # noqa: E402
+from pianove.sound import init as _sound_init, set_enabled as _sound_set  # noqa: E402
 
 _sound_init()
 _sound_set(False)
