@@ -44,12 +44,12 @@ DemoApp().run()
 | Category | Widgets |
 |----------|---------|
 | Controls | `Button`, `Switch`, `Slider`, `TextField`, `Checkbox`, `RadioButton`, `SegmentedControl`, `Stepper` |
-| Display | `Label`, `Badge`, `Avatar`, `ProgressBar`, `ProgressRing`, `LineChart`, `CodeViewer` |
+| Display | `Label`, `Badge`, `Avatar`, `ProgressBar`, `ProgressRing`, `LineChart`, `BarChart`, `CodeViewer` |
 | Lists | `ListItem`, `Divider`, `SlideReveal`, `EmptyState` |
 | Navigation | `BottomNav`, `SideNav`, `HamburgerButton`, `SidebarDrawer`, `PageRouter` |
 | Advanced | `PygameCanvas`, `ScrollableCanvas`, `FilePicker`, `OptionSelector`, `Icon`, `EmojiIcon` |
 
-29 widgets total.
+30 widgets total.
 
 ## Layouts
 

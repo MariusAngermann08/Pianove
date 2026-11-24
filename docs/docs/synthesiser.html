@@ -53,6 +53,8 @@
       <a href="#what">What it does</a>
       <a href="#engine">Engine and sound</a>
       <a href="#volume">Volume</a>
+      <a href="#metronome">Metronome</a>
+      <a href="#missing">Without FluidSynth</a>
       <a href="#mic">With the microphone</a>
     </div>
     <a href="settings.html">Settings</a>
@@ -72,7 +74,7 @@
       <p>Pianove plays piano sound in two situations:</p>
       <ul>
         <li><strong>Demos:</strong> theory scenes, <em>Listen</em> and the editors' preview play phrases for you.</li>
-        <li><strong>Your keys:</strong> with <strong>Settings → MIDI Sound Output</strong> on, every key you press on a MIDI keyboard sounds, including the sustain pedal. Leave it off if your digital piano has its own speakers.</li>
+        <li><strong>Your keys:</strong> with <strong>Settings → Keyboard &amp; Sound → MIDI Sound Output</strong> on, every key you press on a MIDI keyboard sounds, including the sustain pedal. Leave it off if your digital piano has its own speakers.</li>
       </ul>
     </section>
     <section class="doc-section" id="engine">
@@ -82,7 +84,15 @@
     </section>
     <section class="doc-section" id="volume">
       <h2>Volume</h2>
-      <p><strong>Settings → Volume</strong> sets the level; it is remembered between sessions.</p>
+      <p><strong>Settings → Keyboard &amp; Sound → Volume</strong> sets the level; it is remembered between sessions. Notes played with the computer keyboard or the mouse always sound, whatever <em>MIDI Sound Output</em> says.</p>
+    </section>
+    <section class="doc-section" id="metronome">
+      <h2>Metronome</h2>
+      <p>Songs have a metronome (on the song's page): a short wooden click on every beat, louder on the first beat of the bar. It is made on the fly and played through the normal audio output, so it works even without FluidSynth.</p>
+    </section>
+    <section class="doc-section" id="missing">
+      <h2>Without FluidSynth</h2>
+      <p>If the library is missing, or no audio output can be opened, Pianove runs without piano sound and <strong>Settings → Keyboard &amp; Sound</strong> shows <em>Piano sound unavailable</em> with the reason. Playing, lessons and progress work as usual.</p>
     </section>
     <section class="doc-section" id="mic">
       <h2>With the microphone</h2>

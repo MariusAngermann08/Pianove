@@ -66,20 +66,26 @@
       <p class="page-eyebrow">Getting Started</p>
       <h1>Quick Start</h1>
       <p class="page-subtitle">From a fresh clone to your first lesson in five minutes.</p>
-      <div class="page-meta"><span class="meta-item">Python 3.10+</span><span class="meta-item">Windows · macOS · Linux</span><span class="meta-item">MIDI or microphone</span></div>
+      <div class="page-meta"><span class="meta-item">Windows · macOS · Linux</span><span class="meta-item">MIDI, microphone or computer keyboard</span></div>
     </div>
 <section class="doc-section" id="install">
       <h2>1. Install</h2>
-      <p>You need Python 3.10 or newer. Clone the repository and install the dependencies:</p>
+      <p><strong>The easy way:</strong> download the ready-made app for Windows, macOS or Linux from the <a href="https://github.com/MariusAngermann08/Pianove/releases" target="_blank" rel="noopener">Releases page</a>, unpack it and start <em>Pianove</em>. No Python needed. Details in <a href="installation.html#download">Installation</a>.</p>
+      <p><strong>From source:</strong> with Python 3.10 or newer, clone the repository and install the dependencies:</p>
       <pre><code class="language-bash">git clone https://github.com/MariusAngermann08/Pianove.git
 cd Pianove
 pip install -r requirements.txt</code></pre>
-      <div class="callout callout--note"><span class="callout-icon" aria-hidden="true">i</span><div><strong>FluidSynth.</strong> The piano sound comes from FluidSynth, a native library that pip cannot install. On Windows it ships in <code>bin/</code>; on macOS and Linux install it with your package manager (<code>brew install fluid-synth</code>, <code>sudo apt install libfluidsynth3</code>). Details in <a href="installation.html#fluidsynth">Installation</a>.</div></div>
+      <div class="callout callout--note"><span class="callout-icon" aria-hidden="true">i</span><div><strong>Piano sound.</strong> From source, the sound comes from FluidSynth, a native library pip cannot install. On Windows it ships in <code>bin/</code>; on macOS and Linux install it with your package manager (<code>brew install fluid-synth</code>, <code>sudo apt install libfluidsynth3</code>). Without it Pianove still runs, just silently, and Settings says why.</div></div>
     </section>
     <section class="doc-section" id="launch">
       <h2>2. Launch and set up</h2>
       <pre><code class="language-bash">python main.py</code></pre>
-      <p>On the first start a short setup asks for your language, your name and how much piano you have played, and then looks for your keyboard. Plug in a USB MIDI keyboard and press a key, or choose <strong>Acoustic piano? Use the microphone instead</strong>. You can also skip this and connect later.</p>
+      <p>On the first start a short setup asks for your language, your name and how much piano you have played (Pianove uses the answer to suggest where to start), and then looks for something to play on:</p>
+      <ul>
+        <li><strong>A MIDI keyboard:</strong> plug it in and press a key.</li>
+        <li><strong>An acoustic piano:</strong> choose <em>Acoustic piano: use the microphone</em>.</li>
+        <li><strong>Nothing yet:</strong> press <kbd>A</kbd> on your computer keyboard, or choose <em>Continue without a keyboard</em>. The computer keys and the mouse play notes everywhere.</li>
+      </ul>
       <div class="shot-pair"><figure class="shot "><img src="../img/ss-onboarding-name.png" alt="Setup: your name" loading="lazy"><figcaption>Setup: your name</figcaption></figure><figure class="shot "><img src="../img/ss-onboarding-midi.png" alt="Setup: connect a keyboard or use the microphone" loading="lazy"><figcaption>Setup: connect a keyboard or use the microphone</figcaption></figure></div>
     </section>
     <section class="doc-section" id="home">
@@ -90,16 +96,16 @@ pip install -r requirements.txt</code></pre>
     <section class="doc-section" id="first-lesson">
       <h2>4. Play your first lesson</h2>
       <ol class="steps">
-        <li>On Home, press <strong>Continue</strong>, or open <strong>Lessons → Beginner Path</strong> and start <em>Welcome to Pianove</em>.</li>
+        <li>On the last setup screen press <strong>Start your first lesson</strong>. Later, <strong>Continue</strong> on Home takes you to the next one.</li>
         <li>The lesson first <strong>explains</strong> the idea in a few short animated screens. Read, listen, and play the keys it asks for.</li>
-        <li>Then you <strong>play the piece</strong> from the staff. The key to play next is lit on the on-screen keyboard; the music waits for you.</li>
+        <li>Then you <strong>play the piece</strong> from the staff. The key to play next is lit on the on-screen keyboard, and an animated hand shows the finger; the music waits for you. Play it on your keyboard, with the computer keys, or click it.</li>
         <li>After each section comes the <strong>final performance</strong>: the whole piece in tempo, after a count-in.</li>
       </ol>
       <figure class="shot "><img src="../img/ss-lesson.png" alt="A lesson piece: notes you've played turn green, the blue line shows where you are" loading="lazy"><figcaption>A lesson piece: notes you've played turn green, the blue line shows where you are</figcaption></figure>
     </section>
     <section class="doc-section" id="first-song">
       <h2>5. Learn a song of your own</h2>
-      <p>Open <strong>Songs</strong>, press <strong>+</strong> and pick a MusicXML file (<code>.musicxml</code>, <code>.xml</code> or <code>.mxl</code>). The repository includes one to try: <code>waltz-in-a-minorchopin.mxl</code>. Press <strong>Practice</strong> and Pianove builds a learning path that takes you from the first bars to the whole piece.</p>
+      <p>Open <strong>Songs</strong>, press <strong>Import</strong> and pick a MusicXML file (<code>.musicxml</code>, <code>.xml</code> or <code>.mxl</code>). The repository includes one to try: <code>waltz-in-a-minorchopin.mxl</code>. Press <strong>Practice</strong> and Pianove builds a learning path that takes you from the first bars to the whole piece.</p>
       <p>Where to go next: <a href="songs.html">Songs &amp; Learning Path</a>, <a href="midi-setup.html">Keyboard &amp; Microphone</a>, <a href="settings.html">Settings</a>.</p>
     </section>
     <div class="doc-nav-footer"><div></div><a href="requirements.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">System Requirements →</div></a></div>

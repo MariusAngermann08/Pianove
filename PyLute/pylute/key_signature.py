@@ -1,4 +1,5 @@
 from .font import get_font
+from . import colors
 
 # Diatonic step positions for accidentals within each clef.
 # Step 0 = bottom staff line.
@@ -67,5 +68,5 @@ class KeySignature:
         for step in steps:
             y_center = self.staff.position[1] + 4 * self.staff.space - step * (self.staff.space / 2)
             pos_y = int(y_center - rect.height / 2)
-            font.render_to(self.staff.surface, (int(x), pos_y), glyph, "Black")
+            font.render_to(self.staff.surface, (int(x), pos_y), glyph, colors.INK)
             x += acc_step

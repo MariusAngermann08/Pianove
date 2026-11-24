@@ -290,7 +290,7 @@ class Scene:
 
     def _sound(self, m: int, on: bool, velocity: int = 80):
         try:
-            from pianove import sound_engine_fs as se
+            from pianove import sound as se
             if on:
                 se.play(m, velocity)
             else:

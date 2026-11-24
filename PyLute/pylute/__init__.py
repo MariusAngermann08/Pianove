@@ -1,5 +1,6 @@
 __version__ = "0.1.0"
 
+from . import colors
 from .score import Score
 from .staff import Staff
 from .bar import Bar

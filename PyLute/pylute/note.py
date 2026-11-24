@@ -1,6 +1,7 @@
 import pygame as pg
 from .font import get_font
 from .pitch import pitch_to_step, parse_pitch
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -76,7 +77,8 @@ class Note:
         d = self.staff.space * STEM_SPACES
         return y - d if self._stem_dir() == "up" else y + d
 
-    def _draw_ledger_lines(self, y_center, head_rect, color=(0, 0, 0)):
+    def _draw_ledger_lines(self, y_center, head_rect, color=None):
+        color = color if color is not None else colors.INK
         clef     = getattr(self.staff, "clef_type", "treble")
         step     = pitch_to_step(self.pitch, clef)
         surface  = self.staff.surface
@@ -106,7 +108,8 @@ class Note:
             return "n"  # natural cancels the key signature
         return written_acc
 
-    def _draw_accidental(self, font, y_center, acc, color=(0, 0, 0), x_offset=0):
+    def _draw_accidental(self, font, y_center, acc, color=None, x_offset=0):
+        color = color if color is not None else colors.INK
         if acc not in ACCIDENTAL_GLYPHS:
             return
         acc_char = ACCIDENTAL_GLYPHS[acc]
@@ -125,7 +128,7 @@ class Note:
         dr  = font.get_rect(AUG_DOT)
         dot_x = int(self.offset + hr.x + hr.width + 3)
         dot_y = int(dot_yc - dr.height / 2)
-        font.render_to(self.staff.surface, (dot_x, dot_y), AUG_DOT, "Black")
+        font.render_to(self.staff.surface, (dot_x, dot_y), AUG_DOT, colors.INK)
 
     def draw(self):
         if not self.staff:
@@ -137,7 +140,7 @@ class Note:
         name, written_acc, _ = parse_pitch(self.pitch)
         acc = self._resolve_accidental(name, written_acc)
         head_ref = font.get_rect(WHOLE)
-        color = tuple(self.color) if self.color is not None else (0, 0, 0)
+        color = tuple(self.color) if self.color is not None else colors.INK
 
         self._draw_ledger_lines(y_center, head_ref, color)
         self._draw_accidental(font, y_center, acc, color)

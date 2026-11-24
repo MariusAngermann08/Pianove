@@ -61,15 +61,22 @@ language_state.value = args.lang
 storage.set("language", args.lang)
 name_state.value = "Alex"
 storage.set("name", "Alex")
-experience_state.value = "beginner"
+experience_state.value = "basics"
+storage.set("experience", "basics")
 iOSTheme.dark = True
 iOSTheme.update_theme()
+from pianove.ui_utils import apply_score_colors  # noqa: E402
+apply_score_colors()
 
 storage.set("onboarding_complete", True)
 storage.set("completed_lessons", ["welcome", "c_major_scale", "five_note_melody"])
 today = date.today()
-storage.set("lesson_dates", [(today - timedelta(days=i)).isoformat() for i in range(5)])
-storage.set("total_minutes", 147)
+storage.set("lesson_dates", [(today - timedelta(days=i)).isoformat() for i in (0, 2, 4)])
+# minutes practised over the last days, today last (lessons, songs and sight-reading)
+_minutes = [18, 0, 25, 12, 31, 9, 14]
+storage.set("practice_log", {(today - timedelta(days=6 - i)).isoformat(): m * 60.0
+                             for i, m in enumerate(_minutes) if m})
+storage.set("daily_goal_minutes", 15)
 
 from pianove.song_store import import_song  # noqa: E402
 
@@ -121,7 +128,7 @@ waltz = import_song(str(ROOT / "waltz-in-a-minorchopin.mxl"))
 ui = App(title="Pianove", width=WIDTH, height=HEIGHT, dark_mode=True, managed_display=True)
 ctx.ui = ui
 
-from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_set  # noqa: E402
+from pianove.sound import init as _sound_init, set_enabled as _sound_set  # noqa: E402
 
 _sound_init()
 _sound_set(False)
@@ -228,6 +235,7 @@ def home_tab(page: str, frames: int = 50):
 def set_theme(dark: bool):
     iOSTheme.dark = dark
     iOSTheme.update_theme()
+    apply_score_colors()
     ui.apply_theme(dark)
 
 
@@ -260,6 +268,7 @@ def shot_onboarding():
     go("name"); save("ss-onboarding-name")
     go("experience"); save("ss-onboarding-experience")
     go("midi"); save("ss-onboarding-midi")
+    go("ready"); save("ss-onboarding-ready")
 
 
 def shot_home():
@@ -279,6 +288,15 @@ def shot_songs():
 def shot_song_path():
     ctx.current_song_id = waltz["id"]
     go("song_setup", 80); save("ss-song-path")
+
+
+def shot_song_free():
+    from pianove.pages import song_setup
+    song_setup._mode[0] = 1
+    song_setup._range[waltz["id"]] = [9, 16]
+    ctx.current_song_id = waltz["id"]
+    go("song_setup", 80); save("ss-song-free")
+    song_setup._mode[0] = 0
 
 
 def shot_song_score():

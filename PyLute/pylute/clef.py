@@ -1,4 +1,5 @@
 from .font import get_font
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -29,4 +30,4 @@ class Clef:
             f_y   = self.staff.position[1] + self.staff.space
             pos_y = f_y - rect.height * 0.35
 
-        font.render_to(self.staff.surface, (int(x), int(pos_y)), glyph, "Black")
+        font.render_to(self.staff.surface, (int(x), int(pos_y)), glyph, colors.INK)

@@ -108,7 +108,7 @@ class PianoveLogoWidget(UIElement):
 
             if self._play_notes and self._lit_k != prev_k:
                 try:
-                    from pianove.sound_engine_fs import play_raw, stop
+                    from pianove.sound import play_raw, stop
                     for n in self._playing_notes:
                         stop(n)
                     notes = (self._chords or {}).get(self._lit_k,

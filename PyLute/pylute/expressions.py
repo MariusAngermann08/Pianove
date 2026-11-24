@@ -1,4 +1,5 @@
 import pygame as pg
+from . import colors
 
 DYNAMIC_GLYPHS = {
     "pppp": chr(0xE529),
@@ -66,7 +67,7 @@ class Dynamic:
             y = int(self.staff.position[1] - space * 1.5 - gh)
         else:
             y = int(self.staff.position[1] + 4 * space + space * 1.5)
-        font.render_to(self.staff.surface, (int(self.offset), y), glyph, (0, 0, 0))
+        font.render_to(self.staff.surface, (int(self.offset), y), glyph, colors.INK)
 
 
 class Articulation:
@@ -94,4 +95,4 @@ class Articulation:
             y = int(self.note_y + space * 0.8)
         font.render_to(self.staff.surface,
                        (int(self.offset) - gw // 2, y),
-                       glyph, (0, 0, 0))
+                       glyph, colors.INK)

@@ -2,6 +2,7 @@ import pygame as pg
 from .durations import get_value
 from .font import get_font
 from .pitch import parse_pitch as _parse_pitch
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -189,14 +190,14 @@ class Bar:
                 yc   = int(note._y_center())
                 ty   = int(note._stem_tip_y())
                 if stem_dir == "up":
-                    pg.draw.line(surface, (0, 0, 0), (sx, ty), (sx, yc), 2)
+                    pg.draw.line(surface, colors.INK, (sx, ty), (sx, yc), 2)
                 else:
-                    pg.draw.line(surface, (0, 0, 0), (sx, yc), (sx, ty), 2)
+                    pg.draw.line(surface, colors.INK, (sx, yc), (sx, ty), 2)
                 flag = FLAG_GLYPHS.get((note._base_type, stem_dir))
                 if flag:
                     fr = font.get_rect(flag)
                     fy = ty if stem_dir == "up" else ty - fr.height
-                    font.render_to(surface, (sx, fy), flag, "Black")
+                    font.render_to(surface, (sx, fy), flag, colors.INK)
                 continue
 
             x1 = group[0]._stem_x()
@@ -239,9 +240,9 @@ class Bar:
                 by = int(y_start + t * dy)
                 yc = int(note._y_center())
                 if stem_dir == "up":
-                    pg.draw.line(surface, (0, 0, 0), (nx, by), (nx, yc), 2)
+                    pg.draw.line(surface, colors.INK, (nx, by), (nx, yc), 2)
                 else:
-                    pg.draw.line(surface, (0, 0, 0), (nx, yc), (nx, by), 2)
+                    pg.draw.line(surface, colors.INK, (nx, yc), (nx, by), 2)
 
             n_beams = (3 if any(n._base_type == "thirty_second" for n in group)
                        else 2 if any(n._base_type == "sixteenth" for n in group)
@@ -258,7 +259,7 @@ class Bar:
                     t1 = b1 - BEAM_H
                     b2 = int(y_end)   - gap
                     t2 = b2 - BEAM_H
-                pg.draw.polygon(surface, (0, 0, 0),
+                pg.draw.polygon(surface, colors.INK,
                                 [(x1, t1), (x2, t2), (x2, b2), (x1, b1)])
 
     def _draw_expressions(self):
@@ -315,8 +316,8 @@ class Bar:
                 # fake bezier with two lines through control point
                 th = max(1, int(space * 0.12))
                 for dy in range(th):
-                    pg.draw.line(surface, (0, 0, 0), (x1, int(yc) + dy), (mid_x, ctrl_y + dy), 1)
-                    pg.draw.line(surface, (0, 0, 0), (mid_x, ctrl_y + dy), (x2, int(yc) + dy), 1)
+                    pg.draw.line(surface, colors.INK, (x1, int(yc) + dy), (mid_x, ctrl_y + dy), 1)
+                    pg.draw.line(surface, colors.INK, (mid_x, ctrl_y + dy), (x2, int(yc) + dy), 1)
 
     def _mark_accidentals(self):
         """Which notes show an accidental, as music is written: the key signature says

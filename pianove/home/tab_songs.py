@@ -21,7 +21,7 @@ _import_result_q: _queue_mod.SimpleQueue = _queue_mod.SimpleQueue()
 
 _import_error_state = State("")
 
-_HEADER_H   = 58
+_HEADER_H   = 112     # title and Import button, then the filter
 _PROGRESS_H = 4
 _CARD_H     = 82
 _CARD_GAP   = 10
@@ -49,11 +49,25 @@ def _view_score(song_id: str):
     ctx.router.navigate("song_score", "right")
 
 
+_confirm = {"id": None, "keep": False}   # a delete tapped once waits for a second tap
+
+
 def _delete_song(song_id: str):
-    from pianove.song_store import delete_song
-    delete_song(song_id)
+    """First tap: the button turns into a red "Delete?". A second tap on it deletes the
+    song and its learning-path progress; leaving the tab forgets the first tap."""
+    if _confirm["id"] == song_id:
+        _confirm["id"] = None
+        from pianove.song_store import delete_song
+        delete_song(song_id)
+    else:
+        _confirm["id"] = song_id
+        _confirm["keep"] = True
     if ctx.inner_router:
         ctx.inner_router.reload_current_page()
+
+
+def _confirming(song_id: str) -> bool:
+    return _confirm["id"] == song_id
 
 
 def _song_card(song: dict) -> FloatLayout:
@@ -89,19 +103,30 @@ def _song_card(song: dict) -> FloatLayout:
 
     card.add_child(Label(
         text=t(f"diff_{diff}"),
-        font_size=11, color=diff_color,
-        anchor="right", x=-208, y=0,
+        font_size=12, bold=True, color=diff_color,
+        anchor="right", x=-276 if _confirming(song_id) else -212, y=0,
     ))
 
-    card.add_child(Button(
-        icon_fn=Icon.as_icon_fn("delete", base_size=16),
-        on_click=lambda _id=song_id: _delete_song(_id),
-        anchor="right", x=-168, y=0,
-        width=32, height=32,
-        background_color=iOSTheme.fill,
-        text_color=RED,
-        border_radius=8,
-    ))
+    if _confirming(song_id):
+        card.add_child(Button(
+            text=t("song_delete_confirm"),
+            on_click=lambda _id=song_id: _delete_song(_id),
+            anchor="right", x=-168, y=0,
+            width=96, height=34, font_size=13,
+            background_color=RED,
+            text_color=pygame.Color(255, 255, 255),
+            border_radius=10,
+        ))
+    else:
+        card.add_child(Button(
+            icon_fn=Icon.as_icon_fn("delete", base_size=16),
+            on_click=lambda _id=song_id: _delete_song(_id),
+            anchor="right", x=-168, y=0,
+            width=32, height=32,
+            background_color=iOSTheme.fill,
+            text_color=iOSTheme.secondary_label,
+            border_radius=8,
+        ))
 
     card.add_child(Button(
         text=t("song_view_score"),
@@ -128,6 +153,9 @@ def _song_card(song: dict) -> FloatLayout:
 
 def build():
     global _prev_filter_listener, _prev_import_listener
+    if not _confirm["keep"]:            # back on the tab: no delete is half done
+        _confirm["id"] = None
+    _confirm["keep"] = False
 
     from pianove.song_store import list_songs, import_song
 
@@ -154,6 +182,15 @@ def build():
         background_color=iOSTheme.background,
     )
 
+    header.add_child(Label(
+        text=t("nav_songs"), font_size=24, bold=True, color=iOSTheme.label,
+        anchor="top_left", x=16, y=16,
+    ))
+    header.add_child(Label(
+        text=t("songs_count", n=len(songs)) if songs else t("songs_subtitle"),
+        font_size=13, color=iOSTheme.secondary_label,
+        anchor="top_left", x=16, y=48,
+    ))
     header.add_child(SegmentedControl(
         segments=[
             t("filter_all"), t("filter_beginner"),
@@ -161,8 +198,8 @@ def build():
         ],
         selected_index=_filter_state,
         on_change=lambda i: setattr(_filter_state, "value", i),
-        anchor="center", x=-22, y=0,
-        width=0.80, height=34,
+        anchor="bottom_left", x=12, y=-6,
+        width=0.98, height=34,
     ))
 
     picker = FilePicker(
@@ -190,13 +227,13 @@ def build():
         picker.pick(_on_file)
 
     header.add_child(Button(
-        icon_fn=Icon.as_icon_fn("add", base_size=20),
+        text="+  " + t("songs_import"),
         on_click=_do_import,
-        anchor="right", x=-8, y=0,
-        width=36, height=36,
+        anchor="top_right", x=-14, y=18,
+        width=132, height=38, font_size=14,
         background_color=ColorPalette.BLUE,
         text_color=pygame.Color(255, 255, 255),
-        border_radius=18,
+        border_radius=10,
     ))
 
     root.add_child(header)
@@ -271,7 +308,7 @@ def build():
     else:
         scroll.add_child(EmptyState(
             icon="🎵",
-            title=t("songs_empty" if songs else "songs_coming_soon"),
+            title=t("songs_empty" if songs else "songs_none"),
             subtitle=t("songs_import_hint") if not songs else "",
             height=max(200, list_h - 60),
         ))

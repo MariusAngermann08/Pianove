@@ -94,6 +94,14 @@ def get_physical_inputs() -> list[str]:
         print(f"Error listing MIDI devices: {e}")
         return []
 
+def _count_practice_time():
+    """A key played while a lesson, song or sight-reading session is open is practice."""
+    import pianove.context as _ctx
+    if _ctx.router is not None and _ctx.router.active_page_name == "lesson":
+        from pianove.progress import note_played
+        note_played()
+
+
 class MidiPanel:
     def __init__(self, device_state=None, key_played_state=None,
                  text_fn=None, storage=None):
@@ -103,6 +111,7 @@ class MidiPanel:
         self.active_notes: set[int] = set()
         # every key press, in order, until someone takes them (see take_note_ons)
         self._note_ons: deque[int] = deque(maxlen=64)
+        self._virtual: set[int] = set()   # keys held with the mouse or the computer keyboard
         self._last_device_check = 0.0
         self._font_cache: dict[int, pygame.font.Font] = {}
 
@@ -240,7 +249,7 @@ class MidiPanel:
             self.midi_in = None
         if self.mic is not None:
             self.mic.close()
-        from pianove.sound_engine_fs import set_sustain_pedal as _sustain
+        from pianove.sound import set_sustain_pedal as _sustain
         _sustain(0)
         self.active_notes.clear()
         self._cal_low = None
@@ -328,10 +337,10 @@ class MidiPanel:
                     self._on_note_on(msg.note, msg.velocity)
                 elif msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0):
                     self.active_notes.discard(msg.note)
-                    from pianove.sound_engine_fs import stop as _stop
+                    from pianove.sound import stop as _stop
                     _stop(msg.note)
                 elif msg.type == "control_change" and msg.control == 64:  # sustain/damper pedal
-                    from pianove.sound_engine_fs import set_sustain_pedal as _sustain
+                    from pianove.sound import set_sustain_pedal as _sustain
                     _sustain(msg.value)
         except Exception as e:
             print(f"MIDI read error: {e}")
@@ -360,9 +369,39 @@ class MidiPanel:
             self.active_notes.add(note)
             self._note_ons.append(note)
             self._mark_key_played()
+            _count_practice_time()
             if sound:   # a piano heard through the microphone sounds by itself
-                from pianove.sound_engine_fs import play as _play
+                from pianove.sound import play as _play
                 _play(note, velocity)
+
+    # -- keys played without an instrument: the mouse, or the computer keyboard --
+
+    def press(self, note: int, velocity: int = 90):
+        """A key played on screen or on the computer keyboard. It counts like a key on a
+        MIDI keyboard, with or without a device, and always sounds (there is no instrument
+        to make the sound)."""
+        if not 21 <= note <= 108 or note in self._virtual:
+            return
+        self._virtual.add(note)
+        self._expand_for_note(note)
+        self.active_notes.add(note)
+        self._note_ons.append(note)
+        self._mark_key_played()
+        _count_practice_time()
+        from pianove.sound import play_raw as _play
+        _play(note, velocity)
+
+    def release(self, note: int):
+        if note not in self._virtual:
+            return
+        self._virtual.discard(note)
+        self.active_notes.discard(note)
+        from pianove.sound import stop as _stop
+        _stop(note)
+
+    def release_all_virtual(self):
+        for note in list(self._virtual):
+            self.release(note)
 
     def take_note_ons(self) -> list[int]:
         """Every key pressed since the last call, in order. Unlike comparing active_notes
@@ -440,7 +479,7 @@ class MidiPanel:
         surface.blit(surf, (x, y))
 
     def _draw_idle(self, surface, rect):
-        self._blit_center(surface, rect, self.status_text(), (180, 100, 100), 17)
+        self._blit_center(surface, rect, self.status_text(), (240, 170, 60), 17)
         if self.input_mode == INPUT_MIC:
             self._blit_center(surface, rect, self._txt("mic_none_hint"), (110, 110, 110), 13, dy=24)
 
@@ -557,7 +596,7 @@ class MidiPanel:
 
         connected  = self.connected
         label_text = self.status_text()
-        label_color = (52, 199, 89) if connected else (255, 99, 99)
+        label_color = (52, 199, 89) if connected else (240, 170, 60)
         font_size   = max(14, min(28, status_h - 4))
         font        = self._get_font(font_size)
         label       = font.render(label_text, True, label_color)

@@ -673,3 +673,9 @@ ol.steps > li:not(:last-child)::after {
   .param-table, .const-table { display: block; overflow-x: auto; }
   .param-table .col-name { white-space: normal; }
 }
+
+kbd {
+  display: inline-block; min-width: 1.6em; padding: 1px 6px; text-align: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.8em; color: var(--text);
+  background: var(--bg-alt); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px;
+}

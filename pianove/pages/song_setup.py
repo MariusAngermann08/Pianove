@@ -1,6 +1,6 @@
 import pygame
 from pylay import (
-    FloatLayout, VStack, Label, Button, SegmentedControl, ProgressBar,
+    FloatLayout, VStack, Label, Button, SegmentedControl, ProgressBar, Stepper, Switch,
     State, iOSTheme, EmojiIcon, ColorPalette
 )
 from pylay.widgets.icon import Icon
@@ -10,6 +10,8 @@ from pianove.components import GREEN, ORANGE
 
 _hand_state = State(0)   # 0=right, 1=left, 2=both
 _mode       = [0]        # 0=learning path, 1=free practice (kept while the app runs)
+_range: dict = {}        # song id → [first bar, last bar] chosen for free practice (1-based)
+_TEMPOS     = [50, 60, 70, 80, 90, 100]   # % of the song's own tempo
 
 _HAND_KEYS  = ["right", "left", "both"]
 _HAND_ICONS = {"right": "front_hand", "left": "back_hand", "both": "sign_language"}
@@ -49,7 +51,7 @@ def build():
         border_radius=8,
     ))
     nav.add_child(Label(
-        text=t("song_setup_title"),
+        text=song.get("title") or t("song_setup_title"),
         font_size=16, bold=True, color=iOSTheme.label,
         anchor="center", x=0, y=0,
     ))
@@ -73,6 +75,8 @@ def build():
         width=1.0, height=36,
     ))
 
+    body.add_child(_play_settings(song))
+
     from pianove import song_path
     path = song_path.build_path(song_id) if _mode[0] == 0 else None
     if path and path["steps"]:
@@ -82,7 +86,7 @@ def build():
             body.add_child(Label(text=t("path_none"), font_size=13,
                                  color=iOSTheme.secondary_label, anchor="center", x=0, y=0,
                                  width=1.0, height=36))
-        _free_view(body)
+        _free_view(body, song)
 
     main.add_child(body)
     return root
@@ -110,7 +114,7 @@ def _song_card(song: dict, compact: bool = False) -> FloatLayout:
         card.add_child(Label(text="  ·  ".join(x for x in (composer, t("song_bars", n=n_bars)) if x),
                              font_size=12, color=iOSTheme.secondary_label,
                              anchor="left", x=56, y=11))
-        card.add_child(Label(text=t(f"diff_{diff}"), font_size=11, color=diff_color,
+        card.add_child(Label(text=t(f"diff_{diff}"), font_size=12, bold=True, color=diff_color,
                              anchor="right", x=-16, y=0))
         return card
 
@@ -135,10 +139,42 @@ def _song_card(song: dict, compact: bool = False) -> FloatLayout:
     ))
     card.add_child(Label(
         text=t(f"diff_{diff}"),
-        font_size=11, color=diff_color,
+        font_size=12, bold=True, color=diff_color,
         anchor="top_right", x=-16, y=14,
     ))
     return card
+
+
+def _play_settings(song: dict) -> FloatLayout:
+    """Tempo (a share of the song's own) and the metronome, for every step and free play."""
+    from pianove.state import storage
+    from pianove import metronome
+    bpm = 0
+    try:
+        from pianove.song_store import get_song_rhythm
+        bpm = int(round(get_song_rhythm(song["id"]).get("bpm") or 0))
+    except Exception:
+        pass
+    cur = int(round(float(storage.get("song_tempo", 1.0)) * 100))
+    cur = min(_TEMPOS, key=lambda v: abs(v - cur))
+
+    def _fmt(v):
+        return f"{v} %" + (f"  ·  {round(bpm * v / 100)} BPM" if bpm else "")
+
+    row = FloatLayout(width=1.0, height=48, background_color=iOSTheme.secondary_background,
+                      border_radius=12)
+    row.add_child(Icon("speed", size=20, color=iOSTheme.secondary_label, anchor="left", x=14, y=0))
+    row.add_child(Label(text=t("song_tempo"), font_size=14, color=iOSTheme.label,
+                        anchor="left", x=44, y=0))
+    row.add_child(Stepper(options=_TEMPOS, value=cur, fmt_fn=_fmt,
+                          on_change=lambda v: storage.set("song_tempo", v / 100.0),
+                          anchor="left", x=130, y=0, width=230, height=32))
+    row.add_child(Label(text=t("song_metronome"), font_size=14, color=iOSTheme.label,
+                        anchor="right", x=-76, y=0))
+    row.add_child(Switch(value=metronome.enabled(), on_change=metronome.set_enabled,
+                         anchor="right", x=-14, y=0, width=51, height=31,
+                         active_color=ColorPalette.BLUE))
+    return row
 
 
 # ── The learning path ────────────────────────────────────────────────────────────────
@@ -183,14 +219,14 @@ def _path_view(body: VStack, song_id: str, path: dict):
     for i, step in enumerate(steps):
         letter = step["part"]
         if letter is not None and letter != shown_part:
+            body.add_child(_part_header(parts.get(letter), step, first=shown_part is None and i == 0))
             shown_part = letter
-            body.add_child(_part_header(parts.get(letter), step))
         elif letter is None:
             shown_part = None
         body.add_child(_step_row(step, done.get(step["id"], 0), i == nxt))
 
 
-def _part_header(part: dict | None, step: dict) -> FloatLayout:
+def _part_header(part: dict | None, step: dict, first: bool = False) -> FloatLayout:
     a, b = step["bars"]
     has_topics = bool(step["topics"])
     hdr = FloatLayout(width=1.0, height=52 if has_topics else 32)
@@ -205,7 +241,8 @@ def _part_header(part: dict | None, step: dict) -> FloatLayout:
                                   background_color=(ORANGE if k < diff else iOSTheme.fill),
                                   anchor="right", x=-4 - (2 - k) * 12, y=top))
     if has_topics:
-        hdr.add_child(Label(text=t("path_new", topics=" · ".join(t(k) for k in step["topics"])),
+        hdr.add_child(Label(text=t("path_needs" if first else "path_new",
+                                   topics=" · ".join(t(k) for k in step["topics"])),
                             font_size=12, color=ColorPalette.BLUE,
                             anchor="left", x=2, y=14))
     return hdr
@@ -234,7 +271,7 @@ def _step_row(step: dict, stars: int, is_next: bool) -> FloatLayout:
     sub = (t("path_kind_join") if step["kind"] == "join" else
            t("path_kind_full") if step["kind"] == "full" else
            t("path_kind_learn"))
-    row.add_child(Label(text=sub, font_size=11, color=iOSTheme.secondary_label,
+    row.add_child(Label(text=sub, font_size=12, color=iOSTheme.secondary_label,
                         anchor="left", x=46, y=10))
     if done:
         for k in range(3):
@@ -254,14 +291,17 @@ def _step_row(step: dict, stars: int, is_next: bool) -> FloatLayout:
 
 # ── Free practice: any hand, the whole piece ─────────────────────────────────────────
 
-def _free_view(body: VStack):
-    _hand_state.value = 0
+def _free_view(body: VStack, song: dict):
+    n_bars = max(1, int(song.get("n_bars") or 1))
+    rng = _range.setdefault(song["id"], [1, n_bars])
+    rng[0], rng[1] = max(1, min(rng[0], n_bars)), max(1, min(rng[1], n_bars))
 
     def _start(phase: str = "practice"):
         # "practice": Pianove waits for each note, section by section.
         # "performance": play along at the song's own tempo after a count-in.
         # listening plays the whole piece, both hands
-        ctx.song_range         = None
+        whole = rng[0] == 1 and rng[1] == n_bars
+        ctx.song_range         = None if whole else (rng[0] - 1, rng[1])
         ctx.path_step          = None
         ctx.current_song_hand  = "both" if phase == "listen" else _HAND_KEYS[_hand_state.value]
         ctx.lesson_current_idx = 0
@@ -270,11 +310,8 @@ def _free_view(body: VStack):
         ctx.lesson_phase       = phase
         ctx.router.navigate("lesson", "right")
 
-    body.add_child(Label(
-        text=t("song_hand_label"),
-        font_size=14, bold=True, color=iOSTheme.label,
-        anchor="left", x=4, y=0,
-    ))
+    from pianove.components import section_subheader
+    body.add_child(section_subheader(t("song_hand_label")))
     hand_desc_state = State(_hand_desc(0))
 
     def _on_hand(i):
@@ -292,14 +329,45 @@ def _free_view(body: VStack):
         text=hand_desc_state,
         font_size=13, color=iOSTheme.secondary_label,
         anchor="center", x=0, y=0,
-        width=1.0, height=40,
+        width=1.0, height=30,
     ))
 
-    # Start buttons: practise note by note, or play along in tempo; with beta features
-    # also listen to the piece played for you
-    from pianove.state import beta_features_state
-    listen = bool(beta_features_state.value)
-    bw = 0.32 if listen else 0.49
+    # which bars: the whole piece, or a passage to work on
+    def _set_from(v):
+        rng[0] = v
+        if rng[1] < v:
+            rng[1] = v
+        ctx.router.refresh()
+
+    def _set_to(v):
+        rng[1] = v
+        if rng[0] > v:
+            rng[0] = v
+        ctx.router.refresh()
+
+    bars = FloatLayout(width=1.0, height=48, background_color=iOSTheme.secondary_background,
+                       border_radius=12)
+    bars.add_child(Label(text=t("song_bars_label"), font_size=14, color=iOSTheme.label,
+                         anchor="left", x=14, y=0))
+    bars.add_child(Stepper(options=list(range(1, n_bars + 1)), value=rng[0],
+                           fmt_fn=lambda v: t("song_from_bar", n=v), on_change=_set_from,
+                           anchor="left", x=96, y=0, width=170, height=32))
+    bars.add_child(Stepper(options=list(range(1, n_bars + 1)), value=rng[1],
+                           fmt_fn=lambda v: t("song_to_bar", n=v), on_change=_set_to,
+                           anchor="left", x=280, y=0, width=170, height=32))
+    if not (rng[0] == 1 and rng[1] == n_bars):
+        def _whole():
+            rng[0], rng[1] = 1, n_bars
+            ctx.router.refresh()
+        bars.add_child(Button(text=t("song_whole_piece"), on_click=_whole,
+                              anchor="right", x=-10, y=0, width=120, height=32, font_size=13,
+                              background_color=iOSTheme.fill, text_color=iOSTheme.label,
+                              border_radius=8))
+    body.add_child(bars)
+
+    # Start buttons: practise note by note, play along in tempo, or listen to it
+    listen = True
+    bw = 0.32
     buttons = FloatLayout(width=1.0, height=52)
     buttons.add_child(Button(
         text=t("song_start"),

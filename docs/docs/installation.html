@@ -41,6 +41,7 @@
     <a href="requirements.html">System Requirements</a>
     <a href="installation.html" class="active" aria-current="page">Installation</a>
     <div class="sidebar-toc">
+      <a href="#download">The ready-made app</a>
       <a href="#python">1. Install Python</a>
       <a href="#source">2. Get the source</a>
       <a href="#venv">3. Create a virtual environment</a>
@@ -50,6 +51,7 @@
       <a href="#data">Where your data lives</a>
       <a href="#update">Updating</a>
       <a href="#tests">Running the tests</a>
+      <a href="#build">Building the app yourself</a>
     </div>
     <span class="sidebar-group-label">Playing</span>
     <a href="midi-setup.html">Keyboard &amp; Microphone</a>
@@ -70,9 +72,22 @@
       <p class="page-eyebrow">Getting Started</p>
       <h1>Installation</h1>
       <p class="page-subtitle">A step-by-step install on Windows, macOS and Linux, in a virtual environment.</p>
-      <div class="page-meta"><span class="meta-item">~5 minutes</span><span class="meta-item">git</span><span class="meta-item">pip</span></div>
+      <div class="page-meta"><span class="meta-item">Ready-made app</span><span class="meta-item">or from source</span></div>
     </div>
-<section class="doc-section" id="python">
+<section class="doc-section" id="download">
+      <h2>The ready-made app</h2>
+      <p>The <a href="https://github.com/MariusAngermann08/Pianove/releases" target="_blank" rel="noopener">Releases page</a> has Pianove for every platform, built automatically for each version. Nothing else to install: Python, the libraries and the piano sound are inside.</p>
+      <table class="param-table">
+        <thead><tr><th>Platform</th><th>Download</th><th>Start</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">Windows</td><td><code>Pianove-Windows.zip</code></td><td>Unpack, open the folder, run <code>Pianove.exe</code></td></tr>
+          <tr><td class="col-name">macOS</td><td><code>Pianove-macOS.zip</code></td><td>Unpack, move <em>Pianove.app</em> to Applications; the first time, right-click it and choose <em>Open</em> (the app isn't signed)</td></tr>
+          <tr><td class="col-name">Linux</td><td><code>Pianove-Linux.tar.gz</code></td><td><code>tar xzf Pianove-Linux.tar.gz &amp;&amp; ./Pianove/Pianove</code></td></tr>
+        </tbody>
+      </table>
+      <p>The rest of this page is for running Pianove from source, for example to change it.</p>
+    </section>
+    <section class="doc-section" id="python">
       <h2>1. Install Python</h2>
       <ul>
         <li><strong>Windows:</strong> get the installer from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> and tick <em>Add Python to PATH</em>.</li>
@@ -112,7 +127,7 @@ sudo apt install libfluidsynth3
 sudo dnf install fluidsynth-libs
 # Arch
 sudo pacman -S fluidsynth</code></pre>
-      <div class="callout callout--warn"><span class="callout-icon" aria-hidden="true">!</span><div><strong>“Couldn't find the FluidSynth library”</strong> means step 5 is missing: pyfluidsynth is installed but the native library is not.</div></div>
+      <div class="callout callout--warn"><span class="callout-icon" aria-hidden="true">!</span><div><strong>No piano sound?</strong> If <strong>Settings → Keyboard &amp; Sound</strong> says <em>FluidSynth is not installed</em>, step 5 is missing: pyfluidsynth is there but the native library is not. Everything else works without it.</div></div>
     </section>
     <section class="doc-section" id="run">
       <h2>6. Run Pianove</h2>
@@ -143,6 +158,12 @@ pip install -r requirements.txt</code></pre>
       <pre><code class="language-bash">pip install pytest
 python -m pytest tests -q</code></pre>
       <p>The tests run without a window, sound card or keyboard.</p>
+    </section>
+    <section class="doc-section" id="build">
+      <h2>Building the app yourself</h2>
+      <pre><code class="language-bash">pip install pyinstaller
+pyinstaller pianove.spec          # → dist/Pianove/  (dist/Pianove.app on macOS)</code></pre>
+      <p><code>pianove.spec</code> collects the lessons, fonts, the SoundFont and the FluidSynth library of the machine it runs on. <code>.github/workflows/build.yml</code> does this on Windows, macOS and Linux; pushing a tag such as <code>v1.1.0</code> attaches the three builds to a GitHub release.</p>
     </section>
     <div class="doc-nav-footer"><a href="requirements.html" class="doc-nav-link"><div class="doc-nav-dir">Previous</div><div class="doc-nav-title">← System Requirements</div></a><a href="midi-setup.html" class="doc-nav-link doc-nav-link--next"><div class="doc-nav-dir">Next</div><div class="doc-nav-title">Keyboard &amp; Microphone →</div></a></div>
   </main>

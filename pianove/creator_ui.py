@@ -525,7 +525,7 @@ class KeyPicker:
 
 def _sound(m: int, on: bool):
     try:
-        from pianove import sound_engine_fs as se
+        from pianove import sound as se
         se.play(m, 80) if on else se.stop(m)
     except Exception:
         pass

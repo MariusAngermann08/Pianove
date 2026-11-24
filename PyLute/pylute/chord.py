@@ -2,6 +2,7 @@ import pygame as pg
 from .font import get_font
 from .pitch import pitch_to_step, parse_pitch
 from .note import NOTEHEAD_BLACK, WHOLE, AUG_DOT, ACCIDENTAL_GLYPHS, GLYPHS as NOTE_GLYPHS, STEM_SPACES
+from . import colors
 
 DEBUG = "[OpenScore-Debug]"
 
@@ -176,7 +177,7 @@ def _color(note, chord_color):
         return tuple(chord_color)
     if note.color is not None:
         return tuple(note.color)
-    return (0, 0, 0)
+    return colors.INK
 
 
 def _compute_head_offsets(sorted_notes, staff, stem_dir, font):

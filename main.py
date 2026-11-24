@@ -20,6 +20,8 @@ if storage.get("language"):
     language_state.value = storage.get("language")
 iOSTheme.dark = bool(storage.get("dark_mode", True))
 iOSTheme.update_theme()
+from pianove.ui_utils import apply_score_colors
+apply_score_colors()
 
 ui = App(
     title="Pianove",
@@ -32,7 +34,7 @@ ctx.ui = ui
 
 # Boot the synthesiser AFTER App() so pygame.mixer is already initialised.
 # Apply the persisted setting; pre-generation starts in a background thread.
-from pianove.sound_engine_fs import init as _sound_init, set_enabled as _sound_set, set_volume as _sound_vol, shutdown as _sound_shutdown
+from pianove.sound import init as _sound_init, set_enabled as _sound_set, set_volume as _sound_vol, shutdown as _sound_shutdown
 _sound_init()
 _sound_set(bool(storage.get("midi_sound", False)))
 _sound_vol(float(storage.get("midi_volume", 1.0)))
@@ -46,6 +48,10 @@ def _on_resize(w: int, h: int):
 
 
 ui.on_resize = _on_resize
+
+# The computer keyboard plays notes wherever notes are played (pianove/keyboard_input.py)
+from pianove import keyboard_input
+ui.event_filter = keyboard_input.handle
 
 _after_boot = "home" if storage.get("onboarding_complete") else "language"
 

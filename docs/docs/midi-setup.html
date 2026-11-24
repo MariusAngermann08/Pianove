@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard & Microphone — Pianove Guide</title>
-  <meta name="description" content="Play on a MIDI keyboard, or on any acoustic piano through the microphone.">
+  <meta name="description" content="Play on a MIDI keyboard, on any acoustic piano through the microphone, or on your computer keyboard.">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/docs.css">
@@ -47,6 +47,7 @@
       <a href="#range">Your keyboard's range</a>
       <a href="#sound">Silent keyboards</a>
       <a href="#microphone">Hear My Piano: the microphone</a>
+      <a href="#computer">No instrument: computer keyboard and mouse</a>
       <a href="#trouble">Troubleshooting</a>
     </div>
     <a href="lessons.html">Lessons &amp; Courses</a>
@@ -65,8 +66,8 @@
     <div class="docs-page-header">
       <p class="page-eyebrow">Playing</p>
       <h1>Keyboard &amp; Microphone</h1>
-      <p class="page-subtitle">Play on a MIDI keyboard, or on any acoustic piano through the microphone.</p>
-      <div class="page-meta"><span class="meta-item">USB MIDI</span><span class="meta-item">Microphone (beta)</span></div>
+      <p class="page-subtitle">Play on a MIDI keyboard, on any acoustic piano through the microphone, or on your computer keyboard.</p>
+      <div class="page-meta"><span class="meta-item">USB MIDI</span><span class="meta-item">Microphone (beta)</span><span class="meta-item">Computer keyboard</span></div>
     </div>
 <section class="doc-section" id="midi">
       <h2>Connecting a MIDI keyboard</h2>
@@ -76,29 +77,42 @@
     <section class="doc-section" id="range">
       <h2>Your keyboard's range</h2>
       <p>Keyboards have 25, 49, 61, 76 or 88 keys. The first time a keyboard is connected, Pianove either recognises the model by name or asks you to press its <strong>lowest</strong> and then its <strong>highest</strong> key. The on-screen keyboard in lessons then matches the one in front of you.</p>
-      <p>To do it again, for example with a different keyboard, open <strong>Settings → MIDI Setup → Reconfigure keyboard range</strong>.</p>
+      <p>To do it again, for example with a different keyboard, open <strong>Settings → Keyboard &amp; Sound → MIDI Setup → Reconfigure keyboard range</strong>.</p>
     </section>
     <section class="doc-section" id="sound">
       <h2>Silent keyboards</h2>
-      <p>Many controller keyboards make no sound of their own. Turn on <strong>Settings → MIDI Sound Output</strong> and Pianove plays a sampled grand piano for every key you press, with the sustain pedal. See <a href="synthesiser.html">Piano Sound</a>.</p>
+      <p>Many controller keyboards make no sound of their own. Turn on <strong>Settings → Keyboard &amp; Sound → MIDI Sound Output</strong> and Pianove plays a sampled grand piano for every key you press, with the sustain pedal. See <a href="synthesiser.html">Piano Sound</a>.</p>
     </section>
     <section class="doc-section" id="microphone">
       <h2>Hear My Piano: the microphone</h2>
       <div class="callout callout--beta"><span class="callout-icon" aria-hidden="true">β</span><div><strong>Beta.</strong> Works best in a quiet room with the microphone near the piano. Expect the odd missed or extra note on very fast or very soft passages.</div></div>
-      <p>No MIDI cable? Pianove can listen to an acoustic piano, upright or grand, through the computer's microphone and work out which keys you play. Turn on <strong>Settings → Hear My Piano (Microphone)</strong>, or choose <em>Acoustic piano? Use the microphone instead</em> during setup.</p>
+      <p>No MIDI cable? Pianove can listen to an acoustic piano, upright or grand, through the computer's microphone and work out which keys you play. Turn on <strong>Settings → Keyboard &amp; Sound → Hear My Piano (Microphone)</strong>, or choose <em>Acoustic piano: use the microphone</em> during setup.</p>
       <ul>
-        <li><strong>Sensitivity:</strong> the slider below the switch. Raise it if soft notes are missed; lower it if notes appear that you didn't play.</li>
+        <li><strong>Sensitivity:</strong> the slider that appears below the switch. Raise it if soft notes are missed; lower it if notes appear that you didn't play.</li>
         <li><strong>It knows what comes next:</strong> during a lesson Pianove tells the detector which keys are expected, so the right note is recognised faster and reliably.</li>
         <li><strong>Any tuning:</strong> an old piano that is a little flat is still heard on the right keys.</li>
       </ul>
       <p>How it works: every 10 ms the last fraction of a second of sound is turned into a spectrum and explained as a mix of the 88 keys' own sound (measured from sampled grand pianos). A key counts as played when its share rises sharply and stands clear of the overtones of louder keys. All of it runs locally in numpy; no recording ever leaves your computer.</p>
+    </section>
+    <section class="doc-section" id="computer">
+      <h2>No instrument: computer keyboard and mouse</h2>
+      <p>Without a MIDI keyboard or a piano, your computer keyboard plays notes, the way music programs do. The keys are matched by position, so the layout works the same on QWERTY and QWERTZ keyboards:</p>
+      <table class="param-table">
+        <thead><tr><th>Keys (QWERTY)</th><th>Play</th></tr></thead>
+        <tbody>
+          <tr><td class="col-name">A S D F G H J K L ; '</td><td>White keys from middle C: C D E F G A B C D E F</td></tr>
+          <tr><td class="col-name">W E · T Y U · O P</td><td>Black keys: C♯ D♯ · F♯ G♯ A♯ · C♯ D♯</td></tr>
+          <tr><td class="col-name">Z / X</td><td>One octave down / up</td></tr>
+        </tbody>
+      </table>
+      <p>On a German keyboard the black keys are <kbd>W E T Z U O P</kbd> and the octave keys <kbd>Y</kbd> / <kbd>X</kbd>. You can also <strong>click the keys</strong> of the keyboard on screen. Both work in lessons, songs, sight-reading and the keyboard setup, and always sound, since there is no instrument to make the sound.</p>
     </section>
     <section class="doc-section" id="trouble">
       <h2>Troubleshooting</h2>
       <table class="param-table">
         <thead><tr><th>Problem</th><th>Try this</th></tr></thead>
         <tbody>
-          <tr><td>“No MIDI device — plug in a keyboard”</td><td>Check the cable and that the keyboard is on. Some keyboards need to be switched to USB-MIDI mode. Close other programs (a DAW) that may hold the port.</td></tr>
+          <tr><td>“No MIDI keyboard: play with your computer keys …”</td><td>Check the cable and that the keyboard is on. Some keyboards need to be switched to USB-MIDI mode. Close other programs (a DAW) that may hold the port.</td></tr>
           <tr><td>The on-screen keyboard is shifted</td><td>Reconfigure the range in Settings → MIDI Setup, or check that the keyboard's octave/transpose buttons are at zero.</td></tr>
           <tr><td>Keys play no sound</td><td>Turn on MIDI Sound Output and check the volume.</td></tr>
           <tr><td>“No microphone found”</td><td>Allow Pianove (your terminal or Python) to use the microphone in your system's privacy settings, and install <code>sounddevice</code>.</td></tr>

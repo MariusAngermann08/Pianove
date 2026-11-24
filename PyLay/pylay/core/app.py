@@ -19,6 +19,7 @@ class App:
         self.width = width
         self.height = height
         self._pending_resize = None
+        self.event_filter = None   # callable(event) -> bool: True uses the event up
         self._resize_time = 0.0
         self.on_resize: Optional[Callable[[int, int], None]] = None
         self._display_flags = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
@@ -103,6 +104,10 @@ class App:
         # Any user interaction must wake the draw loop for at least one frame
         # (hover animations, cursor updates, and spring transitions all start here).
         _dirty.mark()
+        # An app-wide filter sees every event first (e.g. keyboard shortcuts); when it
+        # returns True the event is used up and the widget tree doesn't get it.
+        if self.event_filter is not None and self.event_filter(event):
+            return True
         self.root.handle_event(event)
         return True
 
