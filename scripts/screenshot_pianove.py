@@ -376,6 +376,14 @@ def shot_lesson():
     go("lesson", 150); save("ss-lesson")
 
 
+def shot_tempo_intro():
+    start_lesson("five_note_melody", "beginner_path", 2, step=1)
+    ctx.lesson_phase = "performance"
+    ctx.lesson_intro = "tempo"
+    go("lesson", 60); save("ss-tempo-intro")
+    ctx.lesson_intro = None
+
+
 def shot_practice():
     home_tab("practice"); save("ss-practice")
 
